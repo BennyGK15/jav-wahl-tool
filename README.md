@@ -17,9 +17,14 @@ Landespersonalvertretungsgesetz (LPVG) und seiner Wahlordnung (LPVGWO).
 > ([landesrecht-bw.de](https://www.landesrecht-bw.de)) zu prüfen. Die Verantwortung für
 > eine ordnungsgemäße Wahl liegt beim Wahlvorstand.
 
+![Übersicht: nächster Schritt, anstehende Termine und Ablauf der Wahl](docs/screenshots/uebersicht.png)
+
+<sub>Alle Screenshots zeigen eine Demo-Instanz mit frei erfundenen Daten.</sub>
+
 ## Inhalt
 
 - [Funktionsumfang](#funktionsumfang)
+- [Screenshots](#screenshots)
 - [Technik](#technik)
 - [Installation](#installation)
 - [Rollen und Berechtigungen](#rollen-und-berechtigungen)
@@ -47,6 +52,38 @@ Die Anwendung begleitet den Wahlvorstand durch alle Phasen einer JAV-Wahl:
 Alle Schreiben und Aushänge werden als druckoptimierte Seiten erzeugt. Für die
 Datenschutz-Dokumentation erstellt die Anwendung Entwürfe für Verarbeitungsverzeichnis,
 TOM, Datenschutz-Folgenabschätzung und Datenschutzhinweis.
+
+## Screenshots
+
+<table>
+  <tr>
+    <td width="50%" valign="top">
+      <a href="docs/screenshots/einrichtung.png"><img src="docs/screenshots/einrichtung.png" alt="Einrichtungsassistent mit fünf erledigten Schritten"></a>
+      <p><b>Einrichtungsassistent</b><br>Grunddaten, Wahlvorstand, Orte und Zeiten, Stützunterschriften und Datenschutz werden einmal vollständig erfasst, bevor der Wahlkalender freigeschaltet wird.</p>
+    </td>
+    <td width="50%" valign="top">
+      <a href="docs/screenshots/wahlkalender.png"><img src="docs/screenshots/wahlkalender.png" alt="Wahlkalender mit Fristen, Rechtsgrundlagen und Status"></a>
+      <p><b>Wahlkalender</b><br>Alle Fristen werden vom Wahltag aus berechnet – mit Uhrzeit des Fristendes, Rechtsgrundlage und Erledigt-Status.</p>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <a href="docs/screenshots/waehlerverzeichnis.png"><img src="docs/screenshots/waehlerverzeichnis.png" alt="Wählerverzeichnis mit Status je Person"></a>
+      <p><b>Wählerverzeichnis</b><br>Wahlberechtigung und Wählbarkeit werden zum Wahltag automatisch geprüft; Import per CSV, Auslagefassung zum Drucken.</p>
+    </td>
+    <td width="50%" valign="top">
+      <a href="docs/screenshots/wahlausschreiben.png"><img src="docs/screenshots/wahlausschreiben.png" alt="Druckansicht des Wahlausschreibens"></a>
+      <p><b>Wahlausschreiben</b><br>Das Dokument wird aus den erfassten Angaben und dem Wahlkalender erzeugt und als versionierte Freigabe festgehalten.</p>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <a href="docs/screenshots/wahltag.png"><img src="docs/screenshots/wahltag.png" alt="Stimmabgabe am Wahltag vermerken"></a>
+      <p><b>Wahltag</b><br>Stimmabgabe und Briefwahl vermerken, mit Suche, Filtern und einer Tablet-Ansicht für den Wahltisch.</p>
+    </td>
+    <td width="50%" valign="top"></td>
+  </tr>
+</table>
 
 ## Technik
 

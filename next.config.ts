@@ -16,6 +16,8 @@ const appHost = process.env.APP_ORIGIN ? new URL(process.env.APP_ORIGIN).host : 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   output: "standalone",
+  // Keine automatisch erzeugte AGENTS.md beim Start von `next dev`
+  agentRules: false,
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },

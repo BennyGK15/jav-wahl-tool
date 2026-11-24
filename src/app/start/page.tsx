@@ -55,7 +55,7 @@ export default async function StartPage() {
           <div className="mx-auto grid max-w-screen-2xl gap-10 px-4 pt-10 pb-16 sm:px-6 lg:grid-cols-[1.1fr_1fr] lg:items-center lg:gap-16 lg:px-8 lg:py-20">
             <div className="grid max-w-2xl gap-6">
               <p className="text-sm font-bold tracking-[0.14em] uppercase">Für Wahlvorstände im öffentlichen Dienst Baden-Württemberg</p>
-              <h1 className="text-4xl leading-[1.05] sm:text-5xl lg:text-6xl">Die JAV-Wahl rechtssicher planen und durchführen.</h1>
+              <h1 className="text-4xl leading-[1.05] sm:text-5xl lg:text-6xl">Die JAV-Wahl strukturiert planen und durchführen.</h1>
               <p className="max-w-xl text-lg leading-relaxed">
                 Fristen, Wählerverzeichnis, Wahlvorschläge, Wahltag und Ergebnis an einem Ort – mit allen Dokumenten zum Aushang und
                 einem klaren nächsten Schritt.
