@@ -1,6 +1,6 @@
 /** Rollen und Berechtigungen laut Konzept. Prüfung erfolgt IMMER serverseitig. */
 
-export const ROLES = ["admin", "vorsitz", "mitglied", "wahlhelfer"] as const;
+export const ROLES = ["admin", "vorsitz", "mitglied", "wahlhelfer", "datenschutz"] as const;
 export type Role = (typeof ROLES)[number];
 
 export const ROLE_LABELS: Record<Role, string> = {
@@ -8,6 +8,7 @@ export const ROLE_LABELS: Record<Role, string> = {
   vorsitz: "Vorsitz Wahlvorstand",
   mitglied: "Mitglied Wahlvorstand",
   wahlhelfer: "Wahlhelfer/in",
+  datenschutz: "Datenschutzbeauftragte/r",
 };
 
 const PERMISSIONS = {
@@ -24,7 +25,9 @@ const PERMISSIONS = {
   "deadlines.read": ["vorsitz", "mitglied", "wahlhelfer"],
   "deadlines.edit": ["vorsitz", "mitglied"],
   "rules.verify": ["vorsitz"],
-  "privacy.manage": ["admin", "vorsitz"],
+  "privacy.manage": ["admin", "vorsitz", "datenschutz"],
+  /** Datenschutz-Unterlagen als abgestimmt einreichen bzw. die Einreichung zurückziehen */
+  "privacy.submit": ["datenschutz"],
 } as const satisfies Record<string, readonly Role[]>;
 
 export type Permission = keyof typeof PERMISSIONS;

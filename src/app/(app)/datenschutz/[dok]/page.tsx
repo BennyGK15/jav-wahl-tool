@@ -7,7 +7,7 @@ import { todayBerlin } from "@/lib/dates";
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/session";
 import { formatIsoDate } from "@/lib/utils";
-import { loadAufgabenStand, loadDatenschutzAngaben } from "@/server/einstellungen";
+import { loadAufgabenStand, loadDatenschutzAngaben, loadEinreichungStatus } from "@/server/einstellungen";
 
 export const metadata = { title: "Datenschutz-Unterlagen" };
 
@@ -218,8 +218,9 @@ export default async function DatenschutzDokumentPage({ params }: { params: Prom
   if (!(dok in DATENSCHUTZ_DOKUMENTE)) notFound();
   const art = dok as DatenschutzDokument;
   const meta = DATENSCHUTZ_DOKUMENTE[art];
-  const { angaben } = await loadDatenschutzAngaben();
-  const offeneAufgaben = aufgabenStatus(angaben, await loadAufgabenStand()).filter((a) => !a.erledigt);
+  const { angaben, geaendertAm } = await loadDatenschutzAngaben();
+  const einreichung = await loadEinreichungStatus(geaendertAm);
+  const offeneAufgaben = aufgabenStatus(angaben, await loadAufgabenStand(), einreichung.art === "eingereicht").filter((a) => !a.erledigt);
   const wahl = await prisma.election.findFirst({ orderBy: { createdAt: "desc" }, select: { dienststelle: true } });
   const dienststelle = angaben.verantwortlicheStelle || wahl?.dienststelle || "[Dienststelle]";
   await writeAudit({ userId: session.user.id, action: "privacy.document", objectType: "einstellung", objectId: "datenschutz", fields: [art] });

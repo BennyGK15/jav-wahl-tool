@@ -13,7 +13,7 @@
 ```mermaid
 sequenceDiagram
     actor IT as Administration (admin)
-    actor P as Person (vorsitz/mitglied/wahlhelfer)
+    actor P as Person (vorsitz/mitglied/wahlhelfer/datenschutz)
     participant App as JAV-Wahl-Tool
 
     IT->>App: Konto anlegen (Benutzername, Rolle, Startpasswort)
@@ -60,3 +60,6 @@ Auf `/benutzer` kann die Administration:
 
 - Wer sich mit einem Startpasswort anmeldet, kommt nicht weiter, bevor es geändert ist. Das ist gewollt.
 - Für den Wahltag rechtzeitig Konten mit der Rolle `wahlhelfer` anlegen – diese Rolle kann nur Stimmabgaben vermerken.
+- Die/der Datenschutzbeauftragte bekommt ein Konto mit der Rolle `datenschutz`, z. B.
+  `pnpm user:create dsb datenschutz "Name"`. Die Rolle sieht nur die Datenschutz-Unterlagen
+  (siehe [Journey 11](11-administration-und-datenschutz.md)), keine Wahldaten.

@@ -31,6 +31,7 @@ flowchart TD
 | `vorsitz` während der Einrichtung | Fortschritt des Einrichtungsassistenten, Knopf „Einrichtung fortsetzen“ |
 | `wahlhelfer` | Wahltag mit Datum und Knopf „Wahltag-Ansicht öffnen“ |
 | `vorsitz`, `admin` | Warnhinweis, wenn bei einer Wahl die Aufbewahrungsfrist abgelaufen ist |
+| `datenschutz` | Stand der Datenschutz-Unterlagen (eingereicht, geändert, offen; Zahl der offenen Aufgaben) mit Knopf zu den Unterlagen |
 
 ## Werkzeuge für den Überblick
 

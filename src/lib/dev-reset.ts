@@ -28,7 +28,7 @@ export async function devReset({ datenschutz }: { datenschutz: boolean }): Promi
     prisma.election.deleteMany({}),
     prisma.deadlineRule.deleteMany({}),
     prisma.auditLog.deleteMany({}),
-    prisma.einstellung.deleteMany({ where: datenschutz ? {} : { schluessel: { notIn: ["datenschutz", "datenschutz-aufgaben"] } } }),
+    prisma.einstellung.deleteMany({ where: datenschutz ? {} : { schluessel: { notIn: ["datenschutz", "datenschutz-aufgaben", "datenschutz-einreichung"] } } }),
     prisma.verification.deleteMany({}),
     prisma.rateLimit.deleteMany({}),
   ]);

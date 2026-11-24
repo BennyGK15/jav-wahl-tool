@@ -48,6 +48,8 @@ const LABELS: Record<string, string> = {
   "privacy.document": "Datenschutz-Dokument erzeugt",
   "privacy.task.done": "Datenschutz-Aufgabe erledigt",
   "privacy.task.reopened": "Datenschutz-Aufgabe wieder geöffnet",
+  "privacy.submitted": "Datenschutz-Unterlagen eingereicht",
+  "privacy.withdrawn": "Einreichung der Datenschutz-Unterlagen zurückgezogen",
   "objection.created": "Einspruch erfasst",
   "objection.deleted": "Einspruch gelöscht",
   "objection.offen": "Einspruch wieder offen",

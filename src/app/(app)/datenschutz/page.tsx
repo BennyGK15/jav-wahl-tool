@@ -1,24 +1,29 @@
 import Link from "next/link";
 import { ArrowRight, FileText } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Check } from "lucide-react";
+import { Check, Send } from "lucide-react";
+import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { aufgabenStatus, DATENSCHUTZ_DOKUMENTE, DATENSCHUTZ_FELDER, LOESCHFRISTEN, type DatenschutzDokument } from "@/lib/datenschutz";
+import { angabenVollstaendig, aufgabenStatus, DATENSCHUTZ_DOKUMENTE, DATENSCHUTZ_FELDER, LOESCHFRISTEN, type DatenschutzDokument } from "@/lib/datenschutz";
 import { formatBerlinDateTime } from "@/lib/dates";
 import { hasPermission } from "@/lib/rbac";
 import { requireSession } from "@/lib/session";
-import { loadAufgabenStand, loadDatenschutzAngaben } from "@/server/einstellungen";
-import { toggleAufgabeAction } from "./actions";
+import { loadAufgabenStand, loadDatenschutzAngaben, loadEinreichungStatus } from "@/server/einstellungen";
+import { toggleAufgabeAction, zurueckziehenAction } from "./actions";
 import { DatenschutzForm } from "./datenschutz-form";
+import { EinreichungForm } from "./einreichung-form";
 
 export const metadata = { title: "Datenschutz-Unterlagen" };
 
 export default async function DatenschutzPage() {
   const session = await requireSession();
   const darfBearbeiten = hasPermission(session.user.role, "privacy.manage");
+  const darfEinreichen = hasPermission(session.user.role, "privacy.submit");
   const { angaben, geaendertAm } = await loadDatenschutzAngaben();
+  const einreichung = await loadEinreichungStatus(geaendertAm);
+  const aufgaben = aufgabenStatus(angaben, await loadAufgabenStand(), einreichung.art === "eingereicht");
   const fehlend = DATENSCHUTZ_FELDER.filter((f) => !f.vorgabe && !angaben[f.key]);
-  const aufgaben = aufgabenStatus(angaben, await loadAufgabenStand());
   const offen = aufgaben.filter((a) => !a.erledigt).length;
 
   return (
@@ -31,6 +36,46 @@ export default async function DatenschutzPage() {
           Rechtsberatung – bitte vor dem Einsatz abstimmen.
         </p>
       </div>
+
+      <Card className={einreichung.art === "eingereicht" ? undefined : "border-l-[6px] border-l-brand-yellow"}>
+        <CardHeader>
+          <CardTitle className="flex flex-wrap items-center gap-2 text-base">
+            <Send aria-hidden className="size-4" /> Einreichung durch die/den Datenschutzbeauftragte(n)
+            <Badge variant={einreichung.art === "eingereicht" ? "success" : einreichung.art === "geaendert" ? "warning" : "secondary"}>
+              {einreichung.art === "offen" ? "noch nicht eingereicht" : einreichung.art === "eingereicht" ? "eingereicht" : "nach Einreichung geändert"}
+            </Badge>
+          </CardTitle>
+          <CardDescription>
+            {einreichung.art === "offen"
+              ? darfEinreichen
+                ? "Angaben ausfüllen, Entwürfe prüfen, erledigte Aufgaben abhaken – und die Unterlagen dann für den Wahlvorstand einreichen."
+                : "Die/der Datenschutzbeauftragte hat die Unterlagen noch nicht eingereicht."
+              : `Eingereicht am ${formatBerlinDateTime(einreichung.eingereichtAm)}${einreichung.name ? ` von ${einreichung.name}` : ""}.`}
+            {einreichung.art === "geaendert" && " Die Angaben wurden danach noch einmal geändert – bitte erneut einreichen."}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="grid gap-4">
+          {einreichung.art !== "offen" && einreichung.anmerkung && (
+            <blockquote className="border-l-4 border-l-border pl-4 text-sm whitespace-pre-line">{einreichung.anmerkung}</blockquote>
+          )}
+          {darfEinreichen && einreichung.art !== "eingereicht" && (
+            <EinreichungForm erneut={einreichung.art === "geaendert"} vollstaendig={angabenVollstaendig(angaben)} />
+          )}
+          {darfEinreichen && einreichung.art !== "offen" && (
+            <form action={zurueckziehenAction}>
+              <ConfirmSubmitButton variant="outline" size="sm" confirmText="Einreichung wirklich zurückziehen?">
+                Einreichung zurückziehen
+              </ConfirmSubmitButton>
+            </form>
+          )}
+          {!darfEinreichen && einreichung.art === "offen" && (
+            <p className="text-sm text-muted-foreground">
+              Für die Einreichung braucht die/der Datenschutzbeauftragte ein Konto mit der Rolle „Datenschutzbeauftragte/r“ – anzulegen
+              von der Administration unter Benutzer.
+            </p>
+          )}
+        </CardContent>
+      </Card>
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {(Object.keys(DATENSCHUTZ_DOKUMENTE) as DatenschutzDokument[]).map((k) => (
@@ -61,7 +106,7 @@ export default async function DatenschutzPage() {
           {darfBearbeiten ? (
             <DatenschutzForm angaben={angaben} />
           ) : (
-            <p className="text-sm text-muted-foreground">Bearbeiten können der Vorsitz des Wahlvorstands und die Administration.</p>
+            <p className="text-sm text-muted-foreground">Bearbeiten können der Vorsitz des Wahlvorstands, die/der Datenschutzbeauftragte und die Administration.</p>
           )}
         </CardContent>
       </Card>
@@ -109,7 +154,7 @@ export default async function DatenschutzPage() {
           <ul className="grid gap-2 text-sm">
             {aufgaben.map((a) => (
               <li key={a.key} className="flex flex-wrap items-center gap-3">
-                {a.automatisch || !darfBearbeiten ? (
+                {a.automatisch || a.durchEinreichung || !darfBearbeiten ? (
                   <span
                     aria-hidden
                     className={`flex size-6 shrink-0 items-center justify-center rounded-sm border ${a.erledigt ? "border-foreground bg-foreground text-background" : "border-input"}`}
@@ -132,6 +177,7 @@ export default async function DatenschutzPage() {
                 )}
                 <span className={a.erledigt ? "text-muted-foreground line-through" : undefined}>{a.text}</span>
                 {a.automatisch && <span className="text-xs text-muted-foreground">(automatisch, sobald alle Angaben oben ausgefüllt sind)</span>}
+                {a.durchEinreichung && <span className="text-xs text-muted-foreground">(erledigt durch die Einreichung der/des Datenschutzbeauftragten)</span>}
                 {a.erledigtAm && <span className="text-xs text-muted-foreground">erledigt am {formatBerlinDateTime(new Date(a.erledigtAm))}</span>}
               </li>
             ))}

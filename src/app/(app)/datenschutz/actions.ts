@@ -2,9 +2,9 @@
 
 import { revalidatePath } from "next/cache";
 import { writeAudit } from "@/lib/audit";
-import { DATENSCHUTZ_FELDER, datenschutzAngabenSchema } from "@/lib/datenschutz";
+import { ANMERKUNG_MAX, angabenVollstaendig, DATENSCHUTZ_FELDER, datenschutzAngabenSchema } from "@/lib/datenschutz";
 import { ForbiddenError, requirePermission } from "@/lib/session";
-import { saveDatenschutzAngaben, toggleAufgabe } from "@/server/einstellungen";
+import { deleteEinreichung, loadDatenschutzAngaben, saveDatenschutzAngaben, saveEinreichung, toggleAufgabe } from "@/server/einstellungen";
 import { z } from "zod";
 import { DATENSCHUTZ_AUFGABEN } from "@/lib/datenschutz";
 
@@ -37,4 +37,35 @@ export async function toggleAufgabeAction(formData: FormData): Promise<void> {
   const erledigt = await toggleAufgabe(key, session.user.id);
   await writeAudit({ userId: session.user.id, action: erledigt ? "privacy.task.done" : "privacy.task.reopened", objectType: "einstellung", objectId: key });
   revalidatePath("/datenschutz", "layout");
+}
+
+export type EinreichungState = { error?: string; ok?: boolean };
+
+/** Die/der Datenschutzbeauftragte reicht die Unterlagen als abgestimmt ein. */
+export async function einreichenAction(_prev: EinreichungState, formData: FormData): Promise<EinreichungState> {
+  try {
+    const session = await requirePermission("privacy.submit");
+    const anmerkung = z
+      .string()
+      .trim()
+      .max(ANMERKUNG_MAX, `Anmerkung höchstens ${ANMERKUNG_MAX} Zeichen`)
+      .safeParse(String(formData.get("anmerkung") ?? ""));
+    if (!anmerkung.success) return { error: anmerkung.error.issues[0]?.message ?? "Eingabe ungültig" };
+    const { angaben } = await loadDatenschutzAngaben();
+    if (!angabenVollstaendig(angaben)) return { error: "Bitte zuerst alle Angaben ausfüllen und speichern." };
+    await saveEinreichung(anmerkung.data || undefined, session.user.id);
+    await writeAudit({ userId: session.user.id, action: "privacy.submitted", objectType: "einstellung", objectId: "datenschutz-einreichung" });
+    revalidatePath("/", "layout");
+    return { ok: true };
+  } catch (e) {
+    if (e instanceof ForbiddenError) return { error: "Keine Berechtigung." };
+    throw e;
+  }
+}
+
+export async function zurueckziehenAction(): Promise<void> {
+  const session = await requirePermission("privacy.submit");
+  await deleteEinreichung();
+  await writeAudit({ userId: session.user.id, action: "privacy.withdrawn", objectType: "einstellung", objectId: "datenschutz-einreichung" });
+  revalidatePath("/", "layout");
 }

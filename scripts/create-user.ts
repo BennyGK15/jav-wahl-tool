@@ -2,7 +2,7 @@
  * Legt ein Benutzerkonto an (es gibt keine Selbstregistrierung).
  *
  *   pnpm user:create <benutzername> <rolle> "<Anzeigename>"
- *   Rollen: admin | vorsitz | mitglied | wahlhelfer
+ *   Rollen: admin | vorsitz | mitglied | wahlhelfer | datenschutz
  *
  * Es wird ein zufälliges Startpasswort ausgegeben. Beim ersten Login muss es geändert werden.
  */

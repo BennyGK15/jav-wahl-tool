@@ -103,15 +103,19 @@ export const LOESCHFRISTEN: Loeschfrist[] = [
   },
 ];
 
-/** Aufgaben, die der Wahlvorstand vor dem Einsatz erledigt. „automatisch“ = erkennt die Anwendung selbst. */
+/**
+ * Aufgaben, die der Wahlvorstand vor dem Einsatz erledigt. „automatisch“ = erkennt die Anwendung selbst;
+ * „durchEinreichung“ = gilt als erledigt, solange eine aktuelle Einreichung der/des DSB vorliegt, lässt sich aber
+ * auch von Hand abhaken (Dienststellen ohne DSB-Konto in der Anwendung).
+ */
 export const DATENSCHUTZ_AUFGABEN = [
   { key: "angaben", text: "Angaben zur verantwortlichen Stelle und zur/zum Datenschutzbeauftragten in der Anwendung ausfüllen", automatisch: true },
   { key: "sicherung", text: "Datensicherung einrichten (Häufigkeit, Ort, Verschlüsselung, Löschung der Sicherungen, Wiederherstellungstest)" },
   { key: "personalrat", text: "Personalrat beteiligen und Einsatz der Anwendung abstimmen" },
-  { key: "dsfa", text: "Datenschutz-Folgenabschätzung mit der/dem Datenschutzbeauftragten abstimmen und freigeben" },
+  { key: "dsfa", text: "Datenschutz-Folgenabschätzung mit der/dem Datenschutzbeauftragten abstimmen und freigeben", durchEinreichung: true },
   { key: "hinweis", text: "Datenschutzhinweis mit dem Wahlausschreiben bekanntmachen" },
   { key: "divers", text: "Umgang mit dem Geschlechtseintrag „divers“ bei der anteiligen Vertretung (§ 8 LPVGWO) abstimmen" },
-] as const satisfies readonly { key: string; text: string; automatisch?: boolean }[];
+] as const satisfies readonly { key: string; text: string; automatisch?: boolean; durchEinreichung?: boolean }[];
 
 export type AufgabeKey = (typeof DATENSCHUTZ_AUFGABEN)[number]["key"];
 
@@ -130,18 +134,23 @@ export interface AufgabeStatus {
   automatisch: boolean;
   erledigt: boolean;
   erledigtAm: string | null;
+  /** Erledigt durch die aktuelle Einreichung der/des Datenschutzbeauftragten (nicht von Hand) */
+  durchEinreichung: boolean;
 }
 
-export function aufgabenStatus(a: DatenschutzAngaben, stand: AufgabenStand): AufgabeStatus[] {
+/** `eingereicht`: Es liegt eine aktuelle Einreichung vor (Status „eingereicht“, nicht „geändert“). */
+export function aufgabenStatus(a: DatenschutzAngaben, stand: AufgabenStand, eingereicht = false): AufgabeStatus[] {
   return DATENSCHUTZ_AUFGABEN.map((x) => {
     const automatisch = "automatisch" in x && x.automatisch === true;
     const manuell = stand[x.key];
+    const durchEinreichung = !automatisch && !manuell && eingereicht && "durchEinreichung" in x && x.durchEinreichung === true;
     return {
       key: x.key,
       text: x.text,
       automatisch,
-      erledigt: automatisch ? angabenVollstaendig(a) : Boolean(manuell),
+      erledigt: automatisch ? angabenVollstaendig(a) : Boolean(manuell) || durchEinreichung,
       erledigtAm: automatisch ? null : (manuell?.erledigtAm ?? null),
+      durchEinreichung,
     };
   });
 }
@@ -153,3 +162,24 @@ export const DATENSCHUTZ_DOKUMENTE = {
   hinweis: { titel: "Datenschutzhinweis zur Wahl der Jugend- und Auszubildendenvertretung", kurz: "Datenschutzhinweis", grundlage: "Art. 13, 14 DSGVO" },
 } as const;
 export type DatenschutzDokument = keyof typeof DATENSCHUTZ_DOKUMENTE;
+
+/** Einreichung der Unterlagen durch die/den Datenschutzbeauftragte(n) – gespeicherter Stand. */
+export const ANMERKUNG_MAX = 2000;
+export const einreichungSchema = z.object({
+  eingereichtAm: z.string(),
+  von: z.string().optional(),
+  anmerkung: z.string().max(ANMERKUNG_MAX).optional(),
+});
+export type Einreichung = z.infer<typeof einreichungSchema>;
+
+export type EinreichungStatus =
+  | { art: "offen" }
+  /** „geaendert“: Die Angaben wurden nach der Einreichung noch einmal gespeichert – bitte erneut einreichen. */
+  | { art: "eingereicht" | "geaendert"; eingereichtAm: Date; von: string | null; anmerkung: string | null };
+
+export function einreichungStatus(e: Einreichung | null, angabenGeaendertAm: Date | null): EinreichungStatus {
+  if (!e) return { art: "offen" };
+  const eingereichtAm = new Date(e.eingereichtAm);
+  const geaendert = angabenGeaendertAm !== null && angabenGeaendertAm.getTime() > eingereichtAm.getTime();
+  return { art: geaendert ? "geaendert" : "eingereicht", eingereichtAm, von: e.von ?? null, anmerkung: e.anmerkung || null };
+}

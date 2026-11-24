@@ -145,6 +145,7 @@ erforderlich.
 | `vorsitz` | Vollzugriff auf die Wahl, Freigabe von Dokumenten und Fristregeln, Feststellung des Ergebnisses |
 | `mitglied` | Wählerverzeichnis, Wahlvorschläge und Wahlkalender bearbeiten |
 | `wahlhelfer` | Stimmabgabe vermerken, Fristen einsehen |
+| `datenschutz` | Datenschutzbeauftragte/r: Datenschutz-Angaben pflegen, Aufgaben abhaken, Unterlagen einreichen – **kein** Zugriff auf Wahldaten |
 
 Berechtigungen werden bei jeder Seite und jeder Server Action serverseitig geprüft
 ([src/lib/rbac.ts](src/lib/rbac.ts)).

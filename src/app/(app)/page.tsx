@@ -1,16 +1,18 @@
 import Link from "next/link";
-import { ArrowRight, Archive, CalendarDays, Calculator, Check, Clock, ListChecks, ScrollText, UserCog } from "lucide-react";
+import { ArrowRight, Archive, CalendarDays, Calculator, Check, Clock, ListChecks, ScrollText, ShieldCheck, UserCog } from "lucide-react";
 import { Tile } from "@/components/tile";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { darfSeite, fristText, gesperrtHinweis, seiteHref } from "@/lib/ablauf";
-import { fromDbDate, todayBerlin } from "@/lib/dates";
+import { formatBerlinDateTime, fromDbDate, todayBerlin } from "@/lib/dates";
+import { aufgabenStatus } from "@/lib/datenschutz";
 import { prisma } from "@/lib/prisma";
 import { hasPermission } from "@/lib/rbac";
 import { requireSession } from "@/lib/session";
 import { cn, formatIsoDate } from "@/lib/utils";
 import { loadAblauf } from "@/server/ablauf";
 import { loadEinrichtung } from "@/server/einrichtung";
+import { loadAufgabenStand, loadDatenschutzAngaben, loadEinreichungStatus } from "@/server/einstellungen";
 import { getActiveElection } from "@/server/elections";
 import { toggleDeadlineDone } from "./wahl/[id]/actions";
 
@@ -30,6 +32,8 @@ export default async function Dashboard() {
   const loeschfaellig = can("retention.execute")
     ? await prisma.election.count({ where: { retentionUntil: { lte: new Date(`${today}T00:00:00.000Z`) } } })
     : 0;
+
+  const datenschutz = can("privacy.submit") ? await loadDatenschutzStand() : null;
 
   const name = session.user.name || session.user.displayUsername || session.user.username;
   const base = election ? `/wahl/${election.id}` : "";
@@ -58,6 +62,31 @@ export default async function Dashboard() {
             Daten jetzt löschen
           </Link>
         </p>
+      )}
+
+      {datenschutz && (
+        <section aria-labelledby="ds-titel" className="grid gap-4 rounded-sm border-2 border-foreground bg-card p-6 sm:grid-cols-[1fr_auto] sm:items-center">
+          <div>
+            <h2 id="ds-titel" className="text-2xl">
+              Datenschutz-Unterlagen
+            </h2>
+            <p className="mt-1 max-w-2xl text-muted-foreground">
+              {datenschutz.einreichung.art === "eingereicht"
+                ? `Eingereicht am ${formatBerlinDateTime(datenschutz.einreichung.eingereichtAm)}. Änderungen sind jederzeit möglich – danach bitte erneut einreichen.`
+                : datenschutz.einreichung.art === "geaendert"
+                  ? "Die Angaben wurden nach der Einreichung geändert – bitte prüfen und erneut einreichen."
+                  : "Angaben zur verantwortlichen Stelle ausfüllen, Verarbeitungsverzeichnis, TOM, Folgenabschätzung und Datenschutzhinweis prüfen und die Unterlagen für den Wahlvorstand einreichen."}
+            </p>
+            <p className="mt-2 text-sm font-semibold">
+              {datenschutz.offen ? `${datenschutz.offen} von ${datenschutz.gesamt} Aufgaben offen` : "Alle Aufgaben erledigt"}
+            </p>
+          </div>
+          <Button asChild size="lg" variant="accent">
+            <Link href="/datenschutz">
+              <ShieldCheck aria-hidden /> {datenschutz.einreichung.art === "eingereicht" ? "Unterlagen ansehen" : "Unterlagen bearbeiten"}
+            </Link>
+          </Button>
+        </section>
       )}
 
       {election && can("voters.markVoted") && !can("voters.edit") && (
@@ -340,4 +369,11 @@ export default async function Dashboard() {
       )}
     </div>
   );
+}
+
+async function loadDatenschutzStand() {
+  const { angaben, geaendertAm } = await loadDatenschutzAngaben();
+  const einreichung = await loadEinreichungStatus(geaendertAm);
+  const aufgaben = aufgabenStatus(angaben, await loadAufgabenStand(), einreichung.art === "eingereicht");
+  return { einreichung, offen: aufgaben.filter((a) => !a.erledigt).length, gesamt: aufgaben.length };
 }

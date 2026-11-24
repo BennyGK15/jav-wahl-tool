@@ -184,6 +184,14 @@ export default async function EinrichtungPage({
                   TOM, der DSFA und im Datenschutzhinweis für die Beschäftigten.
                   {!hasPermission(session.user.role, "privacy.manage") && " Nur Administration und Vorsitz können sie ändern."}
                 </p>
+                <p className="max-w-3xl text-sm text-muted-foreground">
+                  Die/der Datenschutzbeauftragte kann die Angaben auch selbst ausfüllen und die Unterlagen einreichen – mit einem
+                  eigenen Konto in der Rolle „Datenschutzbeauftragte/r“. Den Stand zeigt die Seite{" "}
+                  <Link href="/datenschutz" className="font-semibold">
+                    Datenschutz-Unterlagen
+                  </Link>
+                  .
+                </p>
                 <DatenschutzForm angaben={datenschutz} />
               </>
             )}

@@ -10,3 +10,6 @@ next-env.d.ts
 auth-schema.generated.ts
 .DS_Store
 src/generated/
+
+# Playwright-MCP (Snapshots, Konsolen-Logs, Screenshots beim Testen im Browser)
+.playwright-mcp/

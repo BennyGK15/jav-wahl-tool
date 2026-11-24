@@ -18,6 +18,7 @@ Ergebnis. Schutzmechanismen und typische Stolpersteine stehen jeweils am Ende.
 | `vorsitz` – Vorsitz Wahlvorstand | Vorsitzende/r des Wahlvorstands | alle Journeys; allein zuständig für Anlage, Freigaben und Feststellung des Ergebnisses |
 | `mitglied` – Mitglied Wahlvorstand | weitere Mitglieder des Wahlvorstands | Wählerverzeichnis, Einsprüche, Wahlvorschläge, Wahltag, Auszählung |
 | `wahlhelfer` – Wahlhelfer/in | Helferinnen und Helfer am Wahltisch | [Wahltag](06-wahltag.md) (Stimmabgabe vermerken), Fristen einsehen |
+| `datenschutz` – Datenschutzbeauftragte/r | Datenschutzbeauftragte/r der Dienststelle | [Datenschutz](11-administration-und-datenschutz.md): Unterlagen ausfüllen und einreichen; kein Zugriff auf Wahldaten |
 
 Die Rechte im Detail stehen in [src/lib/rbac.ts](../../src/lib/rbac.ts) und im
 [README](../../README.md#rollen-und-berechtigungen).
@@ -52,7 +53,7 @@ flowchart LR
 | 08 | [Abschluss, Aufbewahrung und Löschung](08-abschluss-und-loeschung.md) | vorsitz, admin | 5 Abschließen |
 | 09 | [Wahlversammlung (vereinfachtes Verfahren)](09-wahlversammlung.md) | vorsitz, mitglied | alle |
 | 10 | [Tägliche Arbeit mit Übersicht und Wahlkalender](10-taegliche-arbeit.md) | alle | durchgehend |
-| 11 | [Administration und Datenschutz](11-administration-und-datenschutz.md) | admin, vorsitz | durchgehend |
+| 11 | [Administration und Datenschutz](11-administration-und-datenschutz.md) | admin, vorsitz, datenschutz | durchgehend |
 
 ## Verwendung im GitHub-Wiki
 
