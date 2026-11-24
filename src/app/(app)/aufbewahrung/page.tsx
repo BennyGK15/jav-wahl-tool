@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -74,6 +75,15 @@ export default async function AufbewahrungPage() {
             </CardHeader>
             <CardContent className="grid gap-4 sm:grid-cols-2">
               <div className="grid gap-2 text-sm sm:col-span-2">
+                {e.status !== "vorbereitung" && (
+                  <p>
+                    <strong>Vor dem Löschen:</strong>{" "}
+                    <Link href={`/wahl/${e.id}/wahlakte`} className="underline">
+                      Wahlakte für den Personalrat zusammenstellen und ausdrucken
+                    </Link>
+                    .
+                  </p>
+                )}
                 <p>
                   <strong>Löschtermin nach § 32 LPVGWO:</strong>{" "}
                   {v.gesperrt ? (

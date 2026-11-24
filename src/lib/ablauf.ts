@@ -46,6 +46,7 @@ const ergebnisSeiten: Seite[] = [
   { pfad: "ergebnis/niederschrift", label: "Niederschrift", rechte: ["voters.edit"], bedingung: "ergebnis" },
   { pfad: "ergebnis/bekanntmachung", label: "Bekanntmachung", rechte: ["voters.edit"], bedingung: "ergebnis" },
   { pfad: "ergebnis/benachrichtigung", label: "Benachrichtigung", rechte: ["voters.edit"], bedingung: "ergebnis" },
+  { pfad: "wahlakte", label: "Wahlakte", rechte: ["voters.edit"] },
   { pfad: "/aufbewahrung", label: "Abschluss & Löschung", rechte: ["retention.execute"] },
 ];
 

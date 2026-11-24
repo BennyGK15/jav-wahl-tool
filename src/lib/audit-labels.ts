@@ -34,6 +34,7 @@ const LABELS: Record<string, string> = {
   "voters.imported": "Wählerverzeichnis importiert",
   "voters.renumbered": "Wählerverzeichnis neu nummeriert",
   "voters.auslage.generated": "Auslage-Fassung erzeugt",
+  "voters.vermerke.printed": "Wählerverzeichnis mit Stimmabgabevermerken erzeugt",
   "nominations.form.generated": "Vordruck Wahlvorschlag erzeugt",
   "election.wahlvorstand": "Wahlvorstand gespeichert",
   "election.wahlvorstand.notice": "Bekanntmachung des Wahlvorstands erzeugt",
