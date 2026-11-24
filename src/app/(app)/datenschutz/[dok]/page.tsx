@@ -154,7 +154,7 @@ function Dsfa({ a }: { a: DatenschutzAngaben }) {
           <span className="block border-b border-black" />
           <span className="block border-b border-black" />
         </div>
-        <div className="mt-10 grid grid-cols-2 gap-10">
+        <div className="unterschrift mt-10 grid grid-cols-2 gap-10">
           <span className="border-t border-black pt-1">Ort, Datum, Datenschutzbeauftragte/r</span>
           <span className="border-t border-black pt-1">Ort, Datum, Verantwortliche Stelle</span>
         </div>
@@ -205,7 +205,7 @@ function Hinweis({ a }: { a: DatenschutzAngaben }) {
         (Art. 77). Eine automatisierte Entscheidung findet nicht statt: Die Anwendung schlägt Wahlberechtigung und Wählbarkeit nur vor, entscheiden
         tut der Wahlvorstand.
       </p>
-      <div className="mt-10 grid w-64 gap-1">
+      <div className="unterschrift mt-10 grid w-64 gap-1">
         <span className="border-t border-black pt-1">Der Wahlvorstand</span>
       </div>
     </>

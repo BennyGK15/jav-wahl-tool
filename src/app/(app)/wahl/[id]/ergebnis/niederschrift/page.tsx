@@ -122,7 +122,7 @@ export default async function NiederschriftPage({ params }: { params: Promise<{ 
             : "Das Wahlergebnis ist noch nicht festgestellt."}
         </p>
 
-        <footer className="mt-8 grid grid-cols-3 gap-6 text-xs">
+        <footer className="unterschrift mt-8 grid grid-cols-3 gap-6 text-xs">
           {["Vorsitz", "Mitglied", "Mitglied"].map((r2, i) => (
             <span key={i} className="border-t pt-1">
               {r2}

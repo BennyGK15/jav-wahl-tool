@@ -107,7 +107,7 @@ export default async function VermerkePage({ params }: { params: Promise<{ id: s
         </table>
       )}
 
-      <footer className="mt-6 grid gap-1 text-sm break-inside-avoid">
+      <footer className="unterschrift mt-6 grid gap-1 text-sm">
         <p>Zahl der Wahlberechtigten: {voters.length}</p>
         <p>
           Stimmabgabe vermerkt: {urne + brief} (an der Urne {urne}, per Brief {brief})

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Briefkopf, DokFuss } from "@/components/dokument";
+import { BriefkopfSeiten, DokFuss } from "@/components/dokument";
 import { notFound } from "next/navigation";
 import { PrintButton } from "@/components/print-button";
 import { WahlausschreibenDokument } from "@/components/wahlausschreiben-dokument";
@@ -45,11 +45,12 @@ export default async function WahlausschreibenDruckPage({ params }: { params: Pr
       )}
       <DokFuss text={`JAV-Wahl ${view.dienststelle} · Wahlausschreiben`} />
       <div className="dok mx-auto w-full max-w-3xl print:max-w-none">
-        <Briefkopf dienststelle={view.dienststelle} art="Wahlausschreiben" datum={view.erlassAm ? `${view.ausstellungsort ? `${view.ausstellungsort}, ` : ""}${view.erlassAm}` : null} />
+        <BriefkopfSeiten kopf={{ dienststelle: view.dienststelle, art: "Wahlausschreiben", datum: view.erlassAm ? `${view.ausstellungsort ? `${view.ausstellungsort}, ` : ""}${view.erlassAm}` : null }}>
         <WahlausschreibenDokument v={view} />
         <p className="mt-6 text-[10px] text-muted-foreground">
           {freigegeben && latest ? `Version ${latest.version} · Prüfsumme ${sha256.slice(0, 16)}` : `Entwurf · Prüfsumme ${sha256.slice(0, 16)}`}
         </p>
+        </BriefkopfSeiten>
       </div>
     </div>
   );

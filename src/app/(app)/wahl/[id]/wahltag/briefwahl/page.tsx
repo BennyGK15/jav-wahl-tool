@@ -84,9 +84,9 @@ export default async function BriefwahlPage({ params, searchParams }: { params: 
                   Später eingehende Wahlbriefe werden nicht berücksichtigt.
                 </li>
               </ol>
-              <p>Der Wahlvorstand</p>
+              <p className="unterschrift">Der Wahlvorstand</p>
             </article>
-            <article className="grid gap-3 border-t border-dashed border-black pt-6">
+            <article className="unterschrift grid gap-3 border-t border-dashed border-black pt-6">
               <h2 className="font-bold">Erklärung zur schriftlichen Stimmabgabe</h2>
               <p>
                 Ich, {p.vorname} {p.nachname} (Nr. {p.lfdNr} im Wählerverzeichnis), versichere gegenüber dem Wahlvorstand, dass

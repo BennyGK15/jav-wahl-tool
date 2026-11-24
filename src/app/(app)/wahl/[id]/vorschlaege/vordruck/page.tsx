@@ -106,12 +106,12 @@ export default async function VordruckPage({ params }: { params: Promise<{ id: s
           </p>
         </header>
 
-        <section className="grid gap-2 break-inside-avoid">
+        <section className="grid gap-2">
           <h2 className="font-bold">1. Kennwort (freiwillig, § 12 Abs. 7 LPVGWO)</h2>
           <Linie />
         </section>
 
-        <section className="grid gap-2 break-inside-avoid">
+        <section className="grid gap-2">
           <h2 className="font-bold">2. Eingereicht von</h2>
           <p>
             <Kasten /> wahlberechtigten Beschäftigten – mit Unterschriften von mindestens{" "}
@@ -122,7 +122,7 @@ export default async function VordruckPage({ params }: { params: Promise<{ id: s
           </p>
         </section>
 
-        <section className="grid gap-2 break-inside-avoid">
+        <section className="grid gap-2">
           <h2 className="font-bold">3. Bewerberinnen und Bewerber</h2>
           <p className="text-[9pt]">
             In der Reihenfolge, in der sie auf dem Stimmzettel erscheinen sollen (§ 12 Abs. 3 LPVGWO). Zu wählen{" "}
@@ -159,7 +159,7 @@ export default async function VordruckPage({ params }: { params: Promise<{ id: s
         </section>
 
         {mitGeschlecht && (
-          <section className="grid gap-2 break-inside-avoid">
+          <section className="grid gap-2">
             <h2 className="font-bold">4. Begründung bei abweichender Verteilung von Frauen und Männern</h2>
             <p className="text-[9pt]">
               Auf Frauen und Männer entfallen <Wert v={sitzeFM} l="Sitze Frauen/Männer" /> (§ 8 LPVGWO). Der Wahlvorschlag muss
@@ -171,7 +171,7 @@ export default async function VordruckPage({ params }: { params: Promise<{ id: s
           </section>
         )}
 
-        <section className="grid gap-2 break-inside-avoid">
+        <section className="grid gap-2">
           <h2 className="font-bold">{mitGeschlecht ? "5" : "4"}. Vertretung des Wahlvorschlags (§ 12 Abs. 5 und 6 LPVGWO)</h2>
           <p className="text-[9pt]">
             Die Vertreterin oder der Vertreter verhandelt mit dem Wahlvorstand und nimmt dessen Erklärungen und Entscheidungen
@@ -184,13 +184,13 @@ export default async function VordruckPage({ params }: { params: Promise<{ id: s
           </div>
         </section>
 
-        <section className="grid gap-2 break-inside-avoid">
+        <section className="grid gap-2">
           <h2 className="font-bold">{mitGeschlecht ? "6" : "5"}. Nur bei Wahlvorschlägen einer Gewerkschaft (§ 12 Abs. 4 LPVGWO)</h2>
           <p className="text-[9pt]">
             Unterschrift eines zeichnungsberechtigten Mitglieds des Vorstands der Gewerkschaft auf Orts-, Bezirks-, Landes- oder
             Bundesebene. Stützunterschriften (Anlage 1) sind dann nicht nötig.
           </p>
-          <div className="grid grid-cols-3 gap-6">
+          <div className="unterschrift grid grid-cols-3 gap-6">
             <Linie label="Ort, Datum" />
             <Linie label="Name in Blockschrift, Funktion im Vorstand" />
             <Linie label="Unterschrift" />

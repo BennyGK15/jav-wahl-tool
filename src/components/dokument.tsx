@@ -1,3 +1,5 @@
+import type { ReactNode } from "react";
+
 /**
  * Gestaltungselemente für Druck- und Exportdokumente: Briefkopf und Fußzeile mit Seitenzahlen.
  * Zurückhaltend gehalten: Anthrazit als Strukturfarbe, Landesgelb nur als kleiner Akzent.
@@ -42,4 +44,28 @@ export function DokFuss({ text, seiten = true }: { text: string; seiten?: boolea
     ${seiten ? `@bottom-right { content: "Seite " counter(page) " von " counter(pages); font: 7.5pt/1.2 Arial, Helvetica, sans-serif; color: #5d5754; vertical-align: top; padding-top: 4mm; }` : ""}
   } }`;
   return <style>{css}</style>;
+}
+
+/**
+ * Briefkopf auf jeder gedruckten Seite: Der Kopf steht im <thead> einer Hülltabelle, den der Browser
+ * beim Seitenumbruch wiederholt (Chrome/Edge, Firefox). Am Bildschirm erscheint er einmal oben.
+ * Nicht für Serienbriefe – dort beginnt jedes Schreiben mit eigenem <Briefkopf>.
+ */
+export function BriefkopfSeiten({ kopf, children }: Readonly<{ kopf: { dienststelle: string; art: string; datum?: string | null }; children: ReactNode }>) {
+  return (
+    <table role="presentation" className="dok-seiten">
+      <thead>
+        <tr>
+          <td>
+            <Briefkopf {...kopf} />
+          </td>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td className="dok-inhalt">{children}</td>
+        </tr>
+      </tbody>
+    </table>
+  );
 }

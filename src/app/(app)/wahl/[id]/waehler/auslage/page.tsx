@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { anteileText } from "@/lib/geschlechter";
 import { loadGeschlechter } from "@/server/geschlechter";
-import { Briefkopf, DokFuss } from "@/components/dokument";
+import { BriefkopfSeiten, DokFuss } from "@/components/dokument";
 import { notFound } from "next/navigation";
 import { PrintButton } from "@/components/print-button";
 import { writeAudit } from "@/lib/audit";
@@ -48,7 +48,7 @@ export default async function AuslagePage({ params }: { params: Promise<{ id: st
 
       <DokFuss text={`JAV-Wahl ${election.dienststelle} · Wählerverzeichnis (Auslage)`} />
       <article className="dok mx-auto w-full max-w-3xl print:max-w-none">
-        <Briefkopf dienststelle={election.dienststelle} art="Wählerverzeichnis" datum={`Stand: ${formatIsoDate(todayBerlin())}`} />
+        <BriefkopfSeiten kopf={{ dienststelle: election.dienststelle, art: "Wählerverzeichnis", datum: `Stand: ${formatIsoDate(todayBerlin())}` }}>
         <header className="mb-6">
           <h1 className="text-xl font-semibold">Wählerverzeichnis</h1>
           <p>für die Wahl der Jugend- und Auszubildendenvertretung</p>
@@ -90,7 +90,7 @@ export default async function AuslagePage({ params }: { params: Promise<{ id: st
           </table>
         )}
 
-        <footer className="mt-6 text-sm">
+        <footer className="unterschrift mt-6 text-sm">
           <p>Zahl der Wahlberechtigten: {voters.length}</p>
           <p>Stand: {formatIsoDate(todayBerlin())}</p>
           <p className="mt-4">
@@ -99,6 +99,7 @@ export default async function AuslagePage({ params }: { params: Promise<{ id: st
           </p>
           <p className="mt-10">Der Wahlvorstand</p>
         </footer>
+        </BriefkopfSeiten>
       </article>
     </div>
   );

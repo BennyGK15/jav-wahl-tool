@@ -75,7 +75,7 @@ export default async function WahlvorstandBekanntmachungPage({ params }: { param
             Erreichbar ist der Wahlvorstand: <strong>{a.einreichungsstelle}</strong>.
           </p>
         )}
-        <div className="mt-10 grid w-64 gap-1">
+        <div className="unterschrift mt-10 grid w-64 gap-1">
           <span className="border-t border-black pt-1">{vorsitz ? `${vorsitz.name}, Vorsitz des Wahlvorstands` : "Vorsitz des Wahlvorstands"}</span>
         </div>
       </article>

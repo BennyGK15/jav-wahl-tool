@@ -156,18 +156,18 @@
     text-wrap: pretty;
   }
   /* Titelblock: Serifenschrift, darunter ein kurzer Strich mit gelbem Akzent */
-  :is(.dok, .dok article) > header {
+  :is(.dok, .dok article, .dok-inhalt) > header {
     margin-bottom: 0.5rem;
   }
-  :is(.dok, .dok article) > header h1 {
+  :is(.dok, .dok article, .dok-inhalt) > header h1 {
     font-size: 1.6rem;
     line-height: 1.15;
     letter-spacing: -0.01em;
   }
-  :is(.dok, .dok article) > header > p:first-of-type {
+  :is(.dok, .dok article, .dok-inhalt) > header > p:first-of-type {
     margin-top: 0.25rem;
   }
-  :is(.dok, .dok article) > header::after {
+  :is(.dok, .dok article, .dok-inhalt) > header::after {
     content: "";
     display: block;
     width: 4.5rem;
@@ -175,7 +175,7 @@
     margin: 0.9rem auto 0;
     background: linear-gradient(90deg, var(--brand-ink) 0 66%, var(--brand-yellow) 66% 100%);
   }
-  :is(.dok, .dok article) > header:not(.text-center)::after {
+  :is(.dok, .dok article, .dok-inhalt) > header:not(.text-center)::after {
     margin-left: 0;
   }
   /* Abschnittsüberschriften: serifenlos, fett, mit feiner Linie */
@@ -214,6 +214,18 @@
   .dok strong {
     font-weight: 650;
   }
+  /* Hülltabelle für den Briefkopf auf jeder Seite (siehe BriefkopfSeiten): keine Tabellenoptik */
+  .dok table.dok-seiten {
+    width: 100%;
+    font-variant-numeric: normal;
+  }
+  .dok .dok-seiten > * > tr > td {
+    padding: 0;
+  }
+  .dok .dok-seiten > tbody > tr,
+  .dok .dok-seiten > tbody > tr:last-child {
+    border: 0;
+  }
   @media print {
     .dok {
       border: 0;
@@ -247,7 +259,8 @@
       widows: 3;
     }
 
-    /* Kurze Einheiten nie trennen: Absätze, Listenpunkte, Tabellenzeilen, Kästen, Unterschriftszeilen, Briefkopf */
+    /* Umbruch nur zwischen Absätzen: Abschnitte dürfen über Seiten laufen, die kleinsten Einheiten aber nie –
+       Absätze, Listenpunkte, Tabellenzeilen, Kästen, mehrspaltige Zeilen (Unterschriften), Briefkopf. */
     .dok p,
     .dok li,
     .dok tr,
@@ -259,9 +272,12 @@
       break-inside: avoid;
     }
 
-    /* Textabschnitte ohne Tabelle oder Liste zusammenhalten; lange Abschnitte dürfen weiterhin umbrechen */
-    .dok section:not(:has(table, ol, ul)) {
+    /* Unterschriften: Block mit zugehörigem Text (Ort/Datum, „Der Wahlvorstand“, Erklärung) nie trennen und nie
+       vom vorangehenden Inhalt lösen – lieber wandert der letzte Absatz mit auf die neue Seite, als dass dort nur
+       die Unterschriftszeile steht. */
+    .dok .unterschrift {
       break-inside: avoid;
+      break-before: avoid;
     }
 
     /* Überschriften nie allein am Seitenende: mit dem folgenden Inhalt zusammenhalten.
@@ -269,7 +285,7 @@
     .dok h1,
     .dok h2,
     .dok h3,
-    :is(.dok, .dok article) > header {
+    :is(.dok, .dok article, .dok-inhalt) > header {
       break-after: avoid;
       break-inside: avoid;
     }
@@ -287,6 +303,12 @@
     }
     .dok tfoot {
       display: table-footer-group;
+    }
+
+    /* Die Hülltabelle selbst darf über beliebig viele Seiten laufen */
+    .dok .dok-seiten > tbody > tr,
+    .dok .dok-seiten > tbody > tr > td {
+      break-inside: auto;
     }
 
     /* Bewusste Seitenwechsel (Anlagen, Serienbriefe) beginnen ohne Leerraum oben */

@@ -105,7 +105,7 @@ export default async function EinspruchBescheidPage({
         <p className="font-semibold">Gründe:</p>
         <p className="whitespace-pre-line">{grund || "[Begründung eintragen]"}</p>
 
-        <div className="mt-10 grid w-64 gap-1">
+        <div className="unterschrift mt-10 grid w-64 gap-1">
           <span className="border-t border-black pt-1">Vorsitz des Wahlvorstands</span>
         </div>
       </article>

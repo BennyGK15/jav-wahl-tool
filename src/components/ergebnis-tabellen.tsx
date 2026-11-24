@@ -15,7 +15,7 @@ export function ErgebnisTabellen({ d, mitHoechstzahlen = false }: { d: ErgebnisD
     <div className="grid gap-6 text-sm">
       {d.verhaeltnis && (
         <>
-          <section className="break-inside-avoid">
+          <section>
             <h3 className="mb-2 font-semibold">Stimmen und Sitze je Wahlvorschlag (Verhältniswahl, d&apos;Hondt, § 38 LPVGWO)</h3>
             <table className="w-full border-collapse">
               <thead>
@@ -70,7 +70,7 @@ export function ErgebnisTabellen({ d, mitHoechstzahlen = false }: { d: ErgebnisD
             </p>
           </section>
           {mitHoechstzahlen && (
-            <section className="break-inside-avoid">
+            <section>
               <h3 className="mb-2 font-semibold">Höchstzahlen</h3>
               <table className="w-full border-collapse">
                 <thead>
@@ -98,7 +98,7 @@ export function ErgebnisTabellen({ d, mitHoechstzahlen = false }: { d: ErgebnisD
       )}
 
       {d.mehrheit && (
-        <section className="break-inside-avoid">
+        <section>
           <h3 className="mb-2 font-semibold">Stimmen je Bewerberin/Bewerber (Mehrheitswahl)</h3>
           <table className="w-full border-collapse">
             <thead>
@@ -125,7 +125,7 @@ export function ErgebnisTabellen({ d, mitHoechstzahlen = false }: { d: ErgebnisD
         </section>
       )}
 
-      <section className="break-inside-avoid">
+      <section>
         <h3 className="mb-2 font-semibold">Gewählte Mitglieder der JAV</h3>
         {gewaehlt.length === 0 ? (
           <p>–</p>
@@ -144,7 +144,7 @@ export function ErgebnisTabellen({ d, mitHoechstzahlen = false }: { d: ErgebnisD
         )}
       </section>
 
-      <section className="break-inside-avoid">
+      <section>
         <h3 className="mb-2 font-semibold">Ersatzmitglieder (in Reihenfolge)</h3>
         {ersatz.length === 0 ? (
           <p>–</p>

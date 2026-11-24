@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { Briefkopf, DokFuss } from "./dokument";
+import { BriefkopfSeiten, DokFuss } from "./dokument";
 import { PrintButton } from "./print-button";
 
 /** Rahmen für Druckseiten: Brotkrumen + Druckknopf (nicht gedruckt) und Entwurfswarnung. */
@@ -17,13 +17,14 @@ export function DruckRahmen({
   titel: string;
   entwurf: boolean;
   hinweis?: ReactNode;
-  /** Briefkopf einmal oben (bei Serienbriefen stattdessen je Schreiben <Briefkopf> verwenden) */
+  /** Briefkopf oben auf jeder gedruckten Seite (bei Serienbriefen stattdessen je Schreiben <Briefkopf> verwenden) */
   kopf?: { dienststelle: string; art: string; datum?: string | null };
   /** Fußzeile im Ausdruck; seiten=false bei Serienbriefen */
   fuss?: { text: string; seiten?: boolean };
   children: ReactNode;
 }) {
   const fussText = fuss?.text ?? (kopf ? `JAV-Wahl ${kopf.dienststelle} · ${kopf.art}` : null);
+  const entwurfMarke = entwurf && <p className="mb-4 text-center text-lg font-bold tracking-widest text-destructive">ENTWURF</p>;
   return (
     <div className="grid gap-6">
       <div className="flex flex-wrap items-center justify-between gap-4 print:hidden">
@@ -47,9 +48,17 @@ export function DruckRahmen({
       )}
       {fussText && <DokFuss text={entwurf ? `ENTWURF · ${fussText}` : fussText} seiten={fuss?.seiten ?? true} />}
       <div className="dok mx-auto w-full max-w-3xl print:max-w-none">
-        {kopf && <Briefkopf {...kopf} />}
-        {entwurf && <p className="mb-4 text-center text-lg font-bold tracking-widest text-destructive">ENTWURF</p>}
-        {children}
+        {kopf ? (
+          <BriefkopfSeiten kopf={kopf}>
+            {entwurfMarke}
+            {children}
+          </BriefkopfSeiten>
+        ) : (
+          <>
+            {entwurfMarke}
+            {children}
+          </>
+        )}
       </div>
     </div>
   );

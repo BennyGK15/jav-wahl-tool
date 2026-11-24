@@ -71,9 +71,9 @@ export default async function BenachrichtigungPage({ params }: { params: Promise
                 Abschnitt unterschrieben beim Wahlvorstand ab.
               </p>
               <p>Wir gratulieren Ihnen herzlich.</p>
-              <p className="mt-6">Der Wahlvorstand</p>
+              <p className="unterschrift mt-6">Der Wahlvorstand</p>
 
-              <div className="mt-8 border-t border-dashed pt-4">
+              <div className="unterschrift mt-8 border-t border-dashed pt-4">
                 <p className="font-semibold">Erklärung</p>
                 <p className="mt-2">
                   Ich, {b.vorname} {b.nachname}, wurde am {wahltag} in die Jugend- und Auszubildendenvertretung gewählt.

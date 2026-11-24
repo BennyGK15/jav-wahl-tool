@@ -110,7 +110,7 @@ export default async function EinladungPage({ params }: { params: Promise<{ id: 
           BW). Wählbar sind Beschäftigte unter 26 Jahren sowie Beschäftigte in beruflicher Ausbildung. Eine schriftliche
           Stimmabgabe (Briefwahl) ist bei der Wahlversammlung nicht vorgesehen.
         </p>
-        <footer className="mt-8 grid gap-10">
+        <footer className="unterschrift mt-8 grid gap-10">
           <p>
             <Wert v={a.ausstellungsort} l="Ort" />, den {formatIsoDate(todayBerlin())}
           </p>

@@ -261,7 +261,7 @@ export default async function SitzungPage({
           </div>
         </section>
 
-        <section className="mt-6">
+        <section className="unterschrift mt-6">
           <p className="mb-8">Unterschriften der Mitglieder des Wahlvorstands (§ 19 Satz 2 LPVGWO):</p>
           <div className="grid grid-cols-2 gap-x-10 gap-y-10">
             {vorstand.map((m) => (

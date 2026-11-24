@@ -64,7 +64,7 @@ export default async function ErgebnisBekanntmachungPage({ params }: { params: P
         <ErgebnisTabellen d={d} />
 
         <p>Die Gewählten werden schriftlich benachrichtigt.</p>
-        <footer className="mt-6 grid gap-10">
+        <footer className="unterschrift mt-6 grid gap-10">
           <p>
             {ort ?? "________________"}, den {formatIsoDate(todayBerlin())}
           </p>

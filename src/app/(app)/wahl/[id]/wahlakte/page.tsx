@@ -120,7 +120,7 @@ export default async function WahlaktePage({ params }: { params: Promise<{ id: s
             </tr>
           </thead>
           {abschnitte.map((abschnitt) => (
-            <tbody key={abschnitt.key} className="break-inside-avoid">
+            <tbody key={abschnitt.key}>
               <tr>
                 <th colSpan={5} className="pt-4 pb-1 text-left text-xs font-bold tracking-wide uppercase">
                   {abschnitt.titel}
@@ -156,7 +156,7 @@ export default async function WahlaktePage({ params }: { params: Promise<{ id: s
               })}
             </tbody>
           ))}
-          <tbody className="break-inside-avoid">
+          <tbody>
             <tr>
               <th colSpan={5} className="pt-4 pb-1 text-left text-xs font-bold tracking-wide uppercase">
                 Weitere Unterlagen
@@ -176,7 +176,7 @@ export default async function WahlaktePage({ params }: { params: Promise<{ id: s
           </tbody>
         </table>
 
-        <section className="grid gap-3 break-inside-avoid">
+        <section className="unterschrift grid gap-3">
           <h2 className="font-bold">Übergabevermerk</h2>
           <p>
             Die oben abgehakten Wahlunterlagen wurden vom Wahlvorstand an den Personalrat zur Aufbewahrung übergeben. Die elektronisch

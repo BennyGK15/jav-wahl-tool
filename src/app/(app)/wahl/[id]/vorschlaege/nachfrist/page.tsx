@@ -73,7 +73,7 @@ export default async function NachfristPage({ params }: { params: Promise<{ id: 
           Gehen auch innerhalb der Nachfrist keine gültigen Wahlvorschläge ein, kann die Wahl nicht durchgeführt werden; der
           Wahlvorstand gibt dies bekannt.
         </p>
-        <footer className="mt-8 grid gap-10">
+        <footer className="unterschrift mt-8 grid gap-10">
           <p>
             {a.ausstellungsort ?? "________________"}, den {formatIsoDate(bekannt)}
           </p>

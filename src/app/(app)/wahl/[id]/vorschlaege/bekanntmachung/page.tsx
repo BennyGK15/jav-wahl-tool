@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Briefkopf, DokFuss } from "@/components/dokument";
+import { BriefkopfSeiten, DokFuss } from "@/components/dokument";
 import { notFound } from "next/navigation";
 import { PrintButton } from "@/components/print-button";
 import { writeAudit } from "@/lib/audit";
@@ -53,7 +53,7 @@ export default async function BekanntmachungPage({ params }: { params: Promise<{
 
       <DokFuss text={`JAV-Wahl ${election.dienststelle} · Bekanntmachung der Wahlvorschläge`} />
       <article className="dok mx-auto w-full max-w-3xl print:max-w-none">
-        <Briefkopf dienststelle={election.dienststelle} art="Bekanntmachung" datum={`Stand: ${formatIsoDate(todayBerlin())}`} />
+        <BriefkopfSeiten kopf={{ dienststelle: election.dienststelle, art: "Bekanntmachung", datum: `Stand: ${formatIsoDate(todayBerlin())}` }}>
         <header className="mb-6">
           <h1 className="text-xl font-semibold">Bekanntmachung der Wahlvorschläge</h1>
           <p>zur Wahl der Jugend- und Auszubildendenvertretung</p>
@@ -70,7 +70,7 @@ export default async function BekanntmachungPage({ params }: { params: Promise<{
           <div className="grid gap-6">
             <p className="text-sm">Der Wahlvorstand hat folgende Wahlvorschläge als gültig zugelassen:</p>
             {gueltig.map((n, i) => (
-              <section key={n.id} className="break-inside-avoid">
+              <section key={n.id}>
                 <h2 className="font-semibold">
                   Wahlvorschlag Nr. {n.ordnungsnummer ?? i + 1}
                   {n.kennwort ? ` – Kennwort „${n.kennwort}“` : ""}
@@ -135,11 +135,12 @@ export default async function BekanntmachungPage({ params }: { params: Promise<{
           </section>
         )}
 
-        <footer className="mt-8 text-sm">
+        <footer className="unterschrift mt-8 text-sm">
           <p>Die Stimmabgabe ist geheim. Die Namen der Unterzeichnerinnen und Unterzeichner werden nicht veröffentlicht.</p>
           <p className="mt-2">Stand: {formatIsoDate(todayBerlin())}</p>
           <p className="mt-10">Der Wahlvorstand</p>
         </footer>
+        </BriefkopfSeiten>
       </article>
     </div>
   );

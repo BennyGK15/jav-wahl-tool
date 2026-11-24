@@ -11,7 +11,7 @@ function V({ value, label }: { value: string | number | null; label: string }) {
 
 function Abschnitt({ nr, titel, children }: { nr: number; titel: string; children: ReactNode }) {
   return (
-    <section className="break-inside-avoid">
+    <section>
       <h2 className="font-semibold">
         {nr}. {titel}
       </h2>
@@ -145,7 +145,7 @@ export function WahlausschreibenDokument({ v }: { v: WahlausschreibenView }) {
         </p>
       </Abschnitt>
 
-      <footer className="mt-4 grid gap-10">
+      <footer className="unterschrift mt-4 grid gap-10">
         <p>
           <V value={v.ausstellungsort} label="Ort" />, den <V value={v.erlassAm} label="Datum des Erlasses" />
         </p>

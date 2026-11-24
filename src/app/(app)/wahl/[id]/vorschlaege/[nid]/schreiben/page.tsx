@@ -137,11 +137,11 @@ export default async function VorschlagSchreibenPage({
           </>
         )}
 
-        <div className="mt-10 grid w-64 gap-1">
+        <div className="unterschrift mt-10 grid w-64 gap-1">
           <span className="border-t border-black pt-1">Vorsitz des Wahlvorstands</span>
         </div>
 
-        <div className="mt-8 grid gap-3 border-t border-dashed border-black pt-4">
+        <div className="unterschrift mt-8 grid gap-3 border-t border-dashed border-black pt-4">
           <p className="font-semibold">Empfangsbestätigung</p>
           <p>
             {artKey === "maengel" ? "Mängelmitteilung und Wahlvorschlag" : "Entscheidung über die Zurückweisung"} erhalten am ______________ um ______ Uhr.
