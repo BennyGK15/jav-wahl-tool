@@ -58,30 +58,33 @@ TOM, Datenschutz-Folgenabschätzung und Datenschutzhinweis.
 <table>
   <tr>
     <td width="50%" valign="top">
+      <a href="docs/screenshots/start.png"><img src="docs/screenshots/start.png" alt="Öffentliche Startseite mit Anmeldung"></a>
+      <p><b>Startseite</b><br>Öffentliche Einstiegsseite mit Überblick über den Ablauf in fünf Phasen; alle weiteren Bereiche erfordern eine Anmeldung.</p>
+    </td>
+    <td width="50%" valign="top">
       <a href="docs/screenshots/einrichtung.png"><img src="docs/screenshots/einrichtung.png" alt="Einrichtungsassistent mit fünf erledigten Schritten"></a>
       <p><b>Einrichtungsassistent</b><br>Grunddaten, Wahlvorstand, Orte und Zeiten, Stützunterschriften und Datenschutz werden einmal vollständig erfasst, bevor der Wahlkalender freigeschaltet wird.</p>
     </td>
+  </tr>
+  <tr>
     <td width="50%" valign="top">
       <a href="docs/screenshots/wahlkalender.png"><img src="docs/screenshots/wahlkalender.png" alt="Wahlkalender mit Fristen, Rechtsgrundlagen und Status"></a>
       <p><b>Wahlkalender</b><br>Alle Fristen werden vom Wahltag aus berechnet – mit Uhrzeit des Fristendes, Rechtsgrundlage und Erledigt-Status.</p>
     </td>
-  </tr>
-  <tr>
     <td width="50%" valign="top">
       <a href="docs/screenshots/waehlerverzeichnis.png"><img src="docs/screenshots/waehlerverzeichnis.png" alt="Wählerverzeichnis mit Status je Person"></a>
       <p><b>Wählerverzeichnis</b><br>Wahlberechtigung und Wählbarkeit werden zum Wahltag automatisch geprüft; Import per CSV, Auslagefassung zum Drucken.</p>
     </td>
+  </tr>
+  <tr>
     <td width="50%" valign="top">
       <a href="docs/screenshots/wahlausschreiben.png"><img src="docs/screenshots/wahlausschreiben.png" alt="Druckansicht des Wahlausschreibens"></a>
       <p><b>Wahlausschreiben</b><br>Das Dokument wird aus den erfassten Angaben und dem Wahlkalender erzeugt und als versionierte Freigabe festgehalten.</p>
     </td>
-  </tr>
-  <tr>
     <td width="50%" valign="top">
       <a href="docs/screenshots/wahltag.png"><img src="docs/screenshots/wahltag.png" alt="Stimmabgabe am Wahltag vermerken"></a>
       <p><b>Wahltag</b><br>Stimmabgabe und Briefwahl vermerken, mit Suche, Filtern und einer Tablet-Ansicht für den Wahltisch.</p>
     </td>
-    <td width="50%" valign="top"></td>
   </tr>
 </table>
 
