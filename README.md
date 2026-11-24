@@ -1,107 +1,180 @@
 # JAV-Wahl-Tool
 
-Plantool für den Wahlvorstand einer Wahl zur Jugend- und Auszubildendenvertretung (JAV)
-im öffentlichen Dienst Baden-Württemberg (LPVG BW, LPVGWO).
+Webanwendung zur Unterstützung des Wahlvorstands bei der Wahl einer Jugend- und
+Auszubildendenvertretung (JAV) im öffentlichen Dienst in Baden-Württemberg nach dem
+Landespersonalvertretungsgesetz (LPVG) und seiner Wahlordnung (LPVGWO).
 
-**Stand:** Code-Grundgerüst (Version 0.1). Fertig sind Login, Rollen, Datenbankschema,
-Feldverschlüsselung, Sicherheits-Header und der Fristenrechner. Die Fachmodule
-Wählerverzeichnis, Wahlvorschläge und Ergebnis folgen.
+> [!WARNING]
+> **Experimentelles Privatprojekt.** Dieses Tool wird von keiner offiziellen Stelle
+> herausgegeben oder unterstützt – weder vom Land Baden-Württemberg noch von einer
+> Behörde, Dienststelle, Gewerkschaft oder Personalvertretung. Es ist nicht für den
+> produktiven Einsatz freigegeben.
 
-> **Rechtlicher Hinweis:** Alle Fristwerte stammen aus einer Vorrecherche und sind als
-> „ungeprüft" markiert. Vor dem Einsatz gegen die amtliche Fassung der LPVGWO
-> (landesrecht-bw.de) prüfen. Die App ersetzt keine Rechtsberatung.
+> [!IMPORTANT]
+> **Keine Rechtsberatung.** Fristen, Musterschreiben und Bekanntmachungen beruhen auf
+> einer Vorrecherche und sind in der Anwendung als „ungeprüft“ gekennzeichnet. Vor jeder
+> Verwendung sind sie gegen die amtliche Fassung von LPVG und LPVGWO
+> ([landesrecht-bw.de](https://www.landesrecht-bw.de)) zu prüfen. Die Verantwortung für
+> eine ordnungsgemäße Wahl liegt beim Wahlvorstand.
 
-## Stack
+## Inhalt
 
-Next.js 16 (App Router) · TypeScript strict · Tailwind CSS 4 · shadcn/ui · better-auth 1.7
-(Benutzername + Passwort) · Prisma ORM 7 (MariaDB-Treiberadapter) · MariaDB 11 / MySQL 8 · Zod · Vitest
+- [Funktionsumfang](#funktionsumfang)
+- [Technik](#technik)
+- [Installation](#installation)
+- [Rollen und Berechtigungen](#rollen-und-berechtigungen)
+- [Sicherheit und Datenschutz](#sicherheit-und-datenschutz)
+- [Projektstruktur](#projektstruktur)
+- [Entwicklung](#entwicklung)
+- [Offene Punkte](#offene-punkte)
+- [Lizenz](#lizenz)
 
-## Erste Schritte
+## Funktionsumfang
 
-Voraussetzung: Node.js ≥ 20.9 (empfohlen 22), pnpm (z. B. `corepack enable pnpm`) und eine erreichbare
-MariaDB-/MySQL-Datenbank mit eigenem Benutzer (nicht root).
+Die Anwendung begleitet den Wahlvorstand durch alle Phasen einer JAV-Wahl:
+
+| Phase | Funktionen |
+| --- | --- |
+| Vorbereitung | Einrichtungsassistent, Wahlvorstand und Ersatzmitglieder, Einladung zur konstituierenden Sitzung, Sitzungsniederschrift |
+| Fristen | Wahlkalender mit Arbeitstagen nach § 55 LPVGWO und gesetzlichen Feiertagen in Baden-Württemberg; Fristregeln einzeln prüf- und freigebbar |
+| Wählerverzeichnis | CSV-Import mit Spaltenzuordnung, Prüfung von Wahlberechtigung und Wählbarkeit, Auslageversion, Einsprüche mit Entscheidungsschreiben |
+| Wahlausschreiben | Erfassung aller Angaben, Druckfassung, Geschlechterverteilung und Sitzzahl |
+| Wahlvorschläge | Vordruck, Erfassung und Prüfung, Mängel- und Zurückweisungsschreiben, Nachfrist, Bekanntmachung |
+| Wahltag | Stimmzettel, Briefwahl, Stimmabgabevermerke (auch durch Wahlhelfer), Urnenansicht |
+| Ergebnis | Auszählung nach Verhältnis- oder Mehrheitswahl, Losentscheid, Wahlniederschrift, Bekanntmachung, Benachrichtigung der Gewählten |
+| Nachbereitung | Checklisten je Phase, Aufbewahrungs- und Löschfristen, Audit-Log |
+
+Alle Schreiben und Aushänge werden als druckoptimierte Seiten erzeugt. Für die
+Datenschutz-Dokumentation erstellt die Anwendung Entwürfe für Verarbeitungsverzeichnis,
+TOM, Datenschutz-Folgenabschätzung und Datenschutzhinweis.
+
+## Technik
+
+| Bereich | Einsatz |
+| --- | --- |
+| Framework | Next.js 16 (App Router), React 19, TypeScript (strict) |
+| Oberfläche | Tailwind CSS 4, shadcn/ui |
+| Authentifizierung | better-auth 1.7 (Benutzername und Passwort, optional TOTP) |
+| Datenbank | MariaDB 11 oder MySQL 8 über Prisma ORM 7 |
+| Validierung und Tests | Zod, Vitest |
+| Betrieb | Node.js ≥ 20.9 (empfohlen 22), Docker-Image (standalone) |
+
+## Installation
+
+### Voraussetzungen
+
+- Node.js ≥ 20.9 und pnpm (`corepack enable pnpm`)
+- Eine MariaDB- oder MySQL-Datenbank mit eigenem Benutzer und minimalen Rechten (nicht `root`)
+
+### Einrichtung
 
 ```bash
-pnpm install                     # erzeugt pnpm-lock.yaml und pinnt die Versionen
-cp .env.example .env.local       # DATABASE_URL eurer DB eintragen, Secrets so erzeugen:
-openssl rand -base64 32          #  → BETTER_AUTH_SECRET
-openssl rand -base64 32          #  → DATA_ENCRYPTION_KEY
+pnpm install
+cp .env.example .env.local        # Datenbankzugang und Secrets eintragen
+```
 
-pnpm typecheck && pnpm test      # zuerst prüfen (siehe unten)
+`BETTER_AUTH_SECRET` und `DATA_ENCRYPTION_KEY` jeweils mit `openssl rand -base64 32`
+erzeugen. Der Schlüssel für die Feldverschlüsselung muss getrennt von den Datensicherungen
+aufbewahrt werden – ohne ihn sind verschlüsselte Felder nicht wiederherstellbar.
 
-pnpm db:migrate --name init      # Client generieren, Migration erzeugen und anwenden
-                                 # (Prisma 7 generiert nach `migrate dev` nicht mehr automatisch)
-
+```bash
+pnpm db:migrate                   # Prisma-Client generieren und Migrationen anwenden
 pnpm user:create admin admin "IT-Administration"
 pnpm user:create m.muster vorsitz "Max Muster"
-
-pnpm dev                         # http://localhost:3000
+pnpm dev                          # http://localhost:3000
 ```
 
 Beim ersten Login muss jedes Konto sein Startpasswort ändern.
 
-### Wichtig beim ersten `pnpm install`
+### Produktivbetrieb mit Docker
 
-Das Gerüst wurde ohne Zugriff auf die npm-Registry geschrieben. Die reine Logik
-(Fristen, Feldverschlüsselung) ist mit Node getestet, der Rest noch nicht kompiliert.
-Bitte nach `pnpm install` einmal ausführen:
-
-1. `pnpm typecheck`: Typfehler zeigen eventuelle API-Abweichungen der installierten Versionen.
-2. `pnpm test`: Fristen, Wahlberechtigung, Verschlüsselung, Rollen.
-3. `pnpm auth:schema-check`: erzeugt das better-auth-Schema zum Vergleich mit `prisma/schema.prisma`.
-4. `pnpm build`
-
-## Struktur
-
-```
-src/
-  app/
-    login/              Anmeldung (Benutzername + Passwort)
-    passwort/           Passwort ändern (beim ersten Login erzwungen)
-    (app)/              geschützter Bereich: Übersicht, Fristenrechner
-    api/auth/[...all]/  better-auth-Endpunkte
-  components/ui/        shadcn/ui-Komponenten (weitere: `pnpm dlx shadcn@latest add …`)
-prisma/schema.prisma    (liegt im Projektwurzelordner) better-auth-Tabellen + Fachdaten
-  generated/prisma/     generierter Prisma-Client (nicht einchecken, entsteht bei `pnpm install`)
-  lib/
-    fristen/            Fristenrechner (Arbeitstage, Feiertage BW, BGB) + Tests
-    jav.ts              Wahlberechtigung, Wählbarkeit, JAV-Größe + Tests
-    auth.ts             better-auth-Konfiguration
-    session.ts          requireSession / requirePermission
-    rbac.ts             Rollen und Berechtigungen
-    crypto.ts           AES-256-GCM-Feldverschlüsselung
-    audit.ts            Audit-Log (nur Feldnamen, keine Inhalte)
-  proxy.ts              CSP mit Nonce, Login-Weiterleitung
-scripts/create-user.ts  Konten anlegen
+```bash
+docker build -t jav-wahl-tool .
+pnpm db:deploy                    # Migrationen gegen die Zieldatenbank anwenden
+docker run --env-file .env.production -p 3000:3000 jav-wahl-tool
 ```
 
-## Rollen
+Im Produktivbetrieb sind HTTPS und eine per TLS erreichbare Datenbank (`DB_SSL=true`)
+erforderlich.
 
-| Rolle | Darf |
+## Rollen und Berechtigungen
+
+| Rolle | Berechtigungen |
 | --- | --- |
-| admin | Konten verwalten, Audit-Log lesen – **keine** Wahldaten |
-| vorsitz | alles rund um die Wahl, Freigaben, Ergebnis |
-| mitglied | Wählerverzeichnis und Wahlvorschläge bearbeiten |
-| wahlhelfer | nur Stimmabgabe vermerken |
+| `admin` | Benutzerkonten verwalten, Audit-Log einsehen, Datenschutz-Angaben pflegen – **kein** Zugriff auf Wahldaten |
+| `vorsitz` | Vollzugriff auf die Wahl, Freigabe von Dokumenten und Fristregeln, Feststellung des Ergebnisses |
+| `mitglied` | Wählerverzeichnis, Wahlvorschläge und Wahlkalender bearbeiten |
+| `wahlhelfer` | Stimmabgabe vermerken, Fristen einsehen |
 
-## Datenschutz und Sicherheit (umgesetzt)
+Berechtigungen werden bei jeder Seite und jeder Server Action serverseitig geprüft
+([src/lib/rbac.ts](src/lib/rbac.ts)).
 
-- Keine Selbstregistrierung; Konten nur per Skript bzw. durch den Admin
-- Passwörter mind. 12 Zeichen, gehasht durch better-auth (scrypt)
-- Rate-Limit in der DB: 5 Anmeldeversuche je 5 Minuten, generische Fehlermeldung
-- Sitzung in der DB, Cookie `HttpOnly`, `SameSite=Strict`, `Secure` in Produktion, max. 8 Stunden
-- Jede Seite und jede Server Action prüft Sitzung und Rolle serverseitig
-- CSP mit Nonce, HSTS, `X-Frame-Options: DENY`, `Referrer-Policy: no-referrer`
-- Geburtsdatum, Ausbildungsende und Einspruchsbegründung AES-256-GCM-verschlüsselt
-- Audit-Log ohne Inhalte, IP-Adressen nur als HMAC
-- Keine externen Skripte, Schriften oder Analytics
-- Löschung je Wahl per Kaskade (Feld `retention_until`)
+## Sicherheit und Datenschutz
 
-## Offen
+**Zugang**
 
-- [ ] Fristwerte gegen die amtliche LPVGWO prüfen und als geprüft markieren
-- [ ] Aufbewahrungsdauer mit der/dem Datenschutzbeauftragten festlegen; Verzeichnis der Verarbeitungstätigkeiten
-- [ ] Kontosperre nach Fehlversuchen (aktuell nur Rate-Limit)
-- [ ] Optional 2. Faktor (better-auth `twoFactor`-Plugin) für den Vorsitz
-- [ ] Module Wählerverzeichnis, Wahlvorschläge, Bekanntmachungen (PDF), Ergebnis
-- [ ] Backups verschlüsselt, Wiederherstellung testen
+- Keine Selbstregistrierung; Konten werden ausschließlich durch die Administration angelegt
+- Passwörter mit mindestens 12 Zeichen, gehasht durch better-auth (scrypt)
+- Kontosperre für 15 Minuten nach 5 Fehlversuchen, zusätzlich Rate-Limit
+- Optionale Zwei-Faktor-Anmeldung (TOTP)
+- Sitzungen serverseitig gespeichert, maximal 8 Stunden; Cookies `HttpOnly`, `SameSite=Strict`, in Produktion `Secure`
+
+**Daten**
+
+- Geburtsdatum, Ausbildungsende und Einspruchsbegründungen sind mit AES-256-GCM verschlüsselt
+- Audit-Log ohne Inhalte; IP-Adressen nur als HMAC
+- Löschkonzept nach § 32 LPVGWO mit Löschung je Wahl
+
+**Auslieferung**
+
+- Content-Security-Policy mit Nonce, HSTS, `X-Frame-Options: DENY`, `Referrer-Policy: no-referrer`
+- Keine externen Skripte, Schriften, CDNs oder Analysedienste
+
+## Projektstruktur
+
+```
+prisma/                 Datenbankschema und Migrationen
+scripts/                Konten anlegen, Testdaten, Entwicklungs-Reset
+src/
+  app/                  Seiten und Server Actions (App Router)
+    (app)/              geschützter Bereich
+    login/, passwort/   Anmeldung, Passwortwechsel, 2FA
+    urne/               Urnenansicht am Wahltag
+  components/           gemeinsame Komponenten und Druckvorlagen
+  lib/                  Fachlogik ohne Datenbankzugriff (Fristen, Wahlberechtigung,
+                        Ergebnisberechnung, CSV-Import, Verschlüsselung, Rollen) mit Tests
+  server/               Datenbankzugriffe je Fachbereich
+  proxy.ts              Content-Security-Policy und Anmeldeweiterleitung
+```
+
+## Entwicklung
+
+| Befehl | Zweck |
+| --- | --- |
+| `pnpm dev` | Entwicklungsserver |
+| `pnpm typecheck` | TypeScript-Prüfung |
+| `pnpm lint` | ESLint |
+| `pnpm test` | Unit-Tests (Vitest) |
+| `pnpm build` | Produktions-Build |
+| `pnpm seed:dummy` | Erfundene Testpersonen für die laufende Wahl anlegen (nicht in Produktion) |
+| `pnpm dev:reset --ja` | Alle Wahldaten löschen, Benutzerkonten bleiben erhalten (nicht in Produktion) |
+| `pnpm db:studio` | Prisma Studio |
+
+## Offene Punkte
+
+- [ ] Fristwerte und Muster gegen die amtliche Fassung von LPVG und LPVGWO prüfen
+- [ ] Datenschutz-Unterlagen mit der/dem Datenschutzbeauftragten abstimmen
+- [ ] Verschlüsselte Datensicherung einrichten und Wiederherstellung testen
+- [ ] Externe Sicherheitsprüfung vor einem produktiven Einsatz
+
+## Lizenz
+
+Copyright © 2026 Benjamin Esenwein
+
+Lizenziert unter der EUPL, Version 1.2 ([SPDX: EUPL-1.2](https://spdx.org/licenses/EUPL-1.2.html)).
+Der vollständige Lizenztext in der amtlichen deutschen Fassung steht in [LICENSE](LICENSE)
+(Quelle: Durchführungsbeschluss (EU) 2017/863, ABl. L 128 vom 19.5.2017, S. 59). Alle
+Sprachfassungen der EUPL sind gleichwertig; weitere Fassungen bietet die
+[Europäische Kommission](https://interoperable-europe.ec.europa.eu/collection/eupl/eupl-text-eupl-12) an.
+
+Die Software wird ohne Gewährleistung bereitgestellt; siehe Artikel 7 und 8 der Lizenz.

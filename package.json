@@ -2,7 +2,9 @@
   "name": "jav-wahl-tool",
   "version": "0.1.0",
   "private": true,
-  "description": "Plantool für den Wahlvorstand einer JAV-Wahl im öffentlichen Dienst Baden-Württemberg",
+  "license": "EUPL-1.2",
+  "author": "Benjamin Esenwein",
+  "description": "Experimentelle, inoffizielle Arbeitshilfe für Wahlvorstände bei JAV-Wahlen nach LPVG BW – von keiner offiziellen Stelle herausgegeben, keine Rechtsberatung",
   "engines": {
     "node": ">=20.9"
   },
@@ -32,7 +34,7 @@
     "better-auth": "^1.7.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "lucide-react": "latest",
+    "lucide-react": "^1.78.0",
     "next": "^16.4.6",
     "qrcode": "^1.5.4",
     "react": "^19.2.0",
