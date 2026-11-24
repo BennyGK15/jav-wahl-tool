@@ -37,7 +37,9 @@ describe("Arbeitstage", () => {
     expect(isWorkday("2026-04-03")).toBe(false); // Karfreitag
     expect(isWorkday("2026-12-24")).toBe(false); // Donnerstag, Heiligabend
     expect(isWorkday("2026-12-31")).toBe(false); // Donnerstag, Silvester
-    expect(isWorkday("2026-12-24", { excludeChristmasEveAndNewYearsEve: false })).toBe(true);
+    expect(
+      isWorkday("2026-12-24", { excludeChristmasEveAndNewYearsEve: false }),
+    ).toBe(true);
   });
 
   it("zählt 12 Arbeitstage ab Erlass ohne den Erlasstag (Beispiel der Arbeitsunterlage)", () => {
@@ -86,19 +88,27 @@ describe("Wahlkalender", () => {
     expect(byKey.wahlvorschlaege_ende).toBe("2026-04-09");
     expect(byKey.auslage_ende).toBe("2026-05-18");
     // alle Standardregeln sind abgeglichen – außer der Empfehlung zur konstituierenden Sitzung
-    expect(schedule.filter((e) => !e.verified).map((e) => e.key)).toEqual(["konstituierende_sitzung"]);
+    expect(schedule.filter((e) => !e.verified).map((e) => e.key)).toEqual([
+      "konstituierende_sitzung",
+    ]);
     const sorted = [...schedule].sort((a, b) => a.date.localeCompare(b.date));
     expect(schedule).toEqual(sorted);
   });
 
   it("rechnet ab einem früheren tatsächlichen Wahlausschreiben", () => {
-    const schedule = computeSchedule("2026-05-20", undefined, { wahlausschreibenAm: "2026-03-02" });
+    const schedule = computeSchedule("2026-05-20", undefined, {
+      wahlausschreibenAm: "2026-03-02",
+    });
     const ende = schedule.find((e) => e.key === "wahlvorschlaege_ende");
     expect(ende?.date).toBe("2026-03-18");
   });
 
   it("verweigert ein zu spätes Wahlausschreiben", () => {
-    expect(() => computeSchedule("2026-05-20", undefined, { wahlausschreibenAm: "2026-04-01" })).toThrow(/zu spät/);
+    expect(() =>
+      computeSchedule("2026-05-20", undefined, {
+        wahlausschreibenAm: "2026-04-01",
+      }),
+    ).toThrow(/zu spät/);
   });
 });
 
@@ -107,8 +117,12 @@ describe("Wahlversammlung", () => {
 
   it("lädt spätestens 4 Wochen vor Amtszeitende ein, zurück auf den letzten Arbeitstag", () => {
     // 31.01.2027 (So) − 4 Wochen = 03.01.2027 (So) → Sa, Neujahr, Silvester übersprungen → Mi 30.12.2026
-    const schedule = computeSchedule("2027-01-20", rules, { amtszeitEnde: "2027-01-31" });
-    expect(schedule.find((e) => e.key === "wv_einladung")?.date).toBe("2026-12-30");
+    const schedule = computeSchedule("2027-01-20", rules, {
+      amtszeitEnde: "2027-01-31",
+    });
+    expect(schedule.find((e) => e.key === "wv_einladung")?.date).toBe(
+      "2026-12-30",
+    );
     expect(schedule.some((e) => e.key === "wahlausschreiben")).toBe(false);
   });
 
@@ -120,9 +134,14 @@ describe("Wahlversammlung", () => {
 
 describe("Regelbeschreibung", () => {
   it("formuliert Regeln lesbar", () => {
-    expect(describeRule({ anchor: "wahlausschreiben", direction: "nach", unit: "arbeitstage", amount: 12 })).toBe(
-      "12 Arbeitstage nach Erlass des Wahlausschreibens",
-    );
+    expect(
+      describeRule({
+        anchor: "wahlausschreiben",
+        direction: "nach",
+        unit: "arbeitstage",
+        amount: 12,
+      }),
+    ).toBe("12 Arbeitstage nach Erlass des Wahlausschreibens");
   });
 });
 
@@ -139,28 +158,60 @@ describe("Vorschlag frühester Wahltag", () => {
   it("nimmt den Beginn des Wahlzeitraums, wenn genug Vorlauf bleibt", async () => {
     const { fruehesterWahltag } = await import("./index");
     // Amtszeit endet mit dem Wahlzeitraum der Personalratswahlen 2029; 01.04.2029 ist Ostersonntag, 02.04. Ostermontag
-    const v = fruehesterWahltag({ heute: "2026-11-03", amtszeitEnde: "2029-07-31", verfahren: "regulaer" });
+    const v = fruehesterWahltag({
+      heute: "2026-11-03",
+      amtszeitEnde: "2029-07-31",
+      verfahren: "regulaer",
+    });
     expect(v.datum).toBe("2029-04-03");
     expect(v.warnungen).toEqual([]);
   });
   it("warnt bei einem Amtszeitende außerhalb des Turnus", async () => {
     const { fruehesterWahltag } = await import("./index");
-    expect(fruehesterWahltag({ heute: "2026-11-03", amtszeitEnde: "2027-07-31", verfahren: "regulaer" }).warnungen[0]).toMatch(/außerhalb/);
+    expect(
+      fruehesterWahltag({
+        heute: "2026-11-03",
+        amtszeitEnde: "2027-07-31",
+        verfahren: "regulaer",
+      }).warnungen[0],
+    ).toMatch(/außerhalb/);
   });
   it("berücksichtigt den Vorlauf des Wahlausschreibens und Feiertage", async () => {
     const { fruehesterWahltag } = await import("./index");
-    expect(fruehesterWahltag({ heute: "2026-11-03", amtszeitEnde: "2027-01-31", verfahren: "regulaer" }).datum).toBe("2027-01-04");
+    expect(
+      fruehesterWahltag({
+        heute: "2026-11-03",
+        amtszeitEnde: "2027-01-31",
+        verfahren: "regulaer",
+      }).datum,
+    ).toBe("2027-01-04");
   });
   it("warnt, wenn das Amtszeitende nicht mehr erreichbar ist", async () => {
     const { fruehesterWahltag } = await import("./index");
-    const v = fruehesterWahltag({ heute: "2026-12-20", amtszeitEnde: "2027-01-31", verfahren: "regulaer" });
+    const v = fruehesterWahltag({
+      heute: "2026-12-20",
+      amtszeitEnde: "2027-01-31",
+      verfahren: "regulaer",
+    });
     expect(v.datum > "2027-01-31").toBe(true);
     expect(v.warnungen).toHaveLength(1);
   });
   it("Wahlversammlung: ab morgen möglich, warnt bei verpasster Einladung", async () => {
     const { fruehesterWahltag } = await import("./index");
-    expect(fruehesterWahltag({ heute: "2026-11-03", amtszeitEnde: "2027-01-31", verfahren: "wahlversammlung" }).datum).toBe("2026-11-04");
-    expect(fruehesterWahltag({ heute: "2027-01-20", amtszeitEnde: "2027-01-31", verfahren: "wahlversammlung" }).warnungen[0]).toMatch(/Einladung/);
+    expect(
+      fruehesterWahltag({
+        heute: "2026-11-03",
+        amtszeitEnde: "2027-01-31",
+        verfahren: "wahlversammlung",
+      }).datum,
+    ).toBe("2026-11-04");
+    expect(
+      fruehesterWahltag({
+        heute: "2027-01-20",
+        amtszeitEnde: "2027-01-31",
+        verfahren: "wahlversammlung",
+      }).warnungen[0],
+    ).toMatch(/Einladung/);
   });
 });
 
@@ -168,7 +219,9 @@ describe("Abgleich mit LPVGWO (Stand 25.07.2023)", () => {
   it("berechnet Stichtag, Mängelmitteilung, Berichtigung und Einspruchsentscheidung", async () => {
     const { computeSchedule } = await import("./index");
     // Wahltag Mi 20.01.2027, Erlass am Fr 20.11.2026
-    const s = computeSchedule("2027-01-20", undefined, { wahlausschreibenAm: "2026-11-20" });
+    const s = computeSchedule("2027-01-20", undefined, {
+      wahlausschreibenAm: "2026-11-20",
+    });
     const d = (k: string) => s.find((e) => e.key === k)?.date;
     expect(d("stichtag_feststellung")).toBe("2026-11-06"); // 10. Arbeitstag vor Erlass
     expect(d("wahlvorschlaege_ende")).toBe("2026-12-08"); // 12 Arbeitstage nach Erlass
@@ -177,7 +230,8 @@ describe("Abgleich mit LPVGWO (Stand 25.07.2023)", () => {
     expect(d("einspruch_entscheidung")).toBe("2027-01-19"); // Arbeitstag vor dem Wahltag
   });
   it("Anfechtungsfrist 12 Arbeitstage, Aushang 2 Wochen", async () => {
-    const { anfechtungsfristEnde, aushangErgebnisEnde } = await import("./index");
+    const { anfechtungsfristEnde, aushangErgebnisEnde } =
+      await import("./index");
     expect(anfechtungsfristEnde("2027-01-21")).toBe("2027-02-08");
     expect(aushangErgebnisEnde("2027-01-21")).toBe("2027-02-04");
   });

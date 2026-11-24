@@ -4,7 +4,10 @@ import Link from "next/link";
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 
-export default function Fehler({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
+export default function Fehler({
+  error,
+  reset,
+}: Readonly<{ error: Error & { digest?: string }; reset: () => void }>) {
   useEffect(() => {
     console.error(error);
   }, [error]);
@@ -14,8 +17,14 @@ export default function Fehler({ error, reset }: { error: Error & { digest?: str
 
   return (
     <div className="grid max-w-xl gap-4">
-      <p className="text-sm font-semibold text-muted-foreground">{keineBerechtigung ? "Zugriff verweigert" : "Fehler"}</p>
-      <h1 className="text-4xl">{keineBerechtigung ? "Keine Berechtigung" : "Da ist etwas schiefgelaufen"}</h1>
+      <p className="text-sm font-semibold text-muted-foreground">
+        {keineBerechtigung ? "Zugriff verweigert" : "Fehler"}
+      </p>
+      <h1 className="text-4xl">
+        {keineBerechtigung
+          ? "Keine Berechtigung"
+          : "Da ist etwas schiefgelaufen"}
+      </h1>
       <p className="text-muted-foreground">
         {keineBerechtigung
           ? "Für diese Aktion fehlt Ihrer Rolle die Berechtigung. Wenden Sie sich bei Bedarf an den Vorsitz des Wahlvorstands."
@@ -27,7 +36,9 @@ export default function Fehler({ error, reset }: { error: Error & { digest?: str
         </p>
       )}
       <div className="flex flex-wrap gap-2">
-        {!keineBerechtigung && <Button onClick={reset}>Erneut versuchen</Button>}
+        {!keineBerechtigung && (
+          <Button onClick={reset}>Erneut versuchen</Button>
+        )}
         <Button asChild variant="outline">
           <Link href="/">Zur Übersicht</Link>
         </Button>

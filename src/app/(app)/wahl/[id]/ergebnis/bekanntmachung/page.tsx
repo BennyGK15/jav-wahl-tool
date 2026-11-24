@@ -12,7 +12,11 @@ import { loadErgebnis } from "@/server/ergebnis";
 
 export const metadata = { title: "Bekanntmachung des Wahlergebnisses" };
 
-export default async function ErgebnisBekanntmachungPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function ErgebnisBekanntmachungPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const session = await requireSession();
   if (!hasPermission(session.user.role, "voters.edit")) notFound();
   const { id } = await params;
@@ -29,18 +33,40 @@ export default async function ErgebnisBekanntmachungPage({ params }: { params: P
   }
   const r = d.result;
   const ort = parseAngaben(d.election.wahlausschreibenAngaben).ausstellungsort;
-  const beteiligung = d.wahlberechtigte ? ((r.stimmzettelGesamt / d.wahlberechtigte) * 100).toLocaleString("de-DE", { maximumFractionDigits: 1 }) : "–";
-  await writeAudit({ userId: session.user.id, action: "result.notice.generated", objectType: "election", objectId: id });
+  const beteiligung = d.wahlberechtigte
+    ? ((r.stimmzettelGesamt / d.wahlberechtigte) * 100).toLocaleString(
+        "de-DE",
+        { maximumFractionDigits: 1 },
+      )
+    : "–";
+  await writeAudit({
+    userId: session.user.id,
+    action: "result.notice.generated",
+    objectType: "election",
+    objectId: id,
+  });
 
   return (
-    <DruckRahmen zurueck={{ href: `/wahl/${id}/ergebnis`, label: "Ergebnis" }} titel="Bekanntmachung" kopf={{ dienststelle: d.election.dienststelle, art: "Bekanntmachung", datum: `Stand: ${formatIsoDate(todayBerlin())}` }}
-      entwurf={!d.festgestellt} hinweis="Inhalt gegen § 31 LPVGWO prüfen.">
+    <DruckRahmen
+      zurueck={{ href: `/wahl/${id}/ergebnis`, label: "Ergebnis" }}
+      titel="Bekanntmachung"
+      kopf={{
+        dienststelle: d.election.dienststelle,
+        art: "Bekanntmachung",
+        datum: `Stand: ${formatIsoDate(todayBerlin())}`,
+      }}
+      entwurf={!d.festgestellt}
+      hinweis="Inhalt gegen § 31 LPVGWO prüfen."
+    >
       <article className="grid gap-5 text-sm">
         <header className="text-center">
-          <h1 className="text-xl font-bold">Bekanntmachung des Wahlergebnisses</h1>
+          <h1 className="text-xl font-bold">
+            Bekanntmachung des Wahlergebnisses
+          </h1>
           <p>Wahl der Jugend- und Auszubildendenvertretung</p>
           <p className="mt-1">
-            Dienststelle: <strong>{d.election.dienststelle}</strong> · Wahltag: <strong>{formatIsoDate(fromDbDate(d.election.wahltag))}</strong>
+            Dienststelle: <strong>{d.election.dienststelle}</strong> · Wahltag:{" "}
+            <strong>{formatIsoDate(fromDbDate(d.election.wahltag))}</strong>
           </p>
         </header>
 

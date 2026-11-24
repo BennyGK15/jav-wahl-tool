@@ -1,0 +1,4 @@
+# Zusätzlich zu .gitignore (wird von Prettier automatisch berücksichtigt)
+pnpm-lock.yaml
+prisma/migrations/
+graphify-out/

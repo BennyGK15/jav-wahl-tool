@@ -12,7 +12,11 @@ import { loadErgebnis, wahlvorstandNamen } from "@/server/ergebnis";
 
 export const metadata = { title: "Wahlniederschrift" };
 
-export default async function NiederschriftPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function NiederschriftPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const session = await requireSession();
   if (!hasPermission(session.user.role, "voters.edit")) notFound();
   const { id } = await params;
@@ -35,7 +39,12 @@ export default async function NiederschriftPage({ params }: { params: Promise<{ 
       ? (d.nominations.find((n) => n.id === x)?.kennwort ?? "Wahlvorschlag")
       : (d.bewerber.get(x)?.name ?? "?"),
   );
-  await writeAudit({ userId: session.user.id, action: "result.minutes.generated", objectType: "election", objectId: id });
+  await writeAudit({
+    userId: session.user.id,
+    action: "result.minutes.generated",
+    objectType: "election",
+    objectId: id,
+  });
 
   const zeile = (k: string, v: string | number) => (
     <tr className="border-b">
@@ -48,7 +57,11 @@ export default async function NiederschriftPage({ params }: { params: Promise<{ 
     <DruckRahmen
       zurueck={{ href: `/wahl/${id}/ergebnis`, label: "Ergebnis" }}
       titel="Niederschrift"
-      kopf={{ dienststelle: d.election.dienststelle, art: "Wahlniederschrift", datum: `Stand: ${formatIsoDate(todayBerlin())}` }}
+      kopf={{
+        dienststelle: d.election.dienststelle,
+        art: "Wahlniederschrift",
+        datum: `Stand: ${formatIsoDate(todayBerlin())}`,
+      }}
       entwurf={!d.festgestellt}
       hinweis="Muster – Pflichtinhalte nach § 29 und § 39 bzw. § 43 LPVGWO prüfen und ergänzen."
     >
@@ -61,22 +74,36 @@ export default async function NiederschriftPage({ params }: { params: Promise<{ 
 
         <section className="grid gap-1">
           <p>
-            Wahltag: <strong>{formatIsoDate(fromDbDate(d.election.wahltag))}</strong>
-            {a.wahlzeitVon && a.wahlzeitBis && <>, Wahlzeit {a.wahlzeitVon}–{a.wahlzeitBis} Uhr</>}
+            Wahltag:{" "}
+            <strong>{formatIsoDate(fromDbDate(d.election.wahltag))}</strong>
+            {a.wahlzeitVon && a.wahlzeitBis && (
+              <>
+                , Wahlzeit {a.wahlzeitVon}–{a.wahlzeitBis} Uhr
+              </>
+            )}
             {a.wahlraum && <>, Wahlraum {a.wahlraum}</>}
           </p>
           <p>
-            Öffentliche Stimmenauszählung: {a.auszaehlungZeit ? `${a.auszaehlungZeit} Uhr` : "____ Uhr"}, {a.auszaehlungOrt ?? "________________"}
+            Öffentliche Stimmenauszählung:{" "}
+            {a.auszaehlungZeit ? `${a.auszaehlungZeit} Uhr` : "____ Uhr"},{" "}
+            {a.auszaehlungOrt ?? "________________"}
           </p>
           <p>
-            Verfahren: {d.election.verfahren === "wahlversammlung" ? "Wahlversammlung, " : ""}
-            {d.wahlverfahren === "verhaeltnis" ? "Verhältniswahl (Höchstzahlverfahren nach d'Hondt)" : "Mehrheitswahl"} · zu wählen: {d.sitze}{" "}
-            {d.sitze === 1 ? "Mitglied" : "Mitglieder"}
+            Verfahren:{" "}
+            {d.election.verfahren === "wahlversammlung"
+              ? "Wahlversammlung, "
+              : ""}
+            {d.wahlverfahren === "verhaeltnis"
+              ? "Verhältniswahl (Höchstzahlverfahren nach d'Hondt)"
+              : "Mehrheitswahl"}{" "}
+            · zu wählen: {d.sitze} {d.sitze === 1 ? "Mitglied" : "Mitglieder"}
           </p>
         </section>
 
         <section>
-          <h2 className="mb-1 font-semibold">Anwesende Mitglieder des Wahlvorstands</h2>
+          <h2 className="mb-1 font-semibold">
+            Anwesende Mitglieder des Wahlvorstands
+          </h2>
           <ul className="grid gap-1">
             {vorstand.map((m) => (
               <li key={m.name}>
@@ -91,13 +118,23 @@ export default async function NiederschriftPage({ params }: { params: Promise<{ 
           <h2 className="mb-1 font-semibold">Zahlen</h2>
           <table className="w-full max-w-md border-collapse">
             <tbody>
-              {zeile("Wahlberechtigte laut Wählerverzeichnis", d.wahlberechtigte)}
-              {zeile("Stimmabgaben laut Vermerk im Wählerverzeichnis", d.vermerkt)}
+              {zeile(
+                "Wahlberechtigte laut Wählerverzeichnis",
+                d.wahlberechtigte,
+              )}
+              {zeile(
+                "Stimmabgaben laut Vermerk im Wählerverzeichnis",
+                d.vermerkt,
+              )}
               {zeile("davon schriftliche Stimmabgabe (Briefwahl)", d.brief)}
               {zeile("Abgegebene Stimmzettel", r.stimmzettelGesamt)}
               {zeile("gültige Stimmzettel", r.stimmzettelGueltig)}
               {zeile("ungültige Stimmzettel", r.stimmzettelUngueltig)}
-              {r.stimmenUngueltig != null && zeile("ungültige Stimmen auf gültigen Stimmzetteln", r.stimmenUngueltig)}
+              {r.stimmenUngueltig != null &&
+                zeile(
+                  "ungültige Stimmen auf gültigen Stimmzetteln",
+                  r.stimmenUngueltig,
+                )}
             </tbody>
           </table>
         </section>
@@ -107,7 +144,10 @@ export default async function NiederschriftPage({ params }: { params: Promise<{ 
         {losNamen.length > 0 && (
           <section>
             <h2 className="mb-1 font-semibold">Losentscheid</h2>
-            <p>Bei Stimmengleichheit wurde durch Los entschieden. Gezogene Reihenfolge: {losNamen.join(" vor ")}.</p>
+            <p>
+              Bei Stimmengleichheit wurde durch Los entschieden. Gezogene
+              Reihenfolge: {losNamen.join(" vor ")}.
+            </p>
           </section>
         )}
 

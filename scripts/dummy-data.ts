@@ -26,10 +26,44 @@ function addYears(iso: string, years: number): string {
 }
 
 const NACHNAMEN = [
-  "Müller", "Schmidt", "Schneider", "Fischer", "Weber", "Meyer", "Wagner", "Becker", "Schulz", "Hoffmann", "Koch",
-  "Bauer", "Richter", "Klein", "Wolf", "Schröder", "Neumann", "Schwarz", "Zimmermann", "Braun", "Krüger",
+  "Müller",
+  "Schmidt",
+  "Schneider",
+  "Fischer",
+  "Weber",
+  "Meyer",
+  "Wagner",
+  "Becker",
+  "Schulz",
+  "Hoffmann",
+  "Koch",
+  "Bauer",
+  "Richter",
+  "Klein",
+  "Wolf",
+  "Schröder",
+  "Neumann",
+  "Schwarz",
+  "Zimmermann",
+  "Braun",
+  "Krüger",
 ];
-const MAENNLICH = ["Lukas", "Jonas", "Leon", "Finn", "Noah", "Elias", "Paul", "Ben", "Felix", "Luis", "Tim", "Jan", "Moritz", "Niklas"];
+const MAENNLICH = [
+  "Lukas",
+  "Jonas",
+  "Leon",
+  "Finn",
+  "Noah",
+  "Elias",
+  "Paul",
+  "Ben",
+  "Felix",
+  "Luis",
+  "Tim",
+  "Jan",
+  "Moritz",
+  "Niklas",
+];
 const WEIBLICH = ["Lena", "Mia", "Emma", "Sophie", "Hannah", "Lea", "Marie"];
 const BEREICHE = ["Verwaltung", "IT", "Bauhof", "Kita"];
 
@@ -58,15 +92,40 @@ export function buildDummyPersons(wahltag: string): DummyPerson[] {
 
   // 15 Auszubildende mit durchschnittlichem Alter
   const alter = [17, 18, 18, 19, 19, 19, 20, 20, 20, 21, 21, 22, 18, 22, 23];
-  const tageNachGeburtstag = [40, 120, 200, 15, 310, 90, 180, 260, 30, 150, 70, 330, 100, 220, 45];
-  const geschlechter = ["m", "m", "w", "m", "m", "w", "m", "m", "w", "m", "m", "w", "m", "m", "w"] as const;
+  const tageNachGeburtstag = [
+    40, 120, 200, 15, 310, 90, 180, 260, 30, 150, 70, 330, 100, 220, 45,
+  ];
+  const geschlechter = [
+    "m",
+    "m",
+    "w",
+    "m",
+    "m",
+    "w",
+    "m",
+    "m",
+    "w",
+    "m",
+    "m",
+    "w",
+    "m",
+    "m",
+    "w",
+  ] as const;
   const azubis = geschlechter.map((g, i) => ({
     ...next(g),
-    geburtsdatum: addDays(addYears(wahltag, -alter[i]!), -tageNachGeburtstag[i]!),
+    geburtsdatum: addDays(
+      addYears(wahltag, -alter[i]!),
+      -tageNachGeburtstag[i]!,
+    ),
     inAusbildung: true,
     ausbildungsende: addDays(wahltag, 200 + i * 37),
     organisationseinheit: `Ausbildung ${BEREICHE[i % BEREICHE.length]} (Testdaten)`,
-    funktion: ["Auszubildende/r Verwaltungsfachangestellte/r", "Auszubildende/r Fachinformatiker/in", "Beamtenanwärter/in mittlerer Dienst"][i % 3]!,
+    funktion: [
+      "Auszubildende/r Verwaltungsfachangestellte/r",
+      "Auszubildende/r Fachinformatiker/in",
+      "Beamtenanwärter/in mittlerer Dienst",
+    ][i % 3]!,
   }));
 
   return [...knapp, ...azubis];

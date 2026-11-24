@@ -25,7 +25,12 @@ export interface LoeschVorschlag {
 
 export function loeschVorschlag(s: LoeschStand): LoeschVorschlag {
   if (s.anfechtungAm && !s.anfechtungErledigtAm) {
-    return { fruehestens: null, gesperrt: true, grund: "Die Wahl ist angefochten – Daten bis zum rechtskräftigen Abschluss des Verfahrens aufbewahren." };
+    return {
+      fruehestens: null,
+      gesperrt: true,
+      grund:
+        "Die Wahl ist angefochten – Daten bis zum rechtskräftigen Abschluss des Verfahrens aufbewahren.",
+    };
   }
   if (s.anfechtungAm && s.anfechtungErledigtAm) {
     return {
@@ -41,5 +46,9 @@ export function loeschVorschlag(s: LoeschStand): LoeschVorschlag {
       grund: `Die Anfechtungsfrist endet am ${s.anfechtungsfristEnde.split("-").reverse().join(".")} (§ 21 LPVG).`,
     };
   }
-  return { fruehestens: null, gesperrt: false, grund: "Erst nach Feststellung des Ergebnisses bestimmbar." };
+  return {
+    fruehestens: null,
+    gesperrt: false,
+    grund: "Erst nach Feststellung des Ergebnisses bestimmbar.",
+  };
 }

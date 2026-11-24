@@ -2,10 +2,10 @@
 
 [← Übersicht](README.md)
 
-| | |
-| --- | --- |
-| **Rollen** | `admin` legt an; alle Rollen melden sich an |
-| **Auslöser** | Der Wahlvorstand ist bestellt und braucht Zugang zur Anwendung |
+|              |                                                                                       |
+| ------------ | ------------------------------------------------------------------------------------- |
+| **Rollen**   | `admin` legt an; alle Rollen melden sich an                                           |
+| **Auslöser** | Der Wahlvorstand ist bestellt und braucht Zugang zur Anwendung                        |
 | **Ergebnis** | Jede beteiligte Person hat ein eigenes Konto mit passender Rolle und eigenem Passwort |
 
 ## Ablauf
@@ -30,14 +30,14 @@ sequenceDiagram
 
 ## Schritte
 
-| # | Wer | Was | Wo |
-| --- | --- | --- | --- |
-| 1 | admin | Konten anlegen – entweder per Kommandozeile (`pnpm user:create <name> <rolle> "<Anzeigename>"`) oder in der Anwendung | Verwaltung → Benutzer (`/benutzer`) |
-| 2 | admin | Startpasswort außerhalb der Anwendung übergeben | – |
-| 3 | Person | Öffentliche Startseite aufrufen und anmelden | `/start`, `/login` |
-| 4 | Person | Startpasswort durch eigenes Passwort ersetzen; vorher ist keine andere Seite erreichbar | `/passwort` |
-| 5 | Person | Optional: Zwei-Faktor-Anmeldung einrichten; danach wird bei jeder Anmeldung ein Code abgefragt | `/konto`, `/login/2fa` |
-| 6 | Person | Landet auf der Übersicht (`/`); was sie sieht, hängt von der Rolle ab (siehe [Journey 10](10-taegliche-arbeit.md)) | `/` |
+| #   | Wer    | Was                                                                                                                   | Wo                                  |
+| --- | ------ | --------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| 1   | admin  | Konten anlegen – entweder per Kommandozeile (`pnpm user:create <name> <rolle> "<Anzeigename>"`) oder in der Anwendung | Verwaltung → Benutzer (`/benutzer`) |
+| 2   | admin  | Startpasswort außerhalb der Anwendung übergeben                                                                       | –                                   |
+| 3   | Person | Öffentliche Startseite aufrufen und anmelden                                                                          | `/start`, `/login`                  |
+| 4   | Person | Startpasswort durch eigenes Passwort ersetzen; vorher ist keine andere Seite erreichbar                               | `/passwort`                         |
+| 5   | Person | Optional: Zwei-Faktor-Anmeldung einrichten; danach wird bei jeder Anmeldung ein Code abgefragt                        | `/konto`, `/login/2fa`              |
+| 6   | Person | Landet auf der Übersicht (`/`); was sie sieht, hängt von der Rolle ab (siehe [Journey 10](10-taegliche-arbeit.md))    | `/`                                 |
 
 ## Konten pflegen (admin)
 

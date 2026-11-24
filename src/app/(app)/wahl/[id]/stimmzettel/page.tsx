@@ -14,15 +14,26 @@ import { loadGeschlechter } from "@/server/geschlechter";
 export const metadata = { title: "Stimmzettel" };
 
 function Kreis() {
-  return <span aria-hidden className="inline-block size-6 shrink-0 rounded-full border-2 border-black" />;
+  return (
+    <span
+      aria-hidden
+      className="inline-block size-6 shrink-0 rounded-full border-2 border-black"
+    />
+  );
 }
 
 /** Feld zum Ankreuzen oder Eintragen der Stimmenzahl (1–3) */
 function StimmenFeld() {
-  return <span aria-hidden className="inline-block h-7 w-10 border-2 border-black" />;
+  return (
+    <span aria-hidden className="inline-block h-7 w-10 border-2 border-black" />
+  );
 }
 
-function Kopf({ dienststelle, wahltag, zusatz }: { dienststelle: string; wahltag: string; zusatz?: string }) {
+function Kopf({
+  dienststelle,
+  wahltag,
+  zusatz,
+}: Readonly<{ dienststelle: string; wahltag: string; zusatz?: string }>) {
   return (
     <header className="text-center">
       <h1 className="text-lg font-bold">Stimmzettel</h1>
@@ -35,7 +46,7 @@ function Kopf({ dienststelle, wahltag, zusatz }: { dienststelle: string; wahltag
   );
 }
 
-function Hinweise({ punkte }: { punkte: React.ReactNode[] }) {
+function Hinweise({ punkte }: Readonly<{ punkte: React.ReactNode[] }>) {
   return (
     <ol className="list-decimal space-y-0.5 border border-black p-3 pl-7 text-[9pt] leading-snug">
       {punkte.map((p, i) => (
@@ -45,16 +56,36 @@ function Hinweise({ punkte }: { punkte: React.ReactNode[] }) {
   );
 }
 
-const funktion = (b: BewerberInfo) => b.funktion ?? b.organisationseinheit ?? "";
+const funktion = (b: BewerberInfo) =>
+  b.funktion ?? b.organisationseinheit ?? "";
 
-export default async function StimmzettelPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ anzahl?: string }> }) {
+export default async function StimmzettelPage({
+  params,
+  searchParams,
+}: Readonly<{
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ anzahl?: string }>;
+}>) {
   const session = await requireSession();
-  if (!hasPermission(session.user.role, "nominations.edit") && !hasPermission(session.user.role, "voters.edit")) notFound();
+  if (
+    !hasPermission(session.user.role, "nominations.edit") &&
+    !hasPermission(session.user.role, "voters.edit")
+  )
+    notFound();
   const { id } = await params;
   const d = await loadErgebnis(id).catch(() => null);
   if (!d) notFound();
-  const anzahl = Math.min(500, Math.max(1, Number.parseInt((await searchParams).anzahl ?? "1", 10) || 1));
-  await writeAudit({ userId: session.user.id, action: "ballots.printed", objectType: "election", objectId: id, fields: [`anzahl:${anzahl}`] });
+  const anzahl = Math.min(
+    500,
+    Math.max(1, Number.parseInt((await searchParams).anzahl ?? "1", 10) || 1),
+  );
+  await writeAudit({
+    userId: session.user.id,
+    action: "ballots.printed",
+    objectType: "election",
+    objectId: id,
+    fields: [`anzahl:${anzahl}`],
+  });
 
   const wahltag = formatIsoDate(fromDbDate(d.election.wahltag));
   const dienststelle = d.election.dienststelle;
@@ -65,11 +96,16 @@ export default async function StimmzettelPage({ params, searchParams }: { params
   const stimmenText = `${d.sitze} ${d.sitze === 1 ? "Stimme" : "Stimmen"}`;
   // § 34 Abs. 2 Nr. 6 / § 41 Abs. 3 Nr. 5 LPVGWO: Angabe zu Frauen und Männern ab drei Mitgliedern (§ 8 LPVGWO)
   const geschlechter = await loadGeschlechter(id);
-  const sitzeFM = geschlechter.verteilung && !geschlechter.verteilung.losOffen ? sitzeText(geschlechter.verteilung) : null;
+  const sitzeFM =
+    geschlechter.verteilung && !geschlechter.verteilung.losOffen
+      ? sitzeText(geschlechter.verteilung)
+      : null;
   const geschlechterHinweis = geschlechter.relevant && (
     <>
-      In der Jugend- und Auszubildendenvertretung sollen <Wert v={sitzeFM} l="Sitze Frauen/Männer nach § 8 LPVGWO" /> vertreten sein; Sie
-      sind aber nicht verpflichtet, eine bestimmte Zahl von Stimmen an Frauen oder Männer zu vergeben.
+      In der Jugend- und Auszubildendenvertretung sollen{" "}
+      <Wert v={sitzeFM} l="Sitze Frauen/Männer nach § 8 LPVGWO" /> vertreten
+      sein; Sie sind aber nicht verpflichtet, eine bestimmte Zahl von Stimmen an
+      Frauen oder Männer zu vergeben.
     </>
   );
 
@@ -79,7 +115,9 @@ export default async function StimmzettelPage({ params, searchParams }: { params
     // § 34 LPVGWO
     const hinweise = [
       "Geben Sie nur einen Stimmzettel ab.",
-      <>Sie haben insgesamt <strong>{stimmenText}</strong>.</>,
+      <>
+        Sie haben insgesamt <strong>{stimmenText}</strong>.
+      </>,
       "Kennzeichnen Sie die Personen, die Sie wählen, durch ein Kreuz oder durch eine Zahl im Feld neben dem Namen.",
       "Sie können Personen aus anderen Wahlvorschlägen in die freien Zeilen übernehmen (panaschieren).",
       "Sie können einer Person durch Eintragen einer Zahl bis zu drei Stimmen geben (kumulieren) – insgesamt höchstens so viele Stimmen, wie Sie haben.",
@@ -87,18 +125,35 @@ export default async function StimmzettelPage({ params, searchParams }: { params
       "Personen, die auf keinem Wahlvorschlag stehen, können nicht gewählt werden.",
     ];
     satz = d.nominations.map((n, i) => {
-      const bewerber = n.candidates.map((c) => d.bewerber.get(c.id)!).filter(Boolean);
+      const bewerber = n.candidates
+        .map((c) => d.bewerber.get(c.id)!)
+        .filter(Boolean);
       return (
-        <article key={n.id} className="grid gap-4 border-2 border-black p-6 text-sm">
-          <Kopf dienststelle={dienststelle} wahltag={wahltag} zusatz={listenName(i)} />
+        <article
+          key={n.id}
+          className="grid gap-4 border-2 border-black p-6 text-sm"
+        >
+          <Kopf
+            dienststelle={dienststelle}
+            wahltag={wahltag}
+            zusatz={listenName(i)}
+          />
           <Hinweise punkte={hinweise} />
           <table className="w-full border-collapse">
             <thead>
               <tr>
-                <th className="w-10 border-b-2 border-black py-1 text-left">Nr.</th>
-                <th className="border-b-2 border-black py-1 text-left">Name, Vorname</th>
-                <th className="border-b-2 border-black py-1 text-left">Amts- oder Funktionsbezeichnung</th>
-                <th className="w-16 border-b-2 border-black py-1 text-center">Stimmen</th>
+                <th className="w-10 border-b-2 border-black py-1 text-left">
+                  Nr.
+                </th>
+                <th className="border-b-2 border-black py-1 text-left">
+                  Name, Vorname
+                </th>
+                <th className="border-b-2 border-black py-1 text-left">
+                  Amts- oder Funktionsbezeichnung
+                </th>
+                <th className="w-16 border-b-2 border-black py-1 text-center">
+                  Stimmen
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -116,7 +171,8 @@ export default async function StimmzettelPage({ params, searchParams }: { params
               ))}
               <tr>
                 <td colSpan={4} className="pt-3 pb-1 text-[9pt] font-semibold">
-                  Übernommene Personen aus anderen Wahlvorschlägen (Name, Vorname, Wahlvorschlag Nr.):
+                  Übernommene Personen aus anderen Wahlvorschlägen (Name,
+                  Vorname, Wahlvorschlag Nr.):
                 </td>
               </tr>
               {Array.from({ length: d.sitze }, (_, k) => (
@@ -137,10 +193,21 @@ export default async function StimmzettelPage({ params, searchParams }: { params
     // § 41 LPVGWO: ein Vorschlag → unveränderte Reihenfolge; eine Person aus mehreren Vorschlägen → alphabetisch
     const mehrereVorschlaege = d.nominations.length > 1;
     const liste = [...d.bewerber.values()];
-    if (mehrereVorschlaege) liste.sort((a, b) => a.nachname.localeCompare(b.nachname, "de") || a.vorname.localeCompare(b.vorname, "de"));
+    if (mehrereVorschlaege)
+      liste.sort(
+        (a, b) =>
+          a.nachname.localeCompare(b.nachname, "de") ||
+          a.vorname.localeCompare(b.vorname, "de"),
+      );
     const hinweise = [
       "Geben Sie nur einen Stimmzettel ab.",
-      <>Sie haben <strong>{d.sitze === 1 ? "eine Stimme" : `bis zu ${stimmenText}`}</strong>.</>,
+      <>
+        Sie haben{" "}
+        <strong>
+          {d.sitze === 1 ? "eine Stimme" : `bis zu ${stimmenText}`}
+        </strong>
+        .
+      </>,
       d.sitze === 1 && mehrereVorschlaege
         ? "Kreuzen Sie nur eine Person an – mehr Kreuze machen den Stimmzettel ungültig (§ 42 Abs. 1 LPVGWO)."
         : "Jeder Person kann nur eine Stimme gegeben werden.",
@@ -149,18 +216,36 @@ export default async function StimmzettelPage({ params, searchParams }: { params
       "Personen, die auf keinem Wahlvorschlag stehen, können nicht gewählt werden.",
     ];
     satz = [
-      <article key="mehrheit" className="grid gap-4 border-2 border-black p-6 text-sm">
-        <Kopf dienststelle={dienststelle} wahltag={wahltag} zusatz={!mehrereVorschlaege && d.nominations[0] && d.election.verfahren === "regulaer" ? listenName(0) : undefined} />
+      <article
+        key="mehrheit"
+        className="grid gap-4 border-2 border-black p-6 text-sm"
+      >
+        <Kopf
+          dienststelle={dienststelle}
+          wahltag={wahltag}
+          zusatz={
+            !mehrereVorschlaege &&
+            d.nominations[0] &&
+            d.election.verfahren === "regulaer"
+              ? listenName(0)
+              : undefined
+          }
+        />
         <Hinweise punkte={hinweise} />
         <ul className="grid gap-3">
           {liste.map((b) => (
-            <li key={b.candidateId} className="flex items-center gap-4 border-t border-black pt-2">
+            <li
+              key={b.candidateId}
+              className="flex items-center gap-4 border-t border-black pt-2"
+            >
               <Kreis />
               <span>
                 <span className="font-semibold">
                   {b.nachname}, {b.vorname}
                 </span>
-                {funktion(b) && <span className="block text-[9pt]">{funktion(b)}</span>}
+                {funktion(b) && (
+                  <span className="block text-[9pt]">{funktion(b)}</span>
+                )}
               </span>
             </li>
           ))}
@@ -188,24 +273,41 @@ export default async function StimmzettelPage({ params, searchParams }: { params
             {d.wahlverfahren === "verhaeltnis"
               ? `Verhältniswahl: Je wählende Person ein Satz aus ${d.nominations.length} Einzelstimmzetteln – einer je Wahlvorschlag (§ 34 Abs. 1 LPVGWO). Jeder Einzelstimmzettel wird auf eine eigene Seite gedruckt.`
               : "Mehrheitswahl: ein Stimmzettel je wählender Person (§ 41 LPVGWO), jeder auf einer eigenen Seite."}{" "}
-            Ist für eine Person keine Amts- oder Funktionsbezeichnung erfasst, steht dort ersatzweise die Organisationseinheit.
-            {geschlechter.relevant && !sitzeFM && " Die Zahl der Sitze für Frauen und Männer (§ 8 LPVGWO) steht noch nicht fest (Wählerverzeichnis bzw. Losentscheid auf der Seite Wahlausschreiben) und ist rot markiert."}
+            Ist für eine Person keine Amts- oder Funktionsbezeichnung erfasst,
+            steht dort ersatzweise die Organisationseinheit.
+            {geschlechter.relevant &&
+              !sitzeFM &&
+              " Die Zahl der Sitze für Frauen und Männer (§ 8 LPVGWO) steht noch nicht fest (Wählerverzeichnis bzw. Losentscheid auf der Seite Wahlausschreiben) und ist rot markiert."}
           </p>
           <form method="get" className="flex flex-wrap items-end gap-2">
             <label className="grid gap-1 font-medium">
               Anzahl Sätze
-              <Input name="anzahl" type="number" min={1} max={500} defaultValue={anzahl} className="w-28" />
+              <Input
+                name="anzahl"
+                type="number"
+                min={1}
+                max={500}
+                defaultValue={anzahl}
+                className="w-28"
+              />
             </label>
             <Button type="submit" size="sm" variant="outline">
               Übernehmen
             </Button>
-            <span className="text-muted-foreground">Wahlberechtigte: {d.wahlberechtigte}</span>
+            <span className="text-muted-foreground">
+              Wahlberechtigte: {d.wahlberechtigte}
+            </span>
           </form>
         </div>
       }
     >
       {seiten.map((s, i) => (
-        <div key={i} className={i < seiten.length - 1 ? "mb-8 break-after-page print:mb-0" : ""}>
+        <div
+          key={i}
+          className={
+            i < seiten.length - 1 ? "mb-8 break-after-page print:mb-0" : ""
+          }
+        >
           {s}
         </div>
       ))}

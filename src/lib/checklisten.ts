@@ -3,9 +3,19 @@
 export type Phase = "vorbereitung" | "wahltag" | "abschluss";
 
 export const PHASEN: Record<Phase, { titel: string; beschreibung: string }> = {
-  vorbereitung: { titel: "Vorbereitung", beschreibung: "Bestellung, Wählerverzeichnis, Wahlausschreiben, Wahlvorschläge" },
-  wahltag: { titel: "Wahltag", beschreibung: "Wahlraum, Stimmabgabe, Auszählung" },
-  abschluss: { titel: "Abschluss", beschreibung: "Bekanntmachung, Benachrichtigung, Aufbewahrung" },
+  vorbereitung: {
+    titel: "Vorbereitung",
+    beschreibung:
+      "Bestellung, Wählerverzeichnis, Wahlausschreiben, Wahlvorschläge",
+  },
+  wahltag: {
+    titel: "Wahltag",
+    beschreibung: "Wahlraum, Stimmabgabe, Auszählung",
+  },
+  abschluss: {
+    titel: "Abschluss",
+    beschreibung: "Bekanntmachung, Benachrichtigung, Aufbewahrung",
+  },
 };
 
 export const STANDARD_CHECKLISTE: Record<Phase, readonly string[]> = {

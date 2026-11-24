@@ -48,7 +48,8 @@ export interface AkteEingabe {
   gewaehlte: number;
 }
 
-const OHNE_ERGEBNIS = "Erst nach Feststellung des Ergebnisses endgültig – vorher nur Entwurf.";
+const OHNE_ERGEBNIS =
+  "Erst nach Feststellung des Ergebnisses endgültig – vorher nur Entwurf.";
 
 export function berechneWahlakte(e: AkteEingabe): AkteAbschnitt[] {
   const versammlung = e.verfahren === "wahlversammlung";
@@ -62,7 +63,8 @@ export function berechneWahlakte(e: AkteEingabe): AkteAbschnitt[] {
         key: "bestellung",
         titel: "Beschluss über die Bestellung des Wahlvorstands",
         form: "original",
-        hinweis: "Beschluss bzw. Protokollauszug des Personalrats, ggf. Bestellung der Ersatzmitglieder.",
+        hinweis:
+          "Beschluss bzw. Protokollauszug des Personalrats, ggf. Bestellung der Ersatzmitglieder.",
       },
       {
         key: "wahlvorstand",
@@ -76,7 +78,8 @@ export function berechneWahlakte(e: AkteEingabe): AkteAbschnitt[] {
         key: "sitzungen",
         titel: "Niederschriften der Sitzungen des Wahlvorstands",
         form: "beides",
-        hinweis: "Alle Sitzungen, jeweils unterschrieben – einschließlich der konstituierenden Sitzung.",
+        hinweis:
+          "Alle Sitzungen, jeweils unterschrieben – einschließlich der konstituierenden Sitzung.",
         pfad: "sitzung",
         rechte: ["voters.edit"],
       },
@@ -98,10 +101,13 @@ export function berechneWahlakte(e: AkteEingabe): AkteAbschnitt[] {
       key: "wahlausschreiben",
       titel: "Wahlausschreiben",
       form: "beides",
-      hinweis: "Unterschriebenes, ausgehängtes Exemplar mit Vermerk „ausgehängt vom … bis …“.",
+      hinweis:
+        "Unterschriebenes, ausgehängtes Exemplar mit Vermerk „ausgehängt vom … bis …“.",
       pfad: "wahlausschreiben/druck",
       rechte: ["deadlines.read"],
-      offen: e.wahlausschreibenFreigegeben ? undefined : "Noch nicht freigegeben.",
+      offen: e.wahlausschreibenFreigegeben
+        ? undefined
+        : "Noch nicht freigegeben.",
     });
   }
   einleitung.push({
@@ -117,14 +123,24 @@ export function berechneWahlakte(e: AkteEingabe): AkteAbschnitt[] {
       key: "einsprueche",
       titel: "Einsprüche gegen das Wählerverzeichnis mit Entscheidungen",
       form: "beides",
-      hinweis: "Eingegangene Einspruchsschreiben (Original) und Kopien der Entscheidungsschreiben.",
+      hinweis:
+        "Eingegangene Einspruchsschreiben (Original) und Kopien der Entscheidungsschreiben.",
       pfad: "einsprueche",
       rechte: ["voters.edit"],
       anzahl: e.einsprueche + e.einspruecheOffen,
-      offen: e.einspruecheOffen > 0 ? `${e.einspruecheOffen} noch nicht entschieden.` : undefined,
+      offen:
+        e.einspruecheOffen > 0
+          ? `${e.einspruecheOffen} noch nicht entschieden.`
+          : undefined,
     });
   }
-  abschnitte.push({ key: "einleitung", titel: versammlung ? "Einladung und Wählerverzeichnis" : "Einleitung der Wahl", eintraege: einleitung });
+  abschnitte.push({
+    key: "einleitung",
+    titel: versammlung
+      ? "Einladung und Wählerverzeichnis"
+      : "Einleitung der Wahl",
+    eintraege: einleitung,
+  });
 
   if (!versammlung || e.wahlvorschlaege > 0) {
     const vorschlaege: AkteEintrag[] = [
@@ -169,7 +185,11 @@ export function berechneWahlakte(e: AkteEingabe): AkteAbschnitt[] {
         rechte: ["nominations.edit"],
       });
     }
-    abschnitte.push({ key: "vorschlaege", titel: "Wahlvorschläge", eintraege: vorschlaege });
+    abschnitte.push({
+      key: "vorschlaege",
+      titel: "Wahlvorschläge",
+      eintraege: vorschlaege,
+    });
   }
 
   const wahl: AkteEintrag[] = [
@@ -177,7 +197,8 @@ export function berechneWahlakte(e: AkteEingabe): AkteAbschnitt[] {
       key: "vermerke",
       titel: "Wählerverzeichnis mit Stimmabgabevermerken",
       form: "ausdruck",
-      hinweis: "Nach Abschluss der Stimmabgabe drucken – enthält Urnen- und Briefwahl.",
+      hinweis:
+        "Nach Abschluss der Stimmabgabe drucken – enthält Urnen- und Briefwahl.",
       pfad: "waehler/vermerke",
       rechte: ["voters.edit"],
     },
@@ -192,7 +213,8 @@ export function berechneWahlakte(e: AkteEingabe): AkteAbschnitt[] {
       key: "stimmzettel",
       titel: "Abgegebene Stimmzettel",
       form: "original",
-      hinweis: "Gültige und ungültige Stimmzettel getrennt gebündelt, verpackt und versiegelt; Paket beschriftet.",
+      hinweis:
+        "Gültige und ungültige Stimmzettel getrennt gebündelt, verpackt und versiegelt; Paket beschriftet.",
     },
   ];
   if (e.briefwahlAntraege > 0) {
@@ -205,7 +227,11 @@ export function berechneWahlakte(e: AkteEingabe): AkteAbschnitt[] {
       anzahl: e.briefwahlAntraege,
     });
   }
-  abschnitte.push({ key: "wahl", titel: versammlung ? "Wahlversammlung" : "Stimmabgabe", eintraege: wahl });
+  abschnitte.push({
+    key: "wahl",
+    titel: versammlung ? "Wahlversammlung" : "Stimmabgabe",
+    eintraege: wahl,
+  });
 
   const offenOhneErgebnis = e.ergebnisFestgestellt ? undefined : OHNE_ERGEBNIS;
   abschnitte.push({
@@ -216,7 +242,8 @@ export function berechneWahlakte(e: AkteEingabe): AkteAbschnitt[] {
         key: "niederschrift",
         titel: "Wahlniederschrift",
         form: "beides",
-        hinweis: "Von allen Mitgliedern des Wahlvorstands unterschrieben; ggf. mit Protokoll zum Losentscheid.",
+        hinweis:
+          "Von allen Mitgliedern des Wahlvorstands unterschrieben; ggf. mit Protokoll zum Losentscheid.",
         pfad: "ergebnis/niederschrift",
         rechte: ["voters.edit"],
         offen: offenOhneErgebnis,
@@ -234,7 +261,8 @@ export function berechneWahlakte(e: AkteEingabe): AkteAbschnitt[] {
         key: "benachrichtigung",
         titel: "Benachrichtigungen der Gewählten mit Erklärungen",
         form: "beides",
-        hinweis: "Kopien der Benachrichtigungen und die zurückgegebenen Erklärungen über Annahme oder Ablehnung der Wahl.",
+        hinweis:
+          "Kopien der Benachrichtigungen und die zurückgegebenen Erklärungen über Annahme oder Ablehnung der Wahl.",
         pfad: "ergebnis/benachrichtigung",
         rechte: ["voters.edit"],
         anzahl: e.ergebnisFestgestellt ? e.gewaehlte : undefined,
@@ -247,8 +275,11 @@ export function berechneWahlakte(e: AkteEingabe): AkteAbschnitt[] {
 }
 
 /** Fortlaufende Nummern über alle Abschnitte (1, 2, 3 …) für das Inhaltsverzeichnis. */
-export function nummeriere(abschnitte: readonly AkteAbschnitt[]): Map<string, number> {
+export function nummeriere(
+  abschnitte: readonly AkteAbschnitt[],
+): Map<string, number> {
   const nr = new Map<string, number>();
-  for (const a of abschnitte) for (const x of a.eintraege) nr.set(x.key, nr.size + 1);
+  for (const a of abschnitte)
+    for (const x of a.eintraege) nr.set(x.key, nr.size + 1);
   return nr;
 }

@@ -54,7 +54,12 @@ export interface VerhaeltnisErgebnis {
 }
 
 /** Vergleich a/ta mit b/tb exakt (ohne Gleitkomma): positiv, wenn a/ta größer. */
-function vergleicheQuotient(a: number, ta: number, b: number, tb: number): number {
+function vergleicheQuotient(
+  a: number,
+  ta: number,
+  b: number,
+  tb: number,
+): number {
   return a * tb - b * ta;
 }
 
@@ -78,35 +83,50 @@ function grenzGleichstand<T>(
   const gruppe = sortiert.filter((x) => gleich(x, letzter));
   const ids = [...new Set(gruppe.map(id))].sort();
   if (ids.every((x) => losReihenfolge.includes(x))) return null;
-  const plaetze = sortiert.slice(0, sitze).filter((x) => gleich(x, letzter)).length;
+  const plaetze = sortiert
+    .slice(0, sitze)
+    .filter((x) => gleich(x, letzter)).length;
   return { ids, plaetze };
 }
 
-export function dHondt(listen: readonly Liste[], sitze: number, losReihenfolge: readonly string[] = []): VerhaeltnisErgebnis {
+export function dHondt(
+  listen: readonly Liste[],
+  sitze: number,
+  losReihenfolge: readonly string[] = [],
+): VerhaeltnisErgebnis {
   const quotienten: Hoechstzahl[] = [];
   for (const l of listen) {
     if (l.stimmen <= 0) continue;
     // Eine Liste kann höchstens so viele Sitze erhalten, wie sie Bewerber hat.
     for (let t = 1; t <= Math.min(sitze, l.bewerber.length); t++) {
-      quotienten.push({ listeId: l.id, teiler: t, stimmen: l.stimmen, sitz: null });
+      quotienten.push({
+        listeId: l.id,
+        teiler: t,
+        stimmen: l.stimmen,
+        sitz: null,
+      });
     }
   }
   quotienten.sort(
     (a, b) =>
       -vergleicheQuotient(a.stimmen, a.teiler, b.stimmen, b.teiler) ||
-      losIndex(losReihenfolge, a.listeId) - losIndex(losReihenfolge, b.listeId) ||
+      losIndex(losReihenfolge, a.listeId) -
+        losIndex(losReihenfolge, b.listeId) ||
       a.teiler - b.teiler,
   );
 
   const los = grenzGleichstand(
     quotienten,
     sitze,
-    (a, b) => vergleicheQuotient(a.stimmen, a.teiler, b.stimmen, b.teiler) === 0,
+    (a, b) =>
+      vergleicheQuotient(a.stimmen, a.teiler, b.stimmen, b.teiler) === 0,
     (q) => q.listeId,
     losReihenfolge,
   );
 
-  const sitzeJeListe: Record<string, number> = Object.fromEntries(listen.map((l) => [l.id, 0]));
+  const sitzeJeListe: Record<string, number> = Object.fromEntries(
+    listen.map((l) => [l.id, 0]),
+  );
   quotienten.slice(0, sitze).forEach((q, i) => {
     q.sitz = i + 1;
     sitzeJeListe[q.listeId] = (sitzeJeListe[q.listeId] ?? 0) + 1;
@@ -118,7 +138,11 @@ export function dHondt(listen: readonly Liste[], sitze: number, losReihenfolge: 
     const n = sitzeJeListe[l.id] ?? 0;
     const bs = l.bewerberStimmen;
     const reihenfolge = bs
-      ? [...l.bewerber].sort((a, b) => (bs[b] ?? 0) - (bs[a] ?? 0) || l.bewerber.indexOf(a) - l.bewerber.indexOf(b))
+      ? [...l.bewerber].sort(
+          (a, b) =>
+            (bs[b] ?? 0) - (bs[a] ?? 0) ||
+            l.bewerber.indexOf(a) - l.bewerber.indexOf(b),
+        )
       : l.bewerber;
     gewaehlt.push(...reihenfolge.slice(0, n));
     ersatzJeListe[l.id] = reihenfolge.slice(n);
@@ -145,13 +169,19 @@ export interface Vorschlag {
  * Sitzverteilung nach d'Hondt, Vergabe innerhalb des Vorschlags nach persönlichen Stimmen.
  * Überzählige Sitze eines Vorschlags mit zu wenigen Bewerbern gehen an die nächsten Höchstzahlen (§ 37 Abs. 3).
  */
-export function verhaeltniswahl(vorschlaege: readonly Vorschlag[], sitze: number, losReihenfolge: readonly string[] = []): VerhaeltnisErgebnis {
+export function verhaeltniswahl(
+  vorschlaege: readonly Vorschlag[],
+  sitze: number,
+  losReihenfolge: readonly string[] = [],
+): VerhaeltnisErgebnis {
   return dHondt(
     vorschlaege.map((v) => ({
       id: v.id,
       stimmen: v.bewerber.reduce((s, b) => s + b.stimmen, 0),
       bewerber: v.bewerber.map((b) => b.id),
-      bewerberStimmen: Object.fromEntries(v.bewerber.map((b) => [b.id, b.stimmen])),
+      bewerberStimmen: Object.fromEntries(
+        v.bewerber.map((b) => [b.id, b.stimmen]),
+      ),
     })),
     sitze,
     losReihenfolge,
@@ -172,11 +202,25 @@ export interface MehrheitErgebnis {
   unbesetzt: number;
 }
 
-export function mehrheitswahl(kandidaten: readonly Kandidat[], sitze: number, losReihenfolge: readonly string[] = []): MehrheitErgebnis {
+export function mehrheitswahl(
+  kandidaten: readonly Kandidat[],
+  sitze: number,
+  losReihenfolge: readonly string[] = [],
+): MehrheitErgebnis {
   const mitStimmen = kandidaten
     .filter((k) => k.stimmen > 0)
-    .sort((a, b) => b.stimmen - a.stimmen || losIndex(losReihenfolge, a.id) - losIndex(losReihenfolge, b.id));
-  const los = grenzGleichstand(mitStimmen, sitze, (a, b) => a.stimmen === b.stimmen, (k) => k.id, losReihenfolge);
+    .sort(
+      (a, b) =>
+        b.stimmen - a.stimmen ||
+        losIndex(losReihenfolge, a.id) - losIndex(losReihenfolge, b.id),
+    );
+  const los = grenzGleichstand(
+    mitStimmen,
+    sitze,
+    (a, b) => a.stimmen === b.stimmen,
+    (k) => k.id,
+    losReihenfolge,
+  );
   return {
     gewaehlt: mitStimmen.slice(0, sitze).map((k) => k.id),
     ersatz: mitStimmen.slice(sitze).map((k) => k.id),
@@ -228,8 +272,12 @@ export function pruefeZahlen(i: ZahlenInput): ZahlenPruefung {
   const fehler: string[] = [];
   const hinweise: string[] = [];
   const gueltig = i.stimmzettelGesamt - i.stimmzettelUngueltig;
-  if (i.stimmzettelGesamt < 0 || i.stimmzettelUngueltig < 0) fehler.push("Zahlen dürfen nicht negativ sein.");
-  if (gueltig < 0) fehler.push("Es gibt mehr ungültige Stimmzettel als Stimmzettel insgesamt.");
+  if (i.stimmzettelGesamt < 0 || i.stimmzettelUngueltig < 0)
+    fehler.push("Zahlen dürfen nicht negativ sein.");
+  if (gueltig < 0)
+    fehler.push(
+      "Es gibt mehr ungültige Stimmzettel als Stimmzettel insgesamt.",
+    );
   if (i.stimmzettelGesamt !== i.vermerkteStimmabgaben) {
     hinweise.push(
       `Stimmzettel in der Urne (${i.stimmzettelGesamt}) und Vermerke im Wählerverzeichnis (${i.vermerkteStimmabgaben}) weichen voneinander ab – in der Niederschrift erläutern.`,
@@ -237,14 +285,21 @@ export function pruefeZahlen(i: ZahlenInput): ZahlenPruefung {
   }
   // Jede wählende Person hat so viele Stimmen, wie Sitze zu vergeben sind (§ 20 Abs. 4 LPVGWO)
   if (gueltig >= 0 && i.summeStimmen > gueltig * i.sitze) {
-    fehler.push(`Mehr Stimmen (${i.summeStimmen}) als möglich (${gueltig} gültige Stimmzettel × ${i.sitze} ${i.sitze === 1 ? "Stimme" : "Stimmen"}).`);
+    fehler.push(
+      `Mehr Stimmen (${i.summeStimmen}) als möglich (${gueltig} gültige Stimmzettel × ${i.sitze} ${i.sitze === 1 ? "Stimme" : "Stimmen"}).`,
+    );
   }
   const proPerson = maxStimmenJeBewerber(i.wahlverfahren);
-  if (gueltig >= 0 && i.maxBewerberStimmen != null && i.maxBewerberStimmen > gueltig * proPerson) {
+  if (
+    gueltig >= 0 &&
+    i.maxBewerberStimmen != null &&
+    i.maxBewerberStimmen > gueltig * proPerson
+  ) {
     fehler.push(
       `Eine Person hat ${i.maxBewerberStimmen} Stimmen – höchstens möglich sind ${gueltig * proPerson} (${gueltig} gültige Stimmzettel × ${proPerson}).`,
     );
   }
-  if (gueltig > 0 && i.summeStimmen === 0) hinweise.push("Es sind noch keine Stimmen eingetragen.");
+  if (gueltig > 0 && i.summeStimmen === 0)
+    hinweise.push("Es sind noch keine Stimmen eingetragen.");
   return { fehler, hinweise };
 }

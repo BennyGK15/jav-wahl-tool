@@ -57,14 +57,31 @@ export interface WahlausschreibenBuild {
   sha256: string;
 }
 
-const mitUhrzeit = (iso: string, uhrzeit: string | null) => `${formatIsoDate(iso)}${uhrzeit ? `, ${uhrzeit} Uhr` : ""}`;
+const mitUhrzeit = (iso: string, uhrzeit: string | null) =>
+  `${formatIsoDate(iso)}${uhrzeit ? `, ${uhrzeit} Uhr` : ""}`;
 
-export async function buildWahlausschreiben(electionId: string): Promise<WahlausschreibenBuild> {
-  const election = await prisma.election.findUniqueOrThrow({ where: { id: electionId }, include: { deadlines: true } });
+export async function buildWahlausschreiben(
+  electionId: string,
+): Promise<WahlausschreibenBuild> {
+  const election = await prisma.election.findUniqueOrThrow({
+    where: { id: electionId },
+    include: { deadlines: true },
+  });
   const a = parseAngaben(election.wahlausschreibenAngaben);
-  const dl = new Map(election.deadlines.map((d) => [d.ruleKey, { iso: fromDbDate(d.datum), uhrzeit: d.uhrzeit }]));
-  const [counts, geschlechter] = await Promise.all([voterCounts(electionId), loadGeschlechter(electionId)]);
-  const anzahl = counts.wahlberechtigt > 0 ? counts.wahlberechtigt : election.wahlberechtigteSchaetzung;
+  const dl = new Map(
+    election.deadlines.map((d) => [
+      d.ruleKey,
+      { iso: fromDbDate(d.datum), uhrzeit: d.uhrzeit },
+    ]),
+  );
+  const [counts, geschlechter] = await Promise.all([
+    voterCounts(electionId),
+    loadGeschlechter(electionId),
+  ]);
+  const anzahl =
+    counts.wahlberechtigt > 0
+      ? counts.wahlberechtigt
+      : election.wahlberechtigteSchaetzung;
   const mitglieder = verfahrensauskunft(anzahl).mitglieder;
   const wahltag = fromDbDate(election.wahltag);
 
@@ -76,52 +93,114 @@ export async function buildWahlausschreiben(electionId: string): Promise<Wahlaus
   const view: WahlausschreibenView = {
     dienststelle: election.dienststelle,
     ausstellungsort: a.ausstellungsort || null,
-    erlassAm: election.wahlausschreibenAm ? formatIsoDate(fromDbDate(election.wahlausschreibenAm)) : null,
+    erlassAm: election.wahlausschreibenAm
+      ? formatIsoDate(fromDbDate(election.wahlausschreibenAm))
+      : null,
     mitglieder,
     mitgliederQuelle: counts.wahlberechtigt > 0 ? "verzeichnis" : "schaetzung",
     wahltag: formatIsoDate(wahltag),
-    wahlzeit: a.wahlzeitVon && a.wahlzeitBis ? `${a.wahlzeitVon} bis ${a.wahlzeitBis} Uhr` : null,
+    wahlzeit:
+      a.wahlzeitVon && a.wahlzeitBis
+        ? `${a.wahlzeitVon} bis ${a.wahlzeitBis} Uhr`
+        : null,
     wahlraum: a.wahlraum || null,
     auslageVon: auslageBeginn ? formatIsoDate(auslageBeginn.iso) : null,
     auslageBis: auslageEnde ? formatIsoDate(auslageEnde.iso) : null,
     auslageOrt: a.auslageOrt || null,
     auslageZeiten: a.auslageZeiten || null,
-    einspruchBis: auslageEnde?.uhrzeit ? mitUhrzeit(auslageEnde.iso, auslageEnde.uhrzeit) : null,
-    vorschlaegeBis: vorschlaege?.uhrzeit ? mitUhrzeit(vorschlaege.iso, vorschlaege.uhrzeit) : null,
+    einspruchBis: auslageEnde?.uhrzeit
+      ? mitUhrzeit(auslageEnde.iso, auslageEnde.uhrzeit)
+      : null,
+    vorschlaegeBis: vorschlaege?.uhrzeit
+      ? mitUhrzeit(vorschlaege.iso, vorschlaege.uhrzeit)
+      : null,
     einreichungsstelle: a.einreichungsstelle || null,
     mindestUnterschriften: election.stuetzunterschriftenMin,
-    bekanntmachungVorschlaegeBis: bekanntmachung ? formatIsoDate(bekanntmachung.iso) : null,
+    bekanntmachungVorschlaegeBis: bekanntmachung
+      ? formatIsoDate(bekanntmachung.iso)
+      : null,
     bekanntmachungsort: a.bekanntmachungsort || null,
-    auszaehlung: a.auszaehlungZeit && a.auszaehlungOrt ? `${formatIsoDate(wahltag)}, ${a.auszaehlungZeit} Uhr, ${a.auszaehlungOrt}` : null,
+    auszaehlung:
+      a.auszaehlungZeit && a.auszaehlungOrt
+        ? `${formatIsoDate(wahltag)}, ${a.auszaehlungZeit} Uhr, ${a.auszaehlungOrt}`
+        : null,
     briefwahlHinweis: a.briefwahlHinweis || null,
     geschlechterHinweis: mitglieder >= 3,
-    geschlechterAnteile: geschlechter.relevant && geschlechter.zaehlung ? anteileText(geschlechter.zaehlung) : null,
+    geschlechterAnteile:
+      geschlechter.relevant && geschlechter.zaehlung
+        ? anteileText(geschlechter.zaehlung)
+        : null,
     geschlechterSitze:
-      geschlechter.relevant && geschlechter.verteilung && !geschlechter.verteilung.losOffen ? sitzeText(geschlechter.verteilung) : null,
+      geschlechter.relevant &&
+      geschlechter.verteilung &&
+      !geschlechter.verteilung.losOffen
+        ? sitzeText(geschlechter.verteilung)
+        : null,
   };
 
   const fehlend: Fehlend[] = [];
-  const feld = (label: string, name: string) => fehlend.push({ label, ziel: { art: "feld", feld: name } });
+  const feld = (label: string, name: string) =>
+    fehlend.push({ label, ziel: { art: "feld", feld: name } });
   if (!view.ausstellungsort) feld("Ausstellungsort", "ausstellungsort");
   if (!view.erlassAm) feld("Datum des Erlasses", "wahlausschreibenAm");
-  if (!view.wahlzeit) feld(a.wahlzeitVon ? "Wahlzeit bis" : "Wahlzeit von/bis", a.wahlzeitVon ? "wahlzeitBis" : "wahlzeitVon");
+  if (!view.wahlzeit)
+    feld(
+      a.wahlzeitVon ? "Wahlzeit bis" : "Wahlzeit von/bis",
+      a.wahlzeitVon ? "wahlzeitBis" : "wahlzeitVon",
+    );
   if (!view.wahlraum) feld("Wahlraum", "wahlraum");
-  if (!view.auslageVon || !view.auslageBis) fehlend.push({ label: "Auslagezeitraum (Wahlkalender neu berechnen)", ziel: { art: "kalender" } });
+  if (!view.auslageVon || !view.auslageBis)
+    fehlend.push({
+      label: "Auslagezeitraum (Wahlkalender neu berechnen)",
+      ziel: { art: "kalender" },
+    });
   if (!view.auslageOrt) feld("Ort der Auslage", "auslageOrt");
   if (!view.auslageZeiten) feld("Zeiten der Einsichtnahme", "auslageZeiten");
-  if (!view.einspruchBis) fehlend.push({ label: "Uhrzeit für das Ende der Einspruchsfrist", ziel: { art: "kalender", frist: "auslage_ende" } });
-  if (!view.vorschlaegeBis) fehlend.push({ label: "Uhrzeit für das Ende der Einreichungsfrist", ziel: { art: "kalender", frist: "wahlvorschlaege_ende" } });
-  if (!view.einreichungsstelle) feld("Einreichungsstelle für Wahlvorschläge", "einreichungsstelle");
-  if (view.mindestUnterschriften == null) fehlend.push({ label: "Mindestzahl der Stützunterschriften", ziel: { art: "vorschlaege", anker: "mindestunterschriften" } });
-  if (!view.bekanntmachungsort) feld("Ort der Bekanntmachungen", "bekanntmachungsort");
+  if (!view.einspruchBis)
+    fehlend.push({
+      label: "Uhrzeit für das Ende der Einspruchsfrist",
+      ziel: { art: "kalender", frist: "auslage_ende" },
+    });
+  if (!view.vorschlaegeBis)
+    fehlend.push({
+      label: "Uhrzeit für das Ende der Einreichungsfrist",
+      ziel: { art: "kalender", frist: "wahlvorschlaege_ende" },
+    });
+  if (!view.einreichungsstelle)
+    feld("Einreichungsstelle für Wahlvorschläge", "einreichungsstelle");
+  if (view.mindestUnterschriften == null)
+    fehlend.push({
+      label: "Mindestzahl der Stützunterschriften",
+      ziel: { art: "vorschlaege", anker: "mindestunterschriften" },
+    });
+  if (!view.bekanntmachungsort)
+    feld("Ort der Bekanntmachungen", "bekanntmachungsort");
   if (geschlechter.relevant) {
     const z = geschlechter.zaehlung;
-    if (!z) fehlend.push({ label: "Anteile von Frauen und Männern (Wählerverzeichnis anlegen)", ziel: { art: "seite", href: "waehler" } });
-    else if (z.ohneAngabe > 0) fehlend.push({ label: `Geschlecht bei ${z.ohneAngabe} Wahlberechtigten nicht erfasst`, ziel: { art: "seite", href: "waehler" } });
-    if (geschlechter.verteilung?.losOffen) fehlend.push({ label: "Losentscheid zur Verteilung der Sitze auf Frauen und Männer", ziel: { art: "feld", feld: "geschlechter" } });
+    if (!z)
+      fehlend.push({
+        label: "Anteile von Frauen und Männern (Wählerverzeichnis anlegen)",
+        ziel: { art: "seite", href: "waehler" },
+      });
+    else if (z.ohneAngabe > 0)
+      fehlend.push({
+        label: `Geschlecht bei ${z.ohneAngabe} Wahlberechtigten nicht erfasst`,
+        ziel: { art: "seite", href: "waehler" },
+      });
+    if (geschlechter.verteilung?.losOffen)
+      fehlend.push({
+        label: "Losentscheid zur Verteilung der Sitze auf Frauen und Männer",
+        ziel: { art: "feld", feld: "geschlechter" },
+      });
   }
-  if (!view.auszaehlung) feld(a.auszaehlungZeit ? "Ort der Auszählung" : "Uhrzeit der Auszählung", a.auszaehlungZeit ? "auszaehlungOrt" : "auszaehlungZeit");
+  if (!view.auszaehlung)
+    feld(
+      a.auszaehlungZeit ? "Ort der Auszählung" : "Uhrzeit der Auszählung",
+      a.auszaehlungZeit ? "auszaehlungOrt" : "auszaehlungZeit",
+    );
 
-  const sha256 = createHash("sha256").update(JSON.stringify(view)).digest("hex");
+  const sha256 = createHash("sha256")
+    .update(JSON.stringify(view))
+    .digest("hex");
   return { view, fehlend, sha256 };
 }

@@ -5,9 +5,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { OrtFeld } from "@/lib/einrichtung";
-import { abschliessenAction, saveOrteAction, saveStuetzAction, type EinrichtungState } from "./actions";
+import {
+  abschliessenAction,
+  saveOrteAction,
+  saveStuetzAction,
+  type EinrichtungState,
+} from "./actions";
 
-function Meldung({ state, ok }: { state: EinrichtungState; ok: string }) {
+function Meldung({
+  state,
+  ok,
+}: Readonly<{ state: EinrichtungState; ok: string }>) {
   if (state.error)
     return (
       <p role="alert" className="text-sm text-destructive">
@@ -23,14 +31,30 @@ function Meldung({ state, ok }: { state: EinrichtungState; ok: string }) {
   return null;
 }
 
-export function OrteForm({ electionId, felder, werte }: { electionId: string; felder: OrtFeld[]; werte: Record<string, string> }) {
-  const [state, action, pending] = useActionState<EinrichtungState, FormData>(saveOrteAction, {});
+export function OrteForm({
+  electionId,
+  felder,
+  werte,
+}: Readonly<{
+  electionId: string;
+  felder: OrtFeld[];
+  werte: Record<string, string>;
+}>) {
+  const [state, action, pending] = useActionState<EinrichtungState, FormData>(
+    saveOrteAction,
+    {},
+  );
   return (
     <form action={action} className="grid gap-5">
       <input type="hidden" name="electionId" value={electionId} />
       <div className="grid gap-4 sm:grid-cols-2">
         {felder.map((f) => (
-          <div key={f.key} className={f.typ === "lang" ? "grid gap-1.5 sm:col-span-2" : "grid gap-1.5"}>
+          <div
+            key={f.key}
+            className={
+              f.typ === "lang" ? "grid gap-1.5 sm:col-span-2" : "grid gap-1.5"
+            }
+          >
             <Label htmlFor={`e-${f.key}`}>
               {f.label}
               {f.pflicht && <span aria-hidden> *</span>}
@@ -54,7 +78,9 @@ export function OrteForm({ electionId, felder, werte }: { electionId: string; fe
                 maxLength={300}
               />
             )}
-            {f.hinweis && <p className="text-xs text-muted-foreground">{f.hinweis}</p>}
+            {f.hinweis && (
+              <p className="text-xs text-muted-foreground">{f.hinweis}</p>
+            )}
           </div>
         ))}
       </div>
@@ -68,14 +94,29 @@ export function OrteForm({ electionId, felder, werte }: { electionId: string; fe
   );
 }
 
-export function StuetzForm({ electionId, wert, vorschlag }: { electionId: string; wert: number | null; vorschlag: number }) {
-  const [state, action, pending] = useActionState<EinrichtungState, FormData>(saveStuetzAction, {});
+export function StuetzForm({
+  electionId,
+  wert,
+  vorschlag,
+}: Readonly<{ electionId: string; wert: number | null; vorschlag: number }>) {
+  const [state, action, pending] = useActionState<EinrichtungState, FormData>(
+    saveStuetzAction,
+    {},
+  );
   return (
     <form action={action} className="grid gap-4">
       <input type="hidden" name="electionId" value={electionId} />
       <div className="grid max-w-xs gap-1.5">
         <Label htmlFor="e-min">Mindestzahl Stützunterschriften *</Label>
-        <Input id="e-min" name="min" type="number" min={0} max={50} required defaultValue={wert ?? vorschlag} />
+        <Input
+          id="e-min"
+          name="min"
+          type="number"
+          min={0}
+          max={50}
+          required
+          defaultValue={wert ?? vorschlag}
+        />
       </div>
       <Meldung state={state} ok="Gespeichert." />
       <div>
@@ -87,15 +128,28 @@ export function StuetzForm({ electionId, wert, vorschlag }: { electionId: string
   );
 }
 
-export function AbschlussForm({ electionId, bereit }: { electionId: string; bereit: boolean }) {
-  const [state, action, pending] = useActionState<EinrichtungState, FormData>(abschliessenAction, {});
+export function AbschlussForm({
+  electionId,
+  bereit,
+}: Readonly<{ electionId: string; bereit: boolean }>) {
+  const [state, action, pending] = useActionState<EinrichtungState, FormData>(
+    abschliessenAction,
+    {},
+  );
   return (
     <form action={action} className="grid gap-3">
       <input type="hidden" name="electionId" value={electionId} />
       <Meldung state={state} ok="" />
       <div>
-        <Button type="submit" size="lg" variant="accent" disabled={!bereit || pending}>
-          {pending ? "Wird freigeschaltet …" : "Einrichtung abschließen und Wahlkalender freischalten"}
+        <Button
+          type="submit"
+          size="lg"
+          variant="accent"
+          disabled={!bereit || pending}
+        >
+          {pending
+            ? "Wird freigeschaltet …"
+            : "Einrichtung abschließen und Wahlkalender freischalten"}
         </Button>
       </div>
     </form>

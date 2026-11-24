@@ -25,7 +25,11 @@ export interface PruefInput {
   eingang: string;
   /** Fristende in Berliner Ortszeit, "YYYY-MM-DD HH:MM"; null = nicht berechnet */
   fristende: string | null;
-  bewerber: (PruefPerson & { waehlbar: boolean; zustimmung: boolean; geschlecht?: "w" | "m" | "d" | null })[];
+  bewerber: (PruefPerson & {
+    waehlbar: boolean;
+    zustimmung: boolean;
+    geschlecht?: "w" | "m" | "d" | null;
+  })[];
   unterstuetzer: (PruefPerson & { wahlberechtigt: boolean })[];
   /** Vom Wahlvorstand festgelegte Mindestzahl; null = noch nicht festgelegt */
   mindestUnterschriften: number | null;
@@ -42,36 +46,65 @@ export function pruefeWahlvorschlag(i: PruefInput): Pruefpunkt[] {
 
   // Frist
   if (!i.fristende) {
-    p.push({ status: "hinweis", text: "Fristende für Wahlvorschläge ist nicht berechnet – Rechtzeitigkeit manuell prüfen." });
+    p.push({
+      status: "hinweis",
+      text: "Fristende für Wahlvorschläge ist nicht berechnet – Rechtzeitigkeit manuell prüfen.",
+    });
   } else if (i.eingang <= i.fristende) {
-    p.push({ status: "ok", text: `Rechtzeitig eingegangen (Fristende ${i.fristende} Uhr).` });
+    p.push({
+      status: "ok",
+      text: `Rechtzeitig eingegangen (Fristende ${i.fristende} Uhr).`,
+    });
   } else {
-    p.push({ status: "fehler", text: `Verspätet: Eingang ${i.eingang} Uhr, Fristende ${i.fristende} Uhr.` });
+    p.push({
+      status: "fehler",
+      text: `Verspätet: Eingang ${i.eingang} Uhr, Fristende ${i.fristende} Uhr.`,
+    });
   }
 
   // Bewerberinnen und Bewerber
   if (i.bewerber.length === 0) {
-    p.push({ status: "fehler", text: "Der Wahlvorschlag enthält keine Bewerberinnen oder Bewerber." });
+    p.push({
+      status: "fehler",
+      text: "Der Wahlvorschlag enthält keine Bewerberinnen oder Bewerber.",
+    });
   } else {
     const nichtWaehlbar = i.bewerber.filter((b) => !b.waehlbar);
     p.push(
       nichtWaehlbar.length
-        ? { status: "fehler", text: `Nicht wählbar (§ 60 Abs. 2 LPVG BW): ${namen(nichtWaehlbar)}.` }
-        : { status: "ok", text: `Alle ${i.bewerber.length} Bewerberinnen und Bewerber sind wählbar.` },
+        ? {
+            status: "fehler",
+            text: `Nicht wählbar (§ 60 Abs. 2 LPVG BW): ${namen(nichtWaehlbar)}.`,
+          }
+        : {
+            status: "ok",
+            text: `Alle ${i.bewerber.length} Bewerberinnen und Bewerber sind wählbar.`,
+          },
     );
     const ohneZustimmung = i.bewerber.filter((b) => !b.zustimmung);
     p.push(
       ohneZustimmung.length
-        ? { status: "fehler", text: `Schriftliche Zustimmung fehlt: ${namen(ohneZustimmung)}.` }
-        : { status: "ok", text: "Schriftliche Zustimmungen liegen vollständig vor." },
+        ? {
+            status: "fehler",
+            text: `Schriftliche Zustimmung fehlt: ${namen(ohneZustimmung)}.`,
+          }
+        : {
+            status: "ok",
+            text: "Schriftliche Zustimmungen liegen vollständig vor.",
+          },
     );
     if (i.geschlechterSitze === null) {
-      p.push({ status: "hinweis", text: "Die Sitze für Frauen und Männer (§ 8 LPVGWO) stehen noch nicht fest – siehe Seite Wahlausschreiben." });
+      p.push({
+        status: "hinweis",
+        text: "Die Sitze für Frauen und Männer (§ 8 LPVGWO) stehen noch nicht fest – siehe Seite Wahlausschreiben.",
+      });
     } else if (i.geschlechterSitze) {
       p.push(
         pruefeGeschlechter({
           verteilung: i.geschlechterSitze,
-          bewerber: i.bewerber.map((b) => ({ geschlecht: b.geschlecht ?? null })),
+          bewerber: i.bewerber.map((b) => ({
+            geschlecht: b.geschlecht ?? null,
+          })),
           begruendung: i.geschlechterBegruendung ?? null,
         }),
       );
@@ -89,8 +122,14 @@ export function pruefeWahlvorschlag(i: PruefInput): Pruefpunkt[] {
   if (i.einreicherArt === "gewerkschaft") {
     p.push(
       i.gewerkschaft?.trim()
-        ? { status: "ok", text: `Eingereicht von der Gewerkschaft ${i.gewerkschaft.trim()}.` }
-        : { status: "fehler", text: "Name der einreichenden Gewerkschaft fehlt." },
+        ? {
+            status: "ok",
+            text: `Eingereicht von der Gewerkschaft ${i.gewerkschaft.trim()}.`,
+          }
+        : {
+            status: "fehler",
+            text: "Name der einreichenden Gewerkschaft fehlt.",
+          },
     );
     return p;
   }
@@ -98,9 +137,14 @@ export function pruefeWahlvorschlag(i: PruefInput): Pruefpunkt[] {
   // Stützunterschriften (nur Vorschläge der Beschäftigten)
   const nichtBerechtigt = i.unterstuetzer.filter((u) => !u.wahlberechtigt);
   if (nichtBerechtigt.length) {
-    p.push({ status: "fehler", text: `Unterschriften von nicht Wahlberechtigten zählen nicht: ${namen(nichtBerechtigt)}.` });
+    p.push({
+      status: "fehler",
+      text: `Unterschriften von nicht Wahlberechtigten zählen nicht: ${namen(nichtBerechtigt)}.`,
+    });
   }
-  const doppelt = i.unterstuetzer.filter((u) => u.wahlberechtigt && u.aufAnderenVorschlaegen > 0);
+  const doppelt = i.unterstuetzer.filter(
+    (u) => u.wahlberechtigt && u.aufAnderenVorschlaegen > 0,
+  );
   if (doppelt.length) {
     p.push({
       status: "hinweis",
@@ -114,7 +158,10 @@ export function pruefeWahlvorschlag(i: PruefInput): Pruefpunkt[] {
       text: `${gueltig} gültige Stützunterschriften. Die Mindestzahl ist noch nicht festgelegt.`,
     });
   } else if (gueltig >= i.mindestUnterschriften) {
-    p.push({ status: "ok", text: `${gueltig} gültige Stützunterschriften (mindestens ${i.mindestUnterschriften}).` });
+    p.push({
+      status: "ok",
+      text: `${gueltig} gültige Stützunterschriften (mindestens ${i.mindestUnterschriften}).`,
+    });
   } else {
     p.push({
       status: "fehler",
@@ -129,12 +176,18 @@ export function hatFehler(punkte: Pruefpunkt[]): boolean {
 }
 
 /** Einspruch rechtzeitig? Beide Werte als Berliner Ortszeit "YYYY-MM-DD HH:MM". */
-export function einspruchRechtzeitig(eingang: string, fristende: string | null): boolean | null {
+export function einspruchRechtzeitig(
+  eingang: string,
+  fristende: string | null,
+): boolean | null {
   if (!fristende) return null;
   return eingang <= fristende;
 }
 
 /** Fristende aus Datum + optionaler Uhrzeit; ohne Uhrzeit gilt das Ende des Tages. */
-export function fristendeAus(datumIso: string, uhrzeit: string | null | undefined): string {
+export function fristendeAus(
+  datumIso: string,
+  uhrzeit: string | null | undefined,
+): string {
   return `${datumIso} ${uhrzeit || "23:59"}`;
 }

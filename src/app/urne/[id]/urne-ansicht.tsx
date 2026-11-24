@@ -20,16 +20,24 @@ export interface UrneZeile {
 }
 
 /** Umlaute/Akzente ignorieren, damit „Muller“ auch „Müller“ findet. */
-const norm = (s: string) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/ß/g, "ss").trim();
+const norm = (s: string) =>
+  s
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replaceAll("ß", "ss")
+    .trim();
 
 const ABGLEICH_MS = 15_000;
 
-export function UrneAnsicht({ zeilen }: { zeilen: UrneZeile[] }) {
+export function UrneAnsicht({ zeilen }: Readonly<{ zeilen: UrneZeile[] }>) {
   const router = useRouter();
   const suche = useRef<HTMLInputElement>(null);
   const [query, setQuery] = useState("");
   const [auswahl, setAuswahl] = useState<UrneZeile | null>(null);
-  const [meldung, setMeldung] = useState<{ ok: boolean; text: string } | null>(null);
+  const [meldung, setMeldung] = useState<{ ok: boolean; text: string } | null>(
+    null,
+  );
   const [pending, startTransition] = useTransition();
 
   // Mehrere Geräte gleichzeitig: Stand regelmäßig vom Server holen
@@ -60,10 +68,16 @@ export function UrneAnsicht({ zeilen }: { zeilen: UrneZeile[] }) {
       const res = await markVotedAction(z.id, "urne");
       setAuswahl(null);
       if (res.ok) {
-        setMeldung({ ok: true, text: `Vermerkt: ${z.vorname} ${z.nachname} (Nr. ${z.lfdNr})` });
+        setMeldung({
+          ok: true,
+          text: `Vermerkt: ${z.vorname} ${z.nachname} (Nr. ${z.lfdNr})`,
+        });
         setQuery("");
       } else {
-        setMeldung({ ok: false, text: res.message ?? "Vermerk nicht möglich." });
+        setMeldung({
+          ok: false,
+          text: res.message ?? "Vermerk nicht möglich.",
+        });
       }
       router.refresh();
       suche.current?.focus();
@@ -73,15 +87,22 @@ export function UrneAnsicht({ zeilen }: { zeilen: UrneZeile[] }) {
   return (
     <div className="grid gap-5">
       <div className="flex items-baseline justify-between gap-3">
-        <p className="text-sm text-muted-foreground">Person anhand des Ausweises oder Namens suchen, Stimmabgabe bestätigen.</p>
+        <p className="text-sm text-muted-foreground">
+          Person anhand des Ausweises oder Namens suchen, Stimmabgabe
+          bestätigen.
+        </p>
         <p className="text-right text-sm whitespace-nowrap">
-          <span className="text-2xl font-bold tabular-nums">{gewaehlt}</span> / {zeilen.length} gewählt
+          <span className="text-2xl font-bold tabular-nums">{gewaehlt}</span> /{" "}
+          {zeilen.length} gewählt
         </p>
       </div>
 
       <label className="relative block">
         <span className="sr-only">Name oder laufende Nummer</span>
-        <Search aria-hidden className="pointer-events-none absolute top-1/2 left-4 size-7 -translate-y-1/2 text-muted-foreground" />
+        <Search
+          aria-hidden
+          className="pointer-events-none absolute top-1/2 left-4 size-7 -translate-y-1/2 text-muted-foreground"
+        />
         <input
           ref={suche}
           type="search"
@@ -108,16 +129,21 @@ export function UrneAnsicht({ zeilen }: { zeilen: UrneZeile[] }) {
             meldung.ok ? "bg-success text-white" : "bg-destructive text-white",
           )}
         >
-          {meldung.ok ? <Check aria-hidden className="size-6" /> : <TriangleAlert aria-hidden className="size-6" />}
+          {meldung.ok ? (
+            <Check aria-hidden className="size-6" />
+          ) : (
+            <TriangleAlert aria-hidden className="size-6" />
+          )}
           {meldung.text}
         </p>
       )}
 
       {query.trim() !== "" && treffer.length === 0 && (
         <p className="rounded-sm border-2 border-dashed p-6 text-center text-lg">
-          Keine wahlberechtigte Person gefunden.
+          Keine wahlberechtigte Person gefunden.{" "}
           <span className="mt-1 block text-base text-muted-foreground">
-            Schreibweise prüfen. Steht die Person nicht im Wählerverzeichnis, darf sie nicht wählen – bitte den Wahlvorstand holen.
+            Schreibweise prüfen. Steht die Person nicht im Wählerverzeichnis,
+            darf sie nicht wählen – bitte den Wahlvorstand holen.
           </span>
         </p>
       )}
@@ -126,7 +152,10 @@ export function UrneAnsicht({ zeilen }: { zeilen: UrneZeile[] }) {
         {treffer.map((z) => (
           <li
             key={z.id}
-            className={cn("flex flex-wrap items-center justify-between gap-4 rounded-sm border-2 bg-card p-4", z.gewaehltUm ? "border-border opacity-80" : "border-foreground")}
+            className={cn(
+              "flex flex-wrap items-center justify-between gap-4 rounded-sm border-2 bg-card p-4",
+              z.gewaehltUm ? "border-border opacity-80" : "border-foreground",
+            )}
           >
             <div>
               <p className="text-2xl leading-tight font-bold">
@@ -135,15 +164,28 @@ export function UrneAnsicht({ zeilen }: { zeilen: UrneZeile[] }) {
               <p className="text-base text-muted-foreground">Nr. {z.lfdNr}</p>
               {z.gewaehltUm && (
                 <p className="mt-1 font-semibold text-destructive">
-                  Hat bereits gewählt ({z.art === "brief" ? "per Brief" : `an der Urne, ${z.gewaehltUm} Uhr`}) – keinen Stimmzettel ausgeben.
+                  Hat bereits gewählt (
+                  {z.art === "brief"
+                    ? "per Brief"
+                    : `an der Urne, ${z.gewaehltUm} Uhr`}
+                  ) – keinen Stimmzettel ausgeben.
                 </p>
               )}
               {!z.gewaehltUm && z.briefUnterlagen && (
-                <p className="mt-1 font-semibold text-destructive">Briefwahlunterlagen wurden ausgegeben – bitte den Wahlvorstand holen.</p>
+                <p className="mt-1 font-semibold text-destructive">
+                  Briefwahlunterlagen wurden ausgegeben – bitte den Wahlvorstand
+                  holen.
+                </p>
               )}
             </div>
             {!z.gewaehltUm && !z.briefUnterlagen && (
-              <Button type="button" size="lg" className="h-14 px-6 text-lg" onClick={() => setAuswahl(z)} disabled={pending}>
+              <Button
+                type="button"
+                size="lg"
+                className="h-14 px-6 text-lg"
+                onClick={() => setAuswahl(z)}
+                disabled={pending}
+              >
                 Stimmabgabe vermerken
               </Button>
             )}
@@ -152,21 +194,48 @@ export function UrneAnsicht({ zeilen }: { zeilen: UrneZeile[] }) {
       </ul>
 
       {auswahl && (
-        <div role="dialog" aria-modal="true" aria-labelledby="bestaetigen-titel" className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-4 sm:items-center">
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="bestaetigen-titel"
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-4 sm:items-center"
+        >
           <div className="grid w-full max-w-lg gap-5 rounded-sm bg-card p-6">
-            <p id="bestaetigen-titel" className="text-sm font-bold tracking-wide text-muted-foreground uppercase">
+            <p
+              id="bestaetigen-titel"
+              className="text-sm font-bold tracking-wide text-muted-foreground uppercase"
+            >
               Stimmabgabe vermerken?
             </p>
             <p className="text-3xl leading-tight font-bold">
               {auswahl.nachname}, {auswahl.vorname}
-              <span className="block text-lg font-normal text-muted-foreground">Nr. {auswahl.lfdNr} im Wählerverzeichnis</span>
+              <span className="block text-lg font-normal text-muted-foreground">
+                Nr. {auswahl.lfdNr} im Wählerverzeichnis
+              </span>
             </p>
-            <p className="text-base">Erst vermerken, wenn der Stimmzettelumschlag in die Urne gelegt wird.</p>
+            <p className="text-base">
+              Erst vermerken, wenn der Stimmzettelumschlag in die Urne gelegt
+              wird.
+            </p>
             <div className="grid gap-3 sm:grid-cols-2">
-              <Button type="button" size="lg" variant="outline" className="h-14 text-lg" onClick={() => setAuswahl(null)} disabled={pending}>
+              <Button
+                type="button"
+                size="lg"
+                variant="outline"
+                className="h-14 text-lg"
+                onClick={() => setAuswahl(null)}
+                disabled={pending}
+              >
                 Abbrechen
               </Button>
-              <Button type="button" size="lg" className="h-14 text-lg" onClick={() => vermerken(auswahl)} disabled={pending} autoFocus>
+              <Button
+                type="button"
+                size="lg"
+                className="h-14 text-lg"
+                onClick={() => vermerken(auswahl)}
+                disabled={pending}
+                autoFocus
+              >
                 {pending ? "Wird vermerkt …" : "Ja, vermerken"}
               </Button>
             </div>

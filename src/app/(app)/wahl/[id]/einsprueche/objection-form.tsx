@@ -12,28 +12,49 @@ export function ObjectionForm({
   electionId,
   persons,
   defaultEingang,
-}: {
+}: Readonly<{
   electionId: string;
   persons: { id: string; label: string }[];
   defaultEingang: string;
-}) {
-  const [state, formAction, pending] = useActionState(createObjectionAction, initial);
+}>) {
+  const [state, formAction, pending] = useActionState(
+    createObjectionAction,
+    initial,
+  );
   const formRef = useRef<HTMLFormElement>(null);
   useEffect(() => {
     if (state.ok) formRef.current?.reset();
   }, [state]);
 
   return (
-    <form ref={formRef} action={formAction} className="grid gap-4" autoComplete="off">
+    <form
+      ref={formRef}
+      action={formAction}
+      className="grid gap-4"
+      autoComplete="off"
+    >
       <input type="hidden" name="electionId" value={electionId} />
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="grid gap-2">
           <Label htmlFor="eingangAm">Eingang beim Wahlvorstand</Label>
-          <Input id="eingangAm" name="eingangAm" type="datetime-local" required defaultValue={defaultEingang} />
+          <Input
+            id="eingangAm"
+            name="eingangAm"
+            type="datetime-local"
+            required
+            defaultValue={defaultEingang}
+          />
         </div>
         <div className="grid gap-2">
-          <Label htmlFor="voterId">Betroffene Person (falls bereits erfasst)</Label>
-          <select id="voterId" name="voterId" defaultValue="" className="h-9 rounded-sm border border-input bg-card px-3 text-sm">
+          <Label htmlFor="voterId">
+            Betroffene Person (falls bereits erfasst)
+          </Label>
+          <select
+            id="voterId"
+            name="voterId"
+            defaultValue=""
+            className="h-9 rounded-sm border border-input bg-card px-3 text-sm"
+          >
             <option value="">– nicht im Verzeichnis / mehrere –</option>
             {persons.map((p) => (
               <option key={p.id} value={p.id}>

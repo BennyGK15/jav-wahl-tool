@@ -11,13 +11,23 @@ import { requireSession } from "@/lib/session";
 export const metadata = { title: "Audit-Log" };
 const PRO_SEITE = 50;
 
-export default async function AuditPage({ searchParams }: { searchParams: Promise<{ bereich?: string; benutzer?: string; seite?: string }> }) {
+export default async function AuditPage({
+  searchParams,
+}: Readonly<{
+  searchParams: Promise<{
+    bereich?: string;
+    benutzer?: string;
+    seite?: string;
+  }>;
+}>) {
   const session = await requireSession();
   if (!hasPermission(session.user.role, "audit.read")) notFound();
 
   const sp = await searchParams;
-  const bereich = sp.bereich && sp.bereich in AUDIT_BEREICHE ? sp.bereich : undefined;
-  const benutzer = sp.benutzer && /^[\w-]{1,64}$/.test(sp.benutzer) ? sp.benutzer : undefined;
+  const bereich =
+    sp.bereich && sp.bereich in AUDIT_BEREICHE ? sp.bereich : undefined;
+  const benutzer =
+    sp.benutzer && /^[\w-]{1,64}$/.test(sp.benutzer) ? sp.benutzer : undefined;
   const seite = Math.max(1, Number.parseInt(sp.seite ?? "1", 10) || 1);
 
   // „voter“ umfasst auch „voters.*“, „objection“ auch „objections.*“ usw.
@@ -26,14 +36,28 @@ export default async function AuditPage({ searchParams }: { searchParams: Promis
     ...(benutzer ? { userId: benutzer } : {}),
   };
   const [eintraege, gesamt, users] = await Promise.all([
-    prisma.auditLog.findMany({ where, orderBy: { at: "desc" }, take: PRO_SEITE, skip: (seite - 1) * PRO_SEITE }),
+    prisma.auditLog.findMany({
+      where,
+      orderBy: { at: "desc" },
+      take: PRO_SEITE,
+      skip: (seite - 1) * PRO_SEITE,
+    }),
     prisma.auditLog.count({ where }),
-    prisma.user.findMany({ select: { id: true, name: true, displayUsername: true, username: true }, orderBy: { name: "asc" } }),
+    prisma.user.findMany({
+      select: { id: true, name: true, displayUsername: true, username: true },
+      orderBy: { name: "asc" },
+    }),
   ]);
-  const name = new Map(users.map((u) => [u.id, u.displayUsername ?? u.username ?? u.name]));
+  const name = new Map(
+    users.map((u) => [u.id, u.displayUsername ?? u.username ?? u.name]),
+  );
   const seiten = Math.max(1, Math.ceil(gesamt / PRO_SEITE));
   const link = (s: number) => {
-    const q = new URLSearchParams({ ...(bereich ? { bereich } : {}), ...(benutzer ? { benutzer } : {}), seite: String(s) });
+    const q = new URLSearchParams({
+      ...(bereich ? { bereich } : {}),
+      ...(benutzer ? { benutzer } : {}),
+      seite: String(s),
+    });
     return `/audit?${q}`;
   };
 
@@ -42,15 +66,20 @@ export default async function AuditPage({ searchParams }: { searchParams: Promis
       <div>
         <h1 className="text-3xl">Audit-Log</h1>
         <p className="max-w-3xl text-muted-foreground">
-          Wer hat wann was getan. Das Protokoll enthält bewusst nur Feldnamen und Kennungen, keine Inhalte; IP-Adressen sind
-          nur als Prüfsumme gespeichert.
+          Wer hat wann was getan. Das Protokoll enthält bewusst nur Feldnamen
+          und Kennungen, keine Inhalte; IP-Adressen sind nur als Prüfsumme
+          gespeichert.
         </p>
       </div>
 
       <form method="get" className="flex flex-wrap items-end gap-3">
         <label className="grid gap-1 text-sm font-medium">
-          Bereich
-          <select name="bereich" defaultValue={bereich ?? ""} className="h-10 rounded-sm border border-input bg-card px-3 text-sm">
+          Bereich{" "}
+          <select
+            name="bereich"
+            defaultValue={bereich ?? ""}
+            className="h-10 rounded-sm border border-input bg-card px-3 text-sm"
+          >
             <option value="">alle</option>
             {Object.entries(AUDIT_BEREICHE).map(([k, v]) => (
               <option key={k} value={k}>
@@ -60,8 +89,12 @@ export default async function AuditPage({ searchParams }: { searchParams: Promis
           </select>
         </label>
         <label className="grid gap-1 text-sm font-medium">
-          Benutzer
-          <select name="benutzer" defaultValue={benutzer ?? ""} className="h-10 rounded-sm border border-input bg-card px-3 text-sm">
+          Benutzer{" "}
+          <select
+            name="benutzer"
+            defaultValue={benutzer ?? ""}
+            className="h-10 rounded-sm border border-input bg-card px-3 text-sm"
+          >
             <option value="">alle</option>
             {users.map((u) => (
               <option key={u.id} value={u.id}>
@@ -93,17 +126,29 @@ export default async function AuditPage({ searchParams }: { searchParams: Promis
               <tbody>
                 {eintraege.map((e) => (
                   <tr key={e.id} className="border-t align-top">
-                    <td className="py-2 pr-4 whitespace-nowrap tabular-nums">{formatBerlinDateTime(e.at)}</td>
-                    <td className="py-2 pr-4">{e.userId ? (name.get(e.userId) ?? "gelöschtes Konto") : "System"}</td>
+                    <td className="py-2 pr-4 whitespace-nowrap tabular-nums">
+                      {formatBerlinDateTime(e.at)}
+                    </td>
+                    <td className="py-2 pr-4">
+                      {e.userId
+                        ? (name.get(e.userId) ?? "gelöschtes Konto")
+                        : "System"}
+                    </td>
                     <td className="py-2 pr-4">
                       {auditLabel(e.action)}
-                      <span className="block font-mono text-xs text-muted-foreground">{e.action}</span>
+                      <span className="block font-mono text-xs text-muted-foreground">
+                        {e.action}
+                      </span>
                     </td>
                     <td className="py-2 pr-4 font-mono text-xs">
                       {e.objectType}
                       {e.objectId ? ` · ${e.objectId.slice(0, 8)}` : ""}
                     </td>
-                    <td className="py-2 font-mono text-xs text-muted-foreground">{Array.isArray(e.fields) ? (e.fields as string[]).join(", ") : ""}</td>
+                    <td className="py-2 font-mono text-xs text-muted-foreground">
+                      {Array.isArray(e.fields)
+                        ? (e.fields as string[]).join(", ")
+                        : ""}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -112,7 +157,10 @@ export default async function AuditPage({ searchParams }: { searchParams: Promis
         </CardContent>
       </Card>
 
-      <nav aria-label="Seiten" className="flex items-center justify-between text-sm">
+      <nav
+        aria-label="Seiten"
+        className="flex items-center justify-between text-sm"
+      >
         <span className="text-muted-foreground">
           {gesamt} Einträge · Seite {seite} von {seiten}
         </span>

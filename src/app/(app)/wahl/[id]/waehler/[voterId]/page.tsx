@@ -1,6 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { writeAudit } from "@/lib/audit";
 import { hasPermission } from "@/lib/rbac";
 import { requireSession } from "@/lib/session";
@@ -9,9 +15,15 @@ import { VoterForm } from "../voter-form";
 
 export const metadata = { title: "Person bearbeiten" };
 
-export default async function VoterEditPage({ params }: { params: Promise<{ id: string; voterId: string }> }) {
+export default async function VoterEditPage({
+  params,
+}: Readonly<{ params: Promise<{ id: string; voterId: string }> }>) {
   const session = await requireSession();
-  if (!hasPermission(session.user.role, "voters.edit") || !hasPermission(session.user.role, "voters.sensitive.read")) notFound();
+  if (
+    !hasPermission(session.user.role, "voters.edit") ||
+    !hasPermission(session.user.role, "voters.sensitive.read")
+  )
+    notFound();
 
   const { id, voterId } = await params;
   const voter = await getVoterDecrypted(voterId);
@@ -39,7 +51,10 @@ export default async function VoterEditPage({ params }: { params: Promise<{ id: 
           <CardTitle>
             {voter.vorname} {voter.nachname}
           </CardTitle>
-          <CardDescription>Änderungen werden protokolliert. Wahlberechtigung und Wählbarkeit werden neu geprüft.</CardDescription>
+          <CardDescription>
+            Änderungen werden protokolliert. Wahlberechtigung und Wählbarkeit
+            werden neu geprüft.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <VoterForm

@@ -15,7 +15,8 @@ for (const file of [".env.local", ".env"]) {
 }
 
 async function main() {
-  if (process.env.NODE_ENV === "production") throw new Error("Testdaten werden in Produktion nicht angelegt.");
+  if (process.env.NODE_ENV === "production")
+    throw new Error("Testdaten werden in Produktion nicht angelegt.");
   const replace = process.argv.includes("--replace");
 
   const { prisma } = await import("../src/lib/prisma");
@@ -28,12 +29,19 @@ async function main() {
       where: { status: { not: "abgeschlossen" } },
       orderBy: { createdAt: "desc" },
     });
-    if (!election) throw new Error("Keine laufende Wahl gefunden. Bitte zuerst in der App eine Wahl anlegen.");
+    if (!election)
+      throw new Error(
+        "Keine laufende Wahl gefunden. Bitte zuerst in der App eine Wahl anlegen.",
+      );
     const wahltag = election.wahltag.toISOString().slice(0, 10);
 
-    const vorhanden = await prisma.voter.count({ where: { electionId: election.id } });
+    const vorhanden = await prisma.voter.count({
+      where: { electionId: election.id },
+    });
     if (vorhanden > 0 && !replace) {
-      throw new Error(`Die Wahl hat bereits ${vorhanden} Personen. Mit --replace werden sie gelöscht und ersetzt.`);
+      throw new Error(
+        `Die Wahl hat bereits ${vorhanden} Personen. Mit --replace werden sie gelöscht und ersetzt.`,
+      );
     }
     if (vorhanden > 0) {
       await prisma.voter.deleteMany({ where: { electionId: election.id } });
@@ -41,7 +49,9 @@ async function main() {
     }
 
     const persons = buildDummyPersons(wahltag).sort(
-      (a, b) => a.nachname.localeCompare(b.nachname, "de") || a.vorname.localeCompare(b.vorname, "de"),
+      (a, b) =>
+        a.nachname.localeCompare(b.nachname, "de") ||
+        a.vorname.localeCompare(b.vorname, "de"),
     );
 
     const data = persons.map((p, i) => {
@@ -69,7 +79,9 @@ async function main() {
     });
     await prisma.voter.createMany({ data });
 
-    console.log(`\n${data.length} Testpersonen für „${election.dienststelle}“ (Wahltag ${wahltag}) angelegt:\n`);
+    console.log(
+      `\n${data.length} Testpersonen für „${election.dienststelle}“ (Wahltag ${wahltag}) angelegt:\n`,
+    );
     console.table(
       persons.map((p, i) => ({
         Nr: i + 1,

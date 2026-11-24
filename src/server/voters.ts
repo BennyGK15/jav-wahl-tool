@@ -19,8 +19,16 @@ export interface VoterInput {
 }
 
 function flags(input: VoterInput, wahltag: string) {
-  const training = inAusbildungAm(input.inAusbildung, input.ausbildungsende, wahltag);
-  const e = eligibility({ birthDate: input.geburtsdatum, inTraining: training, electionDay: wahltag });
+  const training = inAusbildungAm(
+    input.inAusbildung,
+    input.ausbildungsende,
+    wahltag,
+  );
+  const e = eligibility({
+    birthDate: input.geburtsdatum,
+    inTraining: training,
+    electionDay: wahltag,
+  });
   return { wahlberechtigt: e.wahlberechtigt, waehlbar: e.waehlbar };
 }
 
@@ -32,9 +40,14 @@ function sensitiveColumns(voterId: string, input: VoterInput) {
 }
 
 export async function createVoter(electionId: string, input: VoterInput) {
-  const election = await prisma.election.findUniqueOrThrow({ where: { id: electionId } });
+  const election = await prisma.election.findUniqueOrThrow({
+    where: { id: electionId },
+  });
   const id = crypto.randomUUID();
-  const max = await prisma.voter.aggregate({ where: { electionId }, _max: { lfdNr: true } });
+  const max = await prisma.voter.aggregate({
+    where: { electionId },
+    _max: { lfdNr: true },
+  });
   return prisma.voter.create({
     data: {
       id,
@@ -53,7 +66,10 @@ export async function createVoter(electionId: string, input: VoterInput) {
 }
 
 export async function updateVoter(voterId: string, input: VoterInput) {
-  const voter = await prisma.voter.findUniqueOrThrow({ where: { id: voterId }, include: { election: true } });
+  const voter = await prisma.voter.findUniqueOrThrow({
+    where: { id: voterId },
+    include: { election: true },
+  });
   return prisma.voter.update({
     where: { id: voterId },
     data: {
@@ -76,13 +92,19 @@ export async function getVoterDecrypted(voterId: string) {
   return {
     ...v,
     geburtsdatum: decrypt(v.geburtsdatumEnc, aad(v.id)),
-    ausbildungsende: v.ausbildungsendeEnc ? decrypt(v.ausbildungsendeEnc, aad(v.id)) : null,
+    ausbildungsende: v.ausbildungsendeEnc
+      ? decrypt(v.ausbildungsendeEnc, aad(v.id))
+      : null,
   };
 }
 
 /** Prüft Wahlberechtigung und Wählbarkeit aller Personen neu (z. B. nach Änderung des Wahltags). */
-export async function recomputeEligibility(electionId: string): Promise<number> {
-  const election = await prisma.election.findUniqueOrThrow({ where: { id: electionId } });
+export async function recomputeEligibility(
+  electionId: string,
+): Promise<number> {
+  const election = await prisma.election.findUniqueOrThrow({
+    where: { id: electionId },
+  });
   const wahltag = fromDbDate(election.wahltag);
   const voters = await prisma.voter.findMany({ where: { electionId } });
   const updates = voters.map((v) => {
@@ -91,16 +113,23 @@ export async function recomputeEligibility(electionId: string): Promise<number> 
       vorname: v.vorname,
       geburtsdatum: decrypt(v.geburtsdatumEnc, aad(v.id)),
       inAusbildung: v.inAusbildung,
-      ausbildungsende: v.ausbildungsendeEnc ? decrypt(v.ausbildungsendeEnc, aad(v.id)) : null,
+      ausbildungsende: v.ausbildungsendeEnc
+        ? decrypt(v.ausbildungsendeEnc, aad(v.id))
+        : null,
     };
-    return prisma.voter.update({ where: { id: v.id }, data: flags(input, wahltag) });
+    return prisma.voter.update({
+      where: { id: v.id },
+      data: flags(input, wahltag),
+    });
   });
   await prisma.$transaction(updates);
   return updates.length;
 }
 
 /** Nummeriert alphabetisch (Nachname, Vorname) neu: 1, 2, 3 … */
-export async function renumberAlphabetically(electionId: string): Promise<void> {
+export async function renumberAlphabetically(
+  electionId: string,
+): Promise<void> {
   const voters = await prisma.voter.findMany({
     where: { electionId },
     orderBy: [{ nachname: "asc" }, { vorname: "asc" }, { createdAt: "asc" }],
@@ -108,8 +137,12 @@ export async function renumberAlphabetically(electionId: string): Promise<void> 
   });
   // Zwei Schritte wegen des eindeutigen Index (electionId, lfdNr): erst negativ, dann final.
   await prisma.$transaction([
-    ...voters.map((v, i) => prisma.voter.update({ where: { id: v.id }, data: { lfdNr: -(i + 1) } })),
-    ...voters.map((v, i) => prisma.voter.update({ where: { id: v.id }, data: { lfdNr: i + 1 } })),
+    ...voters.map((v, i) =>
+      prisma.voter.update({ where: { id: v.id }, data: { lfdNr: -(i + 1) } }),
+    ),
+    ...voters.map((v, i) =>
+      prisma.voter.update({ where: { id: v.id }, data: { lfdNr: i + 1 } }),
+    ),
   ]);
 }
 
@@ -117,7 +150,9 @@ export async function voterCounts(electionId: string) {
   const [gesamt, wahlberechtigt, nurWaehlbar] = await Promise.all([
     prisma.voter.count({ where: { electionId } }),
     prisma.voter.count({ where: { electionId, wahlberechtigt: true } }),
-    prisma.voter.count({ where: { electionId, wahlberechtigt: false, waehlbar: true } }),
+    prisma.voter.count({
+      where: { electionId, wahlberechtigt: false, waehlbar: true },
+    }),
   ]);
   return { gesamt, wahlberechtigt, nurWaehlbar };
 }
@@ -126,13 +161,33 @@ export async function voterCounts(electionId: string) {
  * Importiert mehrere Personen auf einmal. Dubletten (gleicher Name + Geburtsdatum, auch gegenüber
  * bereits erfassten Personen) werden übersprungen.
  */
-export async function importVoters(electionId: string, rows: VoterInput[]): Promise<{ importiert: number; dubletten: number }> {
+export async function importVoters(
+  electionId: string,
+  rows: VoterInput[],
+): Promise<{ importiert: number; dubletten: number }> {
   const { dublettenSchluessel } = await import("@/lib/csv-import");
-  const election = await prisma.election.findUniqueOrThrow({ where: { id: electionId } });
+  const election = await prisma.election.findUniqueOrThrow({
+    where: { id: electionId },
+  });
   const wahltag = fromDbDate(election.wahltag);
-  const vorhanden = await prisma.voter.findMany({ where: { electionId }, select: { id: true, nachname: true, vorname: true, geburtsdatumEnc: true, lfdNr: true } });
+  const vorhanden = await prisma.voter.findMany({
+    where: { electionId },
+    select: {
+      id: true,
+      nachname: true,
+      vorname: true,
+      geburtsdatumEnc: true,
+      lfdNr: true,
+    },
+  });
   const schluessel = new Set(
-    vorhanden.map((v) => dublettenSchluessel({ nachname: v.nachname, vorname: v.vorname, geburtsdatum: decrypt(v.geburtsdatumEnc, aad(v.id)) })),
+    vorhanden.map((v) =>
+      dublettenSchluessel({
+        nachname: v.nachname,
+        vorname: v.vorname,
+        geburtsdatum: decrypt(v.geburtsdatumEnc, aad(v.id)),
+      }),
+    ),
   );
   let lfdNr = vorhanden.reduce((m, v) => Math.max(m, v.lfdNr), 0);
   let dubletten = 0;

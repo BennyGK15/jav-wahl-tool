@@ -14,7 +14,10 @@ export interface AuditEvent {
 
 export async function writeAudit(event: AuditEvent): Promise<void> {
   const h = await headers();
-  const ip = h.get("x-forwarded-for")?.split(",")[0]?.trim() ?? h.get("x-real-ip") ?? null;
+  const ip =
+    h.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+    h.get("x-real-ip") ??
+    null;
   await prisma.auditLog.create({
     data: {
       userId: event.userId,

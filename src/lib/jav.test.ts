@@ -20,22 +20,37 @@ describe("Alter", () => {
 describe("Wahlberechtigung und Wählbarkeit (§ 60 LPVG BW)", () => {
   const electionDay = "2026-11-03";
   it("17-Jährige ohne Ausbildung: wahlberechtigt und wählbar", () => {
-    expect(eligibility({ birthDate: "2009-06-01", inTraining: false, electionDay })).toMatchObject({ wahlberechtigt: true, waehlbar: true });
+    expect(
+      eligibility({ birthDate: "2009-06-01", inTraining: false, electionDay }),
+    ).toMatchObject({ wahlberechtigt: true, waehlbar: true });
   });
   it("20-Jährige ohne Ausbildung: nicht wahlberechtigt, aber wählbar", () => {
-    expect(eligibility({ birthDate: "2006-01-01", inTraining: false, electionDay })).toMatchObject({ wahlberechtigt: false, waehlbar: true });
+    expect(
+      eligibility({ birthDate: "2006-01-01", inTraining: false, electionDay }),
+    ).toMatchObject({ wahlberechtigt: false, waehlbar: true });
   });
   it("30-jährige Auszubildende: wahlberechtigt und wählbar", () => {
-    expect(eligibility({ birthDate: "1996-01-01", inTraining: true, electionDay })).toMatchObject({ wahlberechtigt: true, waehlbar: true });
+    expect(
+      eligibility({ birthDate: "1996-01-01", inTraining: true, electionDay }),
+    ).toMatchObject({ wahlberechtigt: true, waehlbar: true });
   });
   it("30-Jährige ohne Ausbildung: weder noch", () => {
-    expect(eligibility({ birthDate: "1996-01-01", inTraining: false, electionDay })).toMatchObject({ wahlberechtigt: false, waehlbar: false });
+    expect(
+      eligibility({ birthDate: "1996-01-01", inTraining: false, electionDay }),
+    ).toMatchObject({ wahlberechtigt: false, waehlbar: false });
   });
 });
 
 describe("Größe der JAV (§ 61 LPVG BW)", () => {
   it.each([
-    [4, 0], [5, 1], [20, 1], [21, 3], [50, 3], [51, 5], [200, 5], [201, 7],
+    [4, 0],
+    [5, 1],
+    [20, 1],
+    [21, 3],
+    [50, 3],
+    [51, 5],
+    [200, 5],
+    [201, 7],
   ])("%i Wahlberechtigte → %i Mitglieder", (n, size) => {
     expect(javSize(n)).toBe(size);
   });
@@ -47,9 +62,21 @@ describe("Größe der JAV (§ 61 LPVG BW)", () => {
 
 describe("Verfahren und Wahlzeitraum", () => {
   it("leitet Größe und Verfahren aus der Zahl ab", () => {
-    expect(verfahrensauskunft(4)).toEqual({ javMoeglich: false, mitglieder: 0, wahlversammlungMoeglich: false });
-    expect(verfahrensauskunft(12)).toEqual({ javMoeglich: true, mitglieder: 1, wahlversammlungMoeglich: true });
-    expect(verfahrensauskunft(35)).toEqual({ javMoeglich: true, mitglieder: 3, wahlversammlungMoeglich: false });
+    expect(verfahrensauskunft(4)).toEqual({
+      javMoeglich: false,
+      mitglieder: 0,
+      wahlversammlungMoeglich: false,
+    });
+    expect(verfahrensauskunft(12)).toEqual({
+      javMoeglich: true,
+      mitglieder: 1,
+      wahlversammlungMoeglich: true,
+    });
+    expect(verfahrensauskunft(35)).toEqual({
+      javMoeglich: true,
+      mitglieder: 3,
+      wahlversammlungMoeglich: false,
+    });
   });
   it("erkennt den regelmäßigen Wahlzeitraum", () => {
     // Herbsttermin 1.10.2026–31.1.2027 (zweieinhalb Jahre nach den Personalratswahlen 2024)
@@ -93,7 +120,15 @@ describe("Schwellen zwischen Schätzung und Verzeichnis", () => {
 
 describe("Mindestzahl Stützunterschriften (§ 62 Abs. 1 i. V. m. § 13 Abs. 6 LPVG BW)", () => {
   it.each([
-    [5, 1], [20, 1], [21, 2], [40, 2], [41, 3], [200, 10], [980, 49], [981, 50], [5000, 50],
+    [5, 1],
+    [20, 1],
+    [21, 2],
+    [40, 2],
+    [41, 3],
+    [200, 10],
+    [980, 49],
+    [981, 50],
+    [5000, 50],
   ])("%i Wahlberechtigte → %i Unterschriften", async (n, min) => {
     const { mindestStuetzunterschriften } = await import("./jav");
     expect(mindestStuetzunterschriften(n)).toBe(min);

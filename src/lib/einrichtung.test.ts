@@ -22,19 +22,43 @@ const vollstaendig = {
 
 describe("Einrichtungsassistent", () => {
   it("verlangt alle Pflichtangaben", () => {
-    const s = einrichtungsSchritte({ verfahren: "regulaer", angaben: {}, stuetzunterschriftenMin: null, datenschutzVollstaendig: false });
-    expect(s.map((x) => x.key)).toEqual(["grunddaten", "wahlvorstand", "orte", "unterschriften", "datenschutz", "abschluss"]);
+    const s = einrichtungsSchritte({
+      verfahren: "regulaer",
+      angaben: {},
+      stuetzunterschriftenMin: null,
+      datenschutzVollstaendig: false,
+    });
+    expect(s.map((x) => x.key)).toEqual([
+      "grunddaten",
+      "wahlvorstand",
+      "orte",
+      "unterschriften",
+      "datenschutz",
+      "abschluss",
+    ]);
     expect(bereitZumAbschluss(s)).toBe(false);
     expect(s.find((x) => x.key === "wahlvorstand")?.fehlt).toHaveLength(3);
   });
   it("ist bereit, wenn alles vorliegt", () => {
-    const s = einrichtungsSchritte({ verfahren: "regulaer", angaben: vollstaendig, stuetzunterschriftenMin: 2, datenschutzVollstaendig: true });
+    const s = einrichtungsSchritte({
+      verfahren: "regulaer",
+      angaben: vollstaendig,
+      stuetzunterschriftenMin: 2,
+      datenschutzVollstaendig: true,
+    });
     expect(bereitZumAbschluss(s)).toBe(true);
   });
   it("braucht bei der Wahlversammlung keine Stützunterschriften und weniger Angaben", () => {
     const s = einrichtungsSchritte({
       verfahren: "wahlversammlung",
-      angaben: { ausstellungsort: "X", wahlraum: "Y", wahlzeitVon: "10:00", bekanntmachungsort: "Z", einreichungsstelle: "W", wahlvorstand: vollstaendig.wahlvorstand },
+      angaben: {
+        ausstellungsort: "X",
+        wahlraum: "Y",
+        wahlzeitVon: "10:00",
+        bekanntmachungsort: "Z",
+        einreichungsstelle: "W",
+        wahlvorstand: vollstaendig.wahlvorstand,
+      },
       stuetzunterschriftenMin: null,
       datenschutzVollstaendig: true,
     });

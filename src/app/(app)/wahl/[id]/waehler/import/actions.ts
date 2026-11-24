@@ -20,10 +20,17 @@ const zeile = z.object({
   geschlecht: z.enum(["w", "m", "d"]).nullable(),
 });
 
-export type ImportResult = { error?: string; importiert?: number; dubletten?: number };
+export type ImportResult = {
+  error?: string;
+  importiert?: number;
+  dubletten?: number;
+};
 
 /** Erhält nur bereits normalisierte Zeilen – die Datei selbst verlässt den Browser nicht. */
-export async function importVotersAction(electionId: string, rows: unknown): Promise<ImportResult> {
+export async function importVotersAction(
+  electionId: string,
+  rows: unknown,
+): Promise<ImportResult> {
   let session;
   try {
     session = await requirePermission("voters.edit");
@@ -31,13 +38,30 @@ export async function importVotersAction(electionId: string, rows: unknown): Pro
     if (e instanceof ForbiddenError) return { error: "Keine Berechtigung." };
     throw e;
   }
-  const id = z.string().uuid().safeParse(electionId);
-  const parsed = z.array(zeile).min(1, "Keine Zeilen zum Import").max(2000, "Höchstens 2000 Zeilen je Import").safeParse(rows);
-  if (!id.success || !parsed.success) return { error: parsed.error?.issues[0]?.message ?? "Ungültige Daten" };
-  if (!(await prisma.election.findUnique({ where: { id: id.data }, select: { id: true } }))) return { error: "Wahl nicht gefunden" };
+  const id = z.uuid().safeParse(electionId);
+  const parsed = z
+    .array(zeile)
+    .min(1, "Keine Zeilen zum Import")
+    .max(2000, "Höchstens 2000 Zeilen je Import")
+    .safeParse(rows);
+  if (!id.success || !parsed.success)
+    return { error: parsed.error?.issues[0]?.message ?? "Ungültige Daten" };
+  if (
+    !(await prisma.election.findUnique({
+      where: { id: id.data },
+      select: { id: true },
+    }))
+  )
+    return { error: "Wahl nicht gefunden" };
 
   const { importiert, dubletten } = await importVoters(id.data, parsed.data);
-  await writeAudit({ userId: session.user.id, action: "voters.imported", objectType: "election", objectId: id.data, fields: [`importiert:${importiert}`, `dubletten:${dubletten}`] });
+  await writeAudit({
+    userId: session.user.id,
+    action: "voters.imported",
+    objectType: "election",
+    objectId: id.data,
+    fields: [`importiert:${importiert}`, `dubletten:${dubletten}`],
+  });
   revalidatePath(`/wahl/${id.data}/waehler`);
   return { importiert, dubletten };
 }

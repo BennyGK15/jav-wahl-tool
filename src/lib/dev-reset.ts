@@ -21,16 +21,41 @@ export interface ResetErgebnis {
   einstellungen: number;
 }
 
-export async function devReset({ datenschutz }: { datenschutz: boolean }): Promise<ResetErgebnis> {
-  if (!DEV_RESET_ERLAUBT) throw new Error("Der Neustart ist in Produktion nicht verfügbar.");
+export async function devReset({
+  datenschutz,
+}: {
+  datenschutz: boolean;
+}): Promise<ResetErgebnis> {
+  if (!DEV_RESET_ERLAUBT)
+    throw new Error("Der Neustart ist in Produktion nicht verfügbar.");
   const personen = await prisma.voter.count();
-  const [wahlen, fristregeln, audit, einstellungen] = await prisma.$transaction([
-    prisma.election.deleteMany({}),
-    prisma.deadlineRule.deleteMany({}),
-    prisma.auditLog.deleteMany({}),
-    prisma.einstellung.deleteMany({ where: datenschutz ? {} : { schluessel: { notIn: ["datenschutz", "datenschutz-aufgaben", "datenschutz-einreichung"] } } }),
-    prisma.verification.deleteMany({}),
-    prisma.rateLimit.deleteMany({}),
-  ]);
-  return { wahlen: wahlen.count, personen, fristregeln: fristregeln.count, auditEintraege: audit.count, einstellungen: einstellungen.count };
+  const [wahlen, fristregeln, audit, einstellungen] = await prisma.$transaction(
+    [
+      prisma.election.deleteMany({}),
+      prisma.deadlineRule.deleteMany({}),
+      prisma.auditLog.deleteMany({}),
+      prisma.einstellung.deleteMany({
+        where: datenschutz
+          ? {}
+          : {
+              schluessel: {
+                notIn: [
+                  "datenschutz",
+                  "datenschutz-aufgaben",
+                  "datenschutz-einreichung",
+                ],
+              },
+            },
+      }),
+      prisma.verification.deleteMany({}),
+      prisma.rateLimit.deleteMany({}),
+    ],
+  );
+  return {
+    wahlen: wahlen.count,
+    personen,
+    fristregeln: fristregeln.count,
+    auditEintraege: audit.count,
+    einstellungen: einstellungen.count,
+  };
 }

@@ -26,10 +26,18 @@ export default async function EinspruchBescheidPage({
   searchParams: Promise<{ an?: string }>;
 }) {
   const session = await requireSession();
-  if (!hasPermission(session.user.role, "voters.edit") || !hasPermission(session.user.role, "voters.sensitive.read")) notFound();
+  if (
+    !hasPermission(session.user.role, "voters.edit") ||
+    !hasPermission(session.user.role, "voters.sensitive.read")
+  )
+    notFound();
   const { id, oid } = await params;
-  const an = (await searchParams).an === "betroffen" ? "betroffen" : "einspruch";
-  const o = await prisma.objection.findFirst({ where: { id: oid, electionId: id }, include: { voter: true, election: true } });
+  const an =
+    (await searchParams).an === "betroffen" ? "betroffen" : "einspruch";
+  const o = await prisma.objection.findFirst({
+    where: { id: oid, electionId: id },
+    include: { voter: true, election: true },
+  });
   if (!o) notFound();
   if (o.entscheidung === "offen") {
     return (
@@ -40,12 +48,22 @@ export default async function EinspruchBescheidPage({
       />
     );
   }
-  const grund = o.entscheidungsgrundEnc ? decrypt(o.entscheidungsgrundEnc, `objection:${o.id}:grund`) : "";
-  await writeAudit({ userId: session.user.id, action: "objection.letter", objectType: "objection", objectId: o.id, fields: [an, "entscheidungsgrund"] });
+  const grund = o.entscheidungsgrundEnc
+    ? decrypt(o.entscheidungsgrundEnc, `objection:${o.id}:grund`)
+    : "";
+  await writeAudit({
+    userId: session.user.id,
+    action: "objection.letter",
+    objectType: "objection",
+    objectId: o.id,
+    fields: [an, "entscheidungsgrund"],
+  });
 
   const a = parseAngaben(o.election.wahlausschreibenAngaben);
   const datum = `${a.ausstellungsort ? `${a.ausstellungsort}, ` : ""}${formatIsoDate(todayBerlin())}`;
-  const person = o.voter ? `${o.voter.vorname} ${o.voter.nachname} (lfd. Nr. ${o.voter.lfdNr})` : null;
+  const person = o.voter
+    ? `${o.voter.vorname} ${o.voter.nachname} (lfd. Nr. ${o.voter.lfdNr})`
+    : null;
   const stattgegeben = o.entscheidung === "stattgegeben";
 
   return (
@@ -53,13 +71,23 @@ export default async function EinspruchBescheidPage({
       zurueck={{ href: `/wahl/${id}/einsprueche`, label: "Einsprüche" }}
       titel="Entscheidung über einen Einspruch"
       entwurf={false}
-      kopf={{ dienststelle: o.election.dienststelle, art: "Entscheidung", datum }}
+      kopf={{
+        dienststelle: o.election.dienststelle,
+        art: "Entscheidung",
+        datum,
+      }}
       hinweis={
         <>
-          Unverzüglich, spätestens am Arbeitstag vor dem Wahltag schriftlich mitteilen (§ 6 Abs. 6 LPVGWO).{" "}
+          Unverzüglich, spätestens am Arbeitstag vor dem Wahltag schriftlich
+          mitteilen (§ 6 Abs. 6 LPVGWO).{" "}
           {o.voter ? (
-            <Link href={`?an=${an === "einspruch" ? "betroffen" : "einspruch"}`} className="underline">
-              {an === "einspruch" ? "Schreiben an die betroffene Person" : "Schreiben an die einspruchsführende Person"}
+            <Link
+              href={`?an=${an === "einspruch" ? "betroffen" : "einspruch"}`}
+              className="underline"
+            >
+              {an === "einspruch"
+                ? "Schreiben an die betroffene Person"
+                : "Schreiben an die einspruchsführende Person"}
             </Link>
           ) : (
             "Keine betroffene Person zugeordnet – nur das Schreiben an die einspruchsführende Person."
@@ -83,30 +111,52 @@ export default async function EinspruchBescheidPage({
           <br />
           ______________________________
         </p>
-        <h1 className="mt-4 text-lg font-bold">Entscheidung über einen Einspruch gegen das Wählerverzeichnis</h1>
-        <p>Wahl der Jugend- und Auszubildendenvertretung bei {o.election.dienststelle}</p>
+        <h1 className="mt-4 text-lg font-bold">
+          Entscheidung über einen Einspruch gegen das Wählerverzeichnis
+        </h1>
+        <p>
+          Wahl der Jugend- und Auszubildendenvertretung bei{" "}
+          {o.election.dienststelle}
+        </p>
 
         {an === "einspruch" ? (
           <p>
-            Ihren Einspruch vom {formatBerlinDateTime(o.eingangAm)} Uhr gegen die Richtigkeit des Wählerverzeichnisses
-            {person ? `, der den Eintrag von ${person} betrifft,` : ""} hat der Wahlvorstand geprüft (§ 6 Abs. 5 und 6 LPVGWO).
+            Ihren Einspruch vom {formatBerlinDateTime(o.eingangAm)} Uhr gegen
+            die Richtigkeit des Wählerverzeichnisses
+            {person ? `, der den Eintrag von ${person} betrifft,` : ""} hat der
+            Wahlvorstand geprüft (§ 6 Abs. 5 und 6 LPVGWO).
           </p>
         ) : (
           <p>
-            gegen die Richtigkeit des Wählerverzeichnisses ist am {formatBerlinDateTime(o.eingangAm)} Uhr ein Einspruch eingegangen,
-            der Ihren Eintrag ({person}) betrifft. Der Wahlvorstand hat darüber entschieden (§ 6 Abs. 6 LPVGWO).
+            gegen die Richtigkeit des Wählerverzeichnisses ist am{" "}
+            {formatBerlinDateTime(o.eingangAm)} Uhr ein Einspruch eingegangen,
+            der Ihren Eintrag ({person}) betrifft. Der Wahlvorstand hat darüber
+            entschieden (§ 6 Abs. 6 LPVGWO).
           </p>
         )}
 
         <p className="font-semibold">
-          Entscheidung: Dem Einspruch wird {stattgegeben ? "stattgegeben" : "nicht stattgegeben; er wird zurückgewiesen"}.
+          Entscheidung: Dem Einspruch wird{" "}
+          {stattgegeben
+            ? "stattgegeben"
+            : "nicht stattgegeben; er wird zurückgewiesen"}
+          .
         </p>
-        {stattgegeben && <p>Das Wählerverzeichnis wird entsprechend berichtigt (§ 6 Abs. 6 Satz 3 LPVGWO).</p>}
+        {stattgegeben && (
+          <p>
+            Das Wählerverzeichnis wird entsprechend berichtigt (§ 6 Abs. 6 Satz
+            3 LPVGWO).
+          </p>
+        )}
         <p className="font-semibold">Gründe:</p>
-        <p className="whitespace-pre-line">{grund || "[Begründung eintragen]"}</p>
+        <p className="whitespace-pre-line">
+          {grund || "[Begründung eintragen]"}
+        </p>
 
         <div className="unterschrift mt-10 grid w-64 gap-1">
-          <span className="border-t border-black pt-1">Vorsitz des Wahlvorstands</span>
+          <span className="border-t border-black pt-1">
+            Vorsitz des Wahlvorstands
+          </span>
         </div>
       </article>
     </DruckRahmen>

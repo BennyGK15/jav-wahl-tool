@@ -11,7 +11,8 @@
 /** Stand des Abgleichs mit Landesrecht BW (landesrecht-bw.de). */
 export const RECHTSSTAND = {
   lpvg: "LPVG i. d. F. vom 12.03.2015, zuletzt geändert durch Gesetz vom 21.12.2023 (GBl. S. 482)",
-  lpvgwo: "LPVGWO i. d. F. vom 12.03.2015, zuletzt geändert durch Verordnung vom 25.07.2023 (GBl. S. 277)",
+  lpvgwo:
+    "LPVGWO i. d. F. vom 12.03.2015, zuletzt geändert durch Verordnung vom 25.07.2023 (GBl. S. 277)",
   geprueftAm: "2026-11-04",
 } as const;
 
@@ -31,7 +32,11 @@ export function parseIso(iso: IsoDate): number {
   const d = Number(m[3]);
   const ms = Date.UTC(y, mo - 1, d);
   const check = new Date(ms);
-  if (check.getUTCFullYear() !== y || check.getUTCMonth() !== mo - 1 || check.getUTCDate() !== d) {
+  if (
+    check.getUTCFullYear() !== y ||
+    check.getUTCMonth() !== mo - 1 ||
+    check.getUTCDate() !== d
+  ) {
     throw new Error(`Ungültiges Datum: ${iso}`);
   }
   return ms;
@@ -124,20 +129,29 @@ export function isWorkday(iso: IsoDate, opts: WorkdayOptions = {}): boolean {
   if (wd === 0 || wd === 6) return false;
   if (isHolidayBW(iso)) return false;
   const md = iso.slice(5);
-  if ((opts.excludeChristmasEveAndNewYearsEve ?? true) && (md === "12-24" || md === "12-31")) return false;
+  if (
+    (opts.excludeChristmasEveAndNewYearsEve ?? true) &&
+    (md === "12-24" || md === "12-31")
+  )
+    return false;
   if (opts.extraNonWorkdays?.includes(iso)) return false;
   return true;
 }
 
 function assertCount(n: number) {
-  if (!Number.isInteger(n) || n < 1) throw new Error(`Anzahl Arbeitstage muss ≥ 1 sein: ${n}`);
+  if (!Number.isInteger(n) || n < 1)
+    throw new Error(`Anzahl Arbeitstage muss ≥ 1 sein: ${n}`);
 }
 
 /**
  * n Arbeitstage NACH einem Ereignis. Der Ereignistag zählt nicht mit (§ 187 Abs. 1 BGB).
  * Ergebnis ist der letzte Tag der Frist.
  */
-export function addWorkdays(start: IsoDate, n: number, opts?: WorkdayOptions): IsoDate {
+export function addWorkdays(
+  start: IsoDate,
+  n: number,
+  opts?: WorkdayOptions,
+): IsoDate {
   assertCount(n);
   let current = start;
   let counted = 0;
@@ -152,7 +166,11 @@ export function addWorkdays(start: IsoDate, n: number, opts?: WorkdayOptions): I
  * Der n-te Arbeitstag VOR einem Stichtag (z. B. „spätestens 5 Arbeitstage vor dem Wahltag").
  * Der Stichtag selbst zählt nicht mit.
  */
-export function subtractWorkdays(end: IsoDate, n: number, opts?: WorkdayOptions): IsoDate {
+export function subtractWorkdays(
+  end: IsoDate,
+  n: number,
+  opts?: WorkdayOptions,
+): IsoDate {
   assertCount(n);
   let current = end;
   let counted = 0;
@@ -183,14 +201,21 @@ export function subtractMonths(iso: IsoDate, n: number): IsoDate {
 /** Fällt ein Fristende auf Samstag, Sonntag oder Feiertag, endet es am nächsten Werktag (§ 193 BGB). */
 export function shiftToNextBusinessDay(iso: IsoDate): IsoDate {
   let current = iso;
-  while (weekday(current) === 0 || weekday(current) === 6 || isHolidayBW(current)) {
+  while (
+    weekday(current) === 0 ||
+    weekday(current) === 6 ||
+    isHolidayBW(current)
+  ) {
     current = addDays(current, 1);
   }
   return current;
 }
 
 /** Nächster Arbeitstag vor einem Datum, falls dieses kein Arbeitstag ist (für „spätestens"-Termine). */
-export function shiftToPreviousWorkday(iso: IsoDate, opts?: WorkdayOptions): IsoDate {
+export function shiftToPreviousWorkday(
+  iso: IsoDate,
+  opts?: WorkdayOptions,
+): IsoDate {
   let current = iso;
   while (!isWorkday(current, opts)) current = addDays(current, -1);
   return current;
@@ -223,18 +248,129 @@ export interface DeadlineRule {
  */
 export const DEFAULT_RULES: readonly DeadlineRule[] = [
   // Reguläres Verfahren
-  { key: "stichtag_feststellung", verfahren: "regulaer", label: "Stichtag: Zahl der Beschäftigten und Wahlberechtigten feststellen", anchor: "wahlausschreiben", direction: "vor", unit: "arbeitstage", amount: 10, legalBasis: "§ 5 Satz 2 LPVGWO", verified: true },
-  { key: "wahlausschreiben", verfahren: "regulaer", label: "Erlass des Wahlausschreibens (spätestens)", anchor: "wahltag", direction: "vor", unit: "monate", amount: 2, legalBasis: "§ 9 Abs. 1 LPVGWO", verified: true },
-  { key: "wahlvorschlaege_ende", verfahren: "regulaer", label: "Ende der Einreichungsfrist für Wahlvorschläge", anchor: "wahlausschreiben", direction: "nach", unit: "arbeitstage", amount: 12, legalBasis: "§ 11 Abs. 2 LPVGWO", verified: true },
-  { key: "maengel_mitteilung", verfahren: "regulaer", label: "Mängel an Wahlvorschlägen mitteilen (spätestens)", anchor: "wahlausschreiben", direction: "nach", unit: "arbeitstage", amount: 13, legalBasis: "§ 14 Abs. 2 Satz 1 LPVGWO", verified: true },
-  { key: "berichtigung_ende", verfahren: "regulaer", label: "Ende der Frist für berichtigte Wahlvorschläge", anchor: "wahlausschreiben", direction: "nach", unit: "arbeitstage", amount: 15, legalBasis: "§ 14 Abs. 2 Satz 3 LPVGWO", verified: true },
-  { key: "auslage_beginn", verfahren: "regulaer", label: "Beginn der Auslage des Wählerverzeichnisses (spätestens)", anchor: "wahltag", direction: "vor", unit: "arbeitstage", amount: 12, legalBasis: "§ 6 Abs. 4 Satz 1 LPVGWO", verified: true },
-  { key: "bekanntmachung_vorschlaege", verfahren: "regulaer", label: "Bekanntmachung der zugelassenen Wahlvorschläge (spätestens)", anchor: "wahltag", direction: "vor", unit: "arbeitstage", amount: 5, legalBasis: "§ 18 Abs. 1 Satz 1 LPVGWO", verified: true },
-  { key: "auslage_ende", verfahren: "regulaer", label: "Ende der Auslage und der Einspruchsfrist", anchor: "wahltag", direction: "vor", unit: "arbeitstage", amount: 2, legalBasis: "§ 6 Abs. 4 Satz 1, Abs. 5 LPVGWO", verified: true },
-  { key: "einspruch_entscheidung", verfahren: "regulaer", label: "Entscheidungen über Einsprüche mitteilen (spätestens)", anchor: "wahltag", direction: "vor", unit: "arbeitstage", amount: 1, legalBasis: "§ 6 Abs. 6 Satz 2 LPVGWO", verified: true },
-  { key: "konstituierende_sitzung", verfahren: "regulaer", label: "Einladung zur konstituierenden Sitzung (Empfehlung, ab 3 Mitgliedern)", anchor: "wahltag", direction: "nach", unit: "arbeitstage", amount: 6, legalBasis: "für die JAV nicht geregelt; § 19 LPVG sinngemäß", verified: false },
+  {
+    key: "stichtag_feststellung",
+    verfahren: "regulaer",
+    label: "Stichtag: Zahl der Beschäftigten und Wahlberechtigten feststellen",
+    anchor: "wahlausschreiben",
+    direction: "vor",
+    unit: "arbeitstage",
+    amount: 10,
+    legalBasis: "§ 5 Satz 2 LPVGWO",
+    verified: true,
+  },
+  {
+    key: "wahlausschreiben",
+    verfahren: "regulaer",
+    label: "Erlass des Wahlausschreibens (spätestens)",
+    anchor: "wahltag",
+    direction: "vor",
+    unit: "monate",
+    amount: 2,
+    legalBasis: "§ 9 Abs. 1 LPVGWO",
+    verified: true,
+  },
+  {
+    key: "wahlvorschlaege_ende",
+    verfahren: "regulaer",
+    label: "Ende der Einreichungsfrist für Wahlvorschläge",
+    anchor: "wahlausschreiben",
+    direction: "nach",
+    unit: "arbeitstage",
+    amount: 12,
+    legalBasis: "§ 11 Abs. 2 LPVGWO",
+    verified: true,
+  },
+  {
+    key: "maengel_mitteilung",
+    verfahren: "regulaer",
+    label: "Mängel an Wahlvorschlägen mitteilen (spätestens)",
+    anchor: "wahlausschreiben",
+    direction: "nach",
+    unit: "arbeitstage",
+    amount: 13,
+    legalBasis: "§ 14 Abs. 2 Satz 1 LPVGWO",
+    verified: true,
+  },
+  {
+    key: "berichtigung_ende",
+    verfahren: "regulaer",
+    label: "Ende der Frist für berichtigte Wahlvorschläge",
+    anchor: "wahlausschreiben",
+    direction: "nach",
+    unit: "arbeitstage",
+    amount: 15,
+    legalBasis: "§ 14 Abs. 2 Satz 3 LPVGWO",
+    verified: true,
+  },
+  {
+    key: "auslage_beginn",
+    verfahren: "regulaer",
+    label: "Beginn der Auslage des Wählerverzeichnisses (spätestens)",
+    anchor: "wahltag",
+    direction: "vor",
+    unit: "arbeitstage",
+    amount: 12,
+    legalBasis: "§ 6 Abs. 4 Satz 1 LPVGWO",
+    verified: true,
+  },
+  {
+    key: "bekanntmachung_vorschlaege",
+    verfahren: "regulaer",
+    label: "Bekanntmachung der zugelassenen Wahlvorschläge (spätestens)",
+    anchor: "wahltag",
+    direction: "vor",
+    unit: "arbeitstage",
+    amount: 5,
+    legalBasis: "§ 18 Abs. 1 Satz 1 LPVGWO",
+    verified: true,
+  },
+  {
+    key: "auslage_ende",
+    verfahren: "regulaer",
+    label: "Ende der Auslage und der Einspruchsfrist",
+    anchor: "wahltag",
+    direction: "vor",
+    unit: "arbeitstage",
+    amount: 2,
+    legalBasis: "§ 6 Abs. 4 Satz 1, Abs. 5 LPVGWO",
+    verified: true,
+  },
+  {
+    key: "einspruch_entscheidung",
+    verfahren: "regulaer",
+    label: "Entscheidungen über Einsprüche mitteilen (spätestens)",
+    anchor: "wahltag",
+    direction: "vor",
+    unit: "arbeitstage",
+    amount: 1,
+    legalBasis: "§ 6 Abs. 6 Satz 2 LPVGWO",
+    verified: true,
+  },
+  {
+    key: "konstituierende_sitzung",
+    verfahren: "regulaer",
+    label:
+      "Einladung zur konstituierenden Sitzung (Empfehlung, ab 3 Mitgliedern)",
+    anchor: "wahltag",
+    direction: "nach",
+    unit: "arbeitstage",
+    amount: 6,
+    legalBasis: "für die JAV nicht geregelt; § 19 LPVG sinngemäß",
+    verified: false,
+  },
   // Wahlversammlung (höchstens 20 in der Regel Beschäftigte i. S. v. § 59 LPVG)
-  { key: "wv_einladung", verfahren: "wahlversammlung", label: "Einberufung der Wahlversammlung (spätestens)", anchor: "amtszeitende", direction: "vor", unit: "wochen", amount: 4, legalBasis: "§ 62 Abs. 2 Satz 2 LPVG", verified: true },
+  {
+    key: "wv_einladung",
+    verfahren: "wahlversammlung",
+    label: "Einberufung der Wahlversammlung (spätestens)",
+    anchor: "amtszeitende",
+    direction: "vor",
+    unit: "wochen",
+    amount: 4,
+    legalBasis: "§ 62 Abs. 2 Satz 2 LPVG",
+    verified: true,
+  },
 ];
 
 /** Regeln ohne gesetzliche Frist – nur Empfehlung, daher nicht „prüfbar“. */
@@ -246,7 +382,10 @@ export const ENTFALLENE_REGELN: readonly string[] = [
   "wv_konstituierende_sitzung",
 ];
 
-export function rulesFor(verfahren: Verfahren, rules: readonly DeadlineRule[] = DEFAULT_RULES): DeadlineRule[] {
+export function rulesFor(
+  verfahren: Verfahren,
+  rules: readonly DeadlineRule[] = DEFAULT_RULES,
+): DeadlineRule[] {
   return rules.filter((r) => r.verfahren === verfahren);
 }
 
@@ -265,14 +404,23 @@ export interface ScheduleOptions extends WorkdayOptions {
   amtszeitEnde?: IsoDate;
 }
 
-function applyRule(anchorDate: IsoDate, rule: DeadlineRule, opts?: WorkdayOptions): IsoDate {
+function applyRule(
+  anchorDate: IsoDate,
+  rule: DeadlineRule,
+  opts?: WorkdayOptions,
+): IsoDate {
   switch (rule.unit) {
     case "monate":
       if (rule.direction === "vor") {
         // „spätestens n Monate vor": liegt der Tag nicht auf einem Arbeitstag, früher handeln.
-        return shiftToPreviousWorkday(subtractMonths(anchorDate, rule.amount), opts);
+        return shiftToPreviousWorkday(
+          subtractMonths(anchorDate, rule.amount),
+          opts,
+        );
       }
-      throw new Error(`Regel ${rule.key}: Monatsfristen „nach" sind nicht vorgesehen`);
+      throw new Error(
+        `Regel ${rule.key}: Monatsfristen „nach" sind nicht vorgesehen`,
+      );
     case "wochen":
       return rule.direction === "vor"
         ? shiftToPreviousWorkday(addDays(anchorDate, -7 * rule.amount), opts)
@@ -296,9 +444,15 @@ export function computeSchedule(
 ): ScheduleEntry[] {
   parseIso(wahltag);
   const ausschreibenRule = rules.find((r) => r.key === "wahlausschreiben");
-  const latestAusschreiben = ausschreibenRule ? applyRule(wahltag, ausschreibenRule, options) : undefined;
+  const latestAusschreiben = ausschreibenRule
+    ? applyRule(wahltag, ausschreibenRule, options)
+    : undefined;
 
-  if (options.wahlausschreibenAm && latestAusschreiben && options.wahlausschreibenAm > latestAusschreiben) {
+  if (
+    options.wahlausschreibenAm &&
+    latestAusschreiben &&
+    options.wahlausschreibenAm > latestAusschreiben
+  ) {
     throw new Error(
       `Das Wahlausschreiben am ${options.wahlausschreibenAm} wäre zu spät (spätestens ${latestAusschreiben}).`,
     );
@@ -313,12 +467,20 @@ export function computeSchedule(
     } else if (rule.anchor === "wahlausschreiben") {
       date = ausschreiben ? applyRule(ausschreiben, rule, options) : undefined;
     } else if (rule.anchor === "amtszeitende") {
-      date = options.amtszeitEnde ? applyRule(options.amtszeitEnde, rule, options) : undefined;
+      date = options.amtszeitEnde
+        ? applyRule(options.amtszeitEnde, rule, options)
+        : undefined;
     } else {
       date = applyRule(wahltag, rule, options);
     }
     if (date) {
-      entries.push({ key: rule.key, label: rule.label, date, legalBasis: rule.legalBasis, verified: rule.verified });
+      entries.push({
+        key: rule.key,
+        label: rule.label,
+        date,
+        legalBasis: rule.legalBasis,
+        verified: rule.verified,
+      });
     }
   }
 
@@ -326,8 +488,14 @@ export function computeSchedule(
 }
 
 /** Kurzbeschreibung einer Regel, z. B. „12 Arbeitstage nach Erlass des Wahlausschreibens". */
-export function describeRule(rule: Pick<DeadlineRule, "anchor" | "direction" | "unit" | "amount">): string {
-  const unit = { arbeitstage: "Arbeitstage", wochen: "Wochen", monate: "Monate" }[rule.unit];
+export function describeRule(
+  rule: Pick<DeadlineRule, "anchor" | "direction" | "unit" | "amount">,
+): string {
+  const unit = {
+    arbeitstage: "Arbeitstage",
+    wochen: "Wochen",
+    monate: "Monate",
+  }[rule.unit];
   const anchor = {
     wahltag: "dem ersten Wahltag",
     wahlausschreiben: "Erlass des Wahlausschreibens",
@@ -347,7 +515,10 @@ export const NACHFRIST = {
   arbeitstage: 6,
 } as const;
 
-export function nachfristEnde(bekanntmachung: IsoDate, opts?: WorkdayOptions): IsoDate {
+export function nachfristEnde(
+  bekanntmachung: IsoDate,
+  opts?: WorkdayOptions,
+): IsoDate {
   return addWorkdays(bekanntmachung, NACHFRIST.arbeitstage, opts);
 }
 
@@ -363,7 +534,10 @@ export const ANFECHTUNGSFRIST = {
   arbeitstage: 12,
 } as const;
 
-export function anfechtungsfristEnde(bekanntgabe: IsoDate, opts?: WorkdayOptions): IsoDate {
+export function anfechtungsfristEnde(
+  bekanntgabe: IsoDate,
+  opts?: WorkdayOptions,
+): IsoDate {
   return addWorkdays(bekanntgabe, ANFECHTUNGSFRIST.arbeitstage, opts);
 }
 
@@ -380,10 +554,19 @@ export function aushangErgebnisEnde(bekanntgabe: IsoDate): IsoDate {
 }
 
 /** Bezeichnung + Rechtsgrundlage für ereignisbezogene Fristen (Ergänzung zu den Regeln aus der Datenbank). */
-export const ZUSATZ_FRISTEN: Record<string, { label: string; legalBasis: string }> = {
+export const ZUSATZ_FRISTEN: Record<
+  string,
+  { label: string; legalBasis: string }
+> = {
   [NACHFRIST.key]: { label: NACHFRIST.label, legalBasis: NACHFRIST.legalBasis },
-  [ANFECHTUNGSFRIST.key]: { label: ANFECHTUNGSFRIST.label, legalBasis: ANFECHTUNGSFRIST.legalBasis },
-  [AUSHANG_ERGEBNIS.key]: { label: AUSHANG_ERGEBNIS.label, legalBasis: AUSHANG_ERGEBNIS.legalBasis },
+  [ANFECHTUNGSFRIST.key]: {
+    label: ANFECHTUNGSFRIST.label,
+    legalBasis: ANFECHTUNGSFRIST.legalBasis,
+  },
+  [AUSHANG_ERGEBNIS.key]: {
+    label: AUSHANG_ERGEBNIS.label,
+    legalBasis: AUSHANG_ERGEBNIS.legalBasis,
+  },
 };
 
 // ---------------------------------------------------------------------------
@@ -414,14 +597,26 @@ export interface Wahlzeitraum {
 export function regelWahlzeitraum(iso: IsoDate): Wahlzeitraum | null {
   const y = Number(iso.slice(0, 4));
   const m = Number(iso.slice(5, 7));
-  if (m >= 4 && m <= 7) return istPersonalratswahljahr(y) ? { beginn: `${y}-04-01`, ende: `${y}-07-31`, art: "personalratswahl" } : null;
-  if (m >= 10) return istPersonalratswahljahr(y - 2) ? { beginn: `${y}-10-01`, ende: `${y + 1}-01-31`, art: "herbst" } : null;
-  if (m === 1) return istPersonalratswahljahr(y - 3) ? { beginn: `${y - 1}-10-01`, ende: `${y}-01-31`, art: "herbst" } : null;
+  if (m >= 4 && m <= 7)
+    return istPersonalratswahljahr(y)
+      ? { beginn: `${y}-04-01`, ende: `${y}-07-31`, art: "personalratswahl" }
+      : null;
+  if (m >= 10)
+    return istPersonalratswahljahr(y - 2)
+      ? { beginn: `${y}-10-01`, ende: `${y + 1}-01-31`, art: "herbst" }
+      : null;
+  if (m === 1)
+    return istPersonalratswahljahr(y - 3)
+      ? { beginn: `${y - 1}-10-01`, ende: `${y}-01-31`, art: "herbst" }
+      : null;
   return null;
 }
 
 /** Nächster Arbeitstag ab einem Datum (das Datum selbst eingeschlossen). */
-export function shiftToNextWorkday(iso: IsoDate, opts?: WorkdayOptions): IsoDate {
+export function shiftToNextWorkday(
+  iso: IsoDate,
+  opts?: WorkdayOptions,
+): IsoDate {
   let current = iso;
   while (!isWorkday(current, opts)) current = addDays(current, 1);
   return current;
@@ -447,7 +642,13 @@ export function fruehesterWahltag(args: {
   erlassMonate?: number;
   einladungWochen?: number;
 }): WahltagVorschlag {
-  const { heute, amtszeitEnde, verfahren, erlassMonate = 2, einladungWochen = 4 } = args;
+  const {
+    heute,
+    amtszeitEnde,
+    verfahren,
+    erlassMonate = 2,
+    einladungWochen = 4,
+  } = args;
   parseIso(heute);
   parseIso(amtszeitEnde);
   const gruende: string[] = [];
@@ -457,37 +658,58 @@ export function fruehesterWahltag(args: {
   let datum: IsoDate;
   if (zeitraum) {
     datum = shiftToNextWorkday(zeitraum.beginn);
-    gruende.push(`Die Amtszeit endet im regelmäßigen Wahlzeitraum ${formatKurz(zeitraum.beginn)}–${formatKurz(zeitraum.ende)}; frühester Arbeitstag darin: ${formatKurz(datum)}.`);
+    gruende.push(
+      `Die Amtszeit endet im regelmäßigen Wahlzeitraum ${formatKurz(zeitraum.beginn)}–${formatKurz(zeitraum.ende)}; frühester Arbeitstag darin: ${formatKurz(datum)}.`,
+    );
   } else {
     datum = shiftToNextWorkday(addDays(heute, 1));
-    warnungen.push("Das Amtszeitende liegt außerhalb der regelmäßigen JAV-Wahlzeiträume (§ 62 Abs. 3 LPVG) – bei einer Wahl außerhalb des Turnus bitte die Rechtslage prüfen.");
+    warnungen.push(
+      "Das Amtszeitende liegt außerhalb der regelmäßigen JAV-Wahlzeiträume (§ 62 Abs. 3 LPVG) – bei einer Wahl außerhalb des Turnus bitte die Rechtslage prüfen.",
+    );
   }
 
   if (verfahren === "regulaer") {
     // Frühester Tag X, für den der späteste Erlass (X − erlassMonate, zurück auf Arbeitstag) nicht vor heute liegt
     let x = shiftToNextWorkday(addDays(heute, 1));
-    for (let i = 0; i < 800 && shiftToPreviousWorkday(subtractMonths(x, erlassMonate)) < heute; i++) {
+    for (
+      let i = 0;
+      i < 800 &&
+      shiftToPreviousWorkday(subtractMonths(x, erlassMonate)) < heute;
+      i++
+    ) {
       x = shiftToNextWorkday(addDays(x, 1));
     }
     if (x > datum) {
       datum = x;
-      gruende.push(`Das Wahlausschreiben muss spätestens ${erlassMonate} Monate vorher erlassen werden; bei Erlass ab heute ist ${formatKurz(x)} der früheste Wahltag.`);
+      gruende.push(
+        `Das Wahlausschreiben muss spätestens ${erlassMonate} Monate vorher erlassen werden; bei Erlass ab heute ist ${formatKurz(x)} der früheste Wahltag.`,
+      );
     } else {
-      gruende.push(`Der Vorlauf von ${erlassMonate} Monaten für das Wahlausschreiben ist eingehalten, wenn es spätestens am ${formatKurz(shiftToPreviousWorkday(subtractMonths(datum, erlassMonate)))} erlassen wird.`);
+      gruende.push(
+        `Der Vorlauf von ${erlassMonate} Monaten für das Wahlausschreiben ist eingehalten, wenn es spätestens am ${formatKurz(shiftToPreviousWorkday(subtractMonths(datum, erlassMonate)))} erlassen wird.`,
+      );
     }
   } else {
     const morgen = shiftToNextWorkday(addDays(heute, 1));
     if (morgen > datum) datum = morgen;
-    const einladungBis = shiftToPreviousWorkday(addDays(amtszeitEnde, -7 * einladungWochen));
+    const einladungBis = shiftToPreviousWorkday(
+      addDays(amtszeitEnde, -7 * einladungWochen),
+    );
     if (einladungBis < heute) {
-      warnungen.push(`Die Einladung hätte spätestens am ${formatKurz(einladungBis)} erfolgen müssen (${einladungWochen} Wochen vor Amtszeitende).`);
+      warnungen.push(
+        `Die Einladung hätte spätestens am ${formatKurz(einladungBis)} erfolgen müssen (${einladungWochen} Wochen vor Amtszeitende).`,
+      );
     } else {
-      gruende.push(`Einladung zur Wahlversammlung spätestens am ${formatKurz(einladungBis)}.`);
+      gruende.push(
+        `Einladung zur Wahlversammlung spätestens am ${formatKurz(einladungBis)}.`,
+      );
     }
   }
 
   if (datum > amtszeitEnde) {
-    warnungen.push(`Der früheste mögliche Termin liegt nach dem Ende der Amtszeit (${formatKurz(amtszeitEnde)}). Bis zur Wahl gibt es keine JAV – bitte so früh wie möglich wählen.`);
+    warnungen.push(
+      `Der früheste mögliche Termin liegt nach dem Ende der Amtszeit (${formatKurz(amtszeitEnde)}). Bis zur Wahl gibt es keine JAV – bitte so früh wie möglich wählen.`,
+    );
   }
   return { datum, gruende, warnungen };
 }
@@ -497,4 +719,9 @@ function formatKurz(iso: IsoDate): string {
 }
 
 /** Fristenden, für die der Wahlvorstand eine Uhrzeit festlegen kann (§ 55 Abs. 2 LPVGWO); nicht vor Dienstschluss der Mehrheit. */
-export const FRISTENDEN_MIT_UHRZEIT: readonly string[] = ["wahlvorschlaege_ende", "berichtigung_ende", "auslage_ende", NACHFRIST.key];
+export const FRISTENDEN_MIT_UHRZEIT: readonly string[] = [
+  "wahlvorschlaege_ende",
+  "berichtigung_ende",
+  "auslage_ende",
+  NACHFRIST.key,
+];

@@ -18,19 +18,27 @@ import { voterCounts } from "@/server/voters";
 export const metadata = { title: "Sitzungsniederschrift" };
 
 const GEGENSTAENDE = {
-  verzeichnis: "Wählerverzeichnis, Zahl der zu wählenden Mitglieder, anteilige Vertretung der Geschlechter (§§ 6, 8 LPVGWO, § 61 LPVG)",
-  einsprueche: "Einsprüche gegen das Wählerverzeichnis (§ 6 Abs. 5 und 6 LPVGWO)",
-  vorschlaege: "Zulassung und Reihenfolge der Wahlvorschläge (§§ 15, 17 LPVGWO)",
+  verzeichnis:
+    "Wählerverzeichnis, Zahl der zu wählenden Mitglieder, anteilige Vertretung der Geschlechter (§§ 6, 8 LPVGWO, § 61 LPVG)",
+  einsprueche:
+    "Einsprüche gegen das Wählerverzeichnis (§ 6 Abs. 5 und 6 LPVGWO)",
+  vorschlaege:
+    "Zulassung und Reihenfolge der Wahlvorschläge (§§ 15, 17 LPVGWO)",
   nachfrist: "Nachfrist für die Einreichung von Wahlvorschlägen (§ 16 LPVGWO)",
 } as const;
 type Gegenstand = keyof typeof GEGENSTAENDE;
 
-const ENTSCHEIDUNG = { offen: "noch offen", stattgegeben: "stattgegeben", zurueckgewiesen: "zurückgewiesen" } as const;
+const ENTSCHEIDUNG = {
+  offen: "noch offen",
+  stattgegeben: "stattgegeben",
+  zurueckgewiesen: "zurückgewiesen",
+} as const;
 
 function Beschluss() {
   return (
     <p className="mt-2">
-      Beschluss: ☐ einstimmig &nbsp; ☐ mit ____ Ja- / ____ Nein-Stimmen &nbsp; (Beschlussfassung mit einfacher Stimmenmehrheit, § 1 Abs. 4 LPVGWO)
+      Beschluss: ☐ einstimmig &nbsp; ☐ mit ____ Ja- / ____ Nein-Stimmen &nbsp;
+      (Beschlussfassung mit einfacher Stimmenmehrheit, § 1 Abs. 4 LPVGWO)
     </p>
   );
 }
@@ -40,36 +48,69 @@ export default async function SitzungPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ datum?: string; beginn?: string; ende?: string; ort?: string; g?: string | string[] }>;
+  searchParams: Promise<{
+    datum?: string;
+    beginn?: string;
+    ende?: string;
+    ort?: string;
+    g?: string | string[];
+  }>;
 }) {
   const session = await requireSession();
   if (!hasPermission(session.user.role, "voters.edit")) notFound();
   const { id } = await params;
   const sp = await searchParams;
-  const election = await prisma.election.findUnique({ where: { id }, include: { deadlines: true } });
+  const election = await prisma.election.findUnique({
+    where: { id },
+    include: { deadlines: true },
+  });
   if (!election) notFound();
 
-  const [counts, geschlechter, objections, nominations, vorstand] = await Promise.all([
-    voterCounts(id),
-    loadGeschlechter(id),
-    prisma.objection.findMany({ where: { electionId: id, entscheidung: { not: "offen" } }, orderBy: { eingangAm: "asc" }, include: { voter: { select: { lfdNr: true } } } }),
-    prisma.nomination.findMany({ where: { electionId: id }, orderBy: [{ ordnungsnummer: "asc" }, { eingangAm: "asc" }] }),
-    wahlvorstandNamen(id),
-  ]);
+  const [counts, geschlechter, objections, nominations, vorstand] =
+    await Promise.all([
+      voterCounts(id),
+      loadGeschlechter(id),
+      prisma.objection.findMany({
+        where: { electionId: id, entscheidung: { not: "offen" } },
+        orderBy: { eingangAm: "asc" },
+        include: { voter: { select: { lfdNr: true } } },
+      }),
+      prisma.nomination.findMany({
+        where: { electionId: id },
+        orderBy: [{ ordnungsnummer: "asc" }, { eingangAm: "asc" }],
+      }),
+      wahlvorstandNamen(id),
+    ]);
   const a = parseAngaben(election.wahlausschreibenAngaben);
-  const stichtag = election.deadlines.find((d) => d.ruleKey === "stichtag_feststellung");
-  const nachfristEnde = election.deadlines.find((d) => d.ruleKey === "nachfrist_ende");
+  const stichtag = election.deadlines.find(
+    (d) => d.ruleKey === "stichtag_feststellung",
+  );
+  const nachfristEnde = election.deadlines.find(
+    (d) => d.ruleKey === "nachfrist_ende",
+  );
 
-  const gewaehlt = (Array.isArray(sp.g) ? sp.g : sp.g ? [sp.g] : []).filter((x): x is Gegenstand => x in GEGENSTAENDE);
+  const gewaehlt = (Array.isArray(sp.g) ? sp.g : sp.g ? [sp.g] : []).filter(
+    (x): x is Gegenstand => x in GEGENSTAENDE,
+  );
   // Ohne Auswahl: alles vorschlagen, wozu es Daten gibt
   const auswahl: Gegenstand[] = gewaehlt.length
     ? gewaehlt
-    : (["verzeichnis", objections.length ? "einsprueche" : null, nominations.length ? "vorschlaege" : null, election.nachfristBekanntgemachtAm ? "nachfrist" : null].filter(
-        Boolean,
-      ) as Gegenstand[]);
-  const datum = sp.datum && /^\d{4}-\d{2}-\d{2}$/.test(sp.datum) ? sp.datum : todayBerlin();
+    : ([
+        "verzeichnis",
+        objections.length ? "einsprueche" : null,
+        nominations.length ? "vorschlaege" : null,
+        election.nachfristBekanntgemachtAm ? "nachfrist" : null,
+      ].filter(Boolean) as Gegenstand[]);
+  const datum =
+    sp.datum && /^\d{4}-\d{2}-\d{2}$/.test(sp.datum) ? sp.datum : todayBerlin();
   const zeit = (v?: string) => (v && /^\d{2}:\d{2}$/.test(v) ? v : null);
-  await writeAudit({ userId: session.user.id, action: "election.minutes.generated", objectType: "election", objectId: id, fields: auswahl });
+  await writeAudit({
+    userId: session.user.id,
+    action: "election.minutes.generated",
+    objectType: "election",
+    objectId: id,
+    fields: auswahl,
+  });
 
   let nr = 0;
   return (
@@ -77,36 +118,68 @@ export default async function SitzungPage({
       zurueck={{ href: `/wahl/${id}`, label: "Wahlkalender" }}
       titel="Sitzungsniederschrift"
       entwurf={false}
-      kopf={{ dienststelle: election.dienststelle, art: "Niederschrift", datum: formatIsoDate(datum) }}
+      kopf={{
+        dienststelle: election.dienststelle,
+        art: "Niederschrift",
+        datum: formatIsoDate(datum),
+      }}
       hinweis={
         <form method="get" className="grid gap-3">
           <p>
-            Niederschrift über eine Sitzung des Wahlvorstands (§ 19 LPVGWO). Gegenstände auswählen, Daten ergänzen, drucken und von allen
-            Mitgliedern unterschreiben lassen. Die Inhalte kommen aus dem aktuellen Stand der Wahl.
+            Niederschrift über eine Sitzung des Wahlvorstands (§ 19 LPVGWO).
+            Gegenstände auswählen, Daten ergänzen, drucken und von allen
+            Mitgliedern unterschreiben lassen. Die Inhalte kommen aus dem
+            aktuellen Stand der Wahl.
           </p>
           <div className="flex flex-wrap items-end gap-3">
             <label className="grid gap-1 font-medium">
               Datum
-              <Input type="date" name="datum" defaultValue={datum} className="w-40" />
+              <Input
+                type="date"
+                name="datum"
+                defaultValue={datum}
+                className="w-40"
+              />
             </label>
             <label className="grid gap-1 font-medium">
               Beginn
-              <Input type="time" name="beginn" defaultValue={zeit(sp.beginn) ?? ""} className="w-28" />
+              <Input
+                type="time"
+                name="beginn"
+                defaultValue={zeit(sp.beginn) ?? ""}
+                className="w-28"
+              />
             </label>
             <label className="grid gap-1 font-medium">
               Ende
-              <Input type="time" name="ende" defaultValue={zeit(sp.ende) ?? ""} className="w-28" />
+              <Input
+                type="time"
+                name="ende"
+                defaultValue={zeit(sp.ende) ?? ""}
+                className="w-28"
+              />
             </label>
             <label className="grid gap-1 font-medium">
               Ort
-              <Input name="ort" defaultValue={sp.ort ?? ""} maxLength={120} className="w-56" />
+              <Input
+                name="ort"
+                defaultValue={sp.ort ?? ""}
+                maxLength={120}
+                className="w-56"
+              />
             </label>
           </div>
           <fieldset className="grid gap-1">
             <legend className="font-medium">Gegenstände</legend>
             {(Object.keys(GEGENSTAENDE) as Gegenstand[]).map((k) => (
               <label key={k} className="flex items-center gap-2">
-                <input type="checkbox" name="g" value={k} defaultChecked={auswahl.includes(k)} /> {GEGENSTAENDE[k]}
+                <input
+                  type="checkbox"
+                  name="g"
+                  value={k}
+                  defaultChecked={auswahl.includes(k)}
+                />{" "}
+                {GEGENSTAENDE[k]}
               </label>
             ))}
           </fieldset>
@@ -120,13 +193,18 @@ export default async function SitzungPage({
     >
       <article className="grid gap-5 text-sm leading-relaxed">
         <header className="text-center">
-          <h1 className="text-xl font-bold">Niederschrift über die Sitzung des Wahlvorstands</h1>
+          <h1 className="text-xl font-bold">
+            Niederschrift über die Sitzung des Wahlvorstands
+          </h1>
           <p>für die Wahl der Jugend- und Auszubildendenvertretung</p>
         </header>
         <p>
           Sitzung am <strong>{formatIsoDate(datum)}</strong>
-          {zeit(sp.beginn) ? `, Beginn ${zeit(sp.beginn)} Uhr` : ", Beginn ____ Uhr"}
-          {zeit(sp.ende) ? `, Ende ${zeit(sp.ende)} Uhr` : ", Ende ____ Uhr"}, Ort: {sp.ort?.trim() || "______________________"}
+          {zeit(sp.beginn)
+            ? `, Beginn ${zeit(sp.beginn)} Uhr`
+            : ", Beginn ____ Uhr"}
+          {zeit(sp.ende) ? `, Ende ${zeit(sp.ende)} Uhr` : ", Ende ____ Uhr"},
+          Ort: {sp.ort?.trim() || "______________________"}
         </p>
 
         <section>
@@ -137,9 +215,15 @@ export default async function SitzungPage({
                 ☐ {m.name} ({m.rolle})
               </li>
             ))}
-            <li>☐ als Ersatzmitglied: ______________________ für ______________________</li>
+            <li>
+              ☐ als Ersatzmitglied: ______________________ für
+              ______________________
+            </li>
           </ul>
-          <p className="mt-2">Der Wahlvorstand ist beschlussfähig, wenn alle Mitglieder oder deren Ersatzmitglieder anwesend sind (§ 1 Abs. 4 LPVGWO).</p>
+          <p className="mt-2">
+            Der Wahlvorstand ist beschlussfähig, wenn alle Mitglieder oder deren
+            Ersatzmitglieder anwesend sind (§ 1 Abs. 4 LPVGWO).
+          </p>
         </section>
 
         {auswahl.includes("verzeichnis") && (
@@ -149,16 +233,24 @@ export default async function SitzungPage({
             </h2>
             <ul className="mt-1 list-disc space-y-1 pl-5">
               <li>
-                Das Wählerverzeichnis ist angelegt; es enthält <strong>{counts.wahlberechtigt}</strong> wahlberechtigte Beschäftigte im Sinne von § 59
-                LPVG{stichtag ? ` (Stichtag ${formatIsoDate(fromDbDate(stichtag.datum))}, § 5 LPVGWO)` : ""}.
+                Das Wählerverzeichnis ist angelegt; es enthält{" "}
+                <strong>{counts.wahlberechtigt}</strong> wahlberechtigte
+                Beschäftigte im Sinne von § 59 LPVG
+                {stichtag
+                  ? ` (Stichtag ${formatIsoDate(fromDbDate(stichtag.datum))}, § 5 LPVGWO)`
+                  : ""}
+                .
               </li>
               <li>
-                Zu wählen {geschlechter.sitze === 1 ? "ist" : "sind"} <strong>{geschlechter.sitze}</strong>{" "}
-                {geschlechter.sitze === 1 ? "Mitglied" : "Mitglieder"} der Jugend- und Auszubildendenvertretung (§ 61 LPVG).
+                Zu wählen {geschlechter.sitze === 1 ? "ist" : "sind"}{" "}
+                <strong>{geschlechter.sitze}</strong>{" "}
+                {geschlechter.sitze === 1 ? "Mitglied" : "Mitglieder"} der
+                Jugend- und Auszubildendenvertretung (§ 61 LPVG).
               </li>
               {geschlechter.relevant && geschlechter.zaehlung && (
                 <li>
-                  Anteile an den Wahlberechtigten: {anteileText(geschlechter.zaehlung)}.{" "}
+                  Anteile an den Wahlberechtigten:{" "}
+                  {anteileText(geschlechter.zaehlung)}.{" "}
                   {geschlechter.verteilung && !geschlechter.verteilung.losOffen
                     ? `Nach d'Hondt entfallen auf ${sitzeText(geschlechter.verteilung)} (§ 8 LPVGWO)${a.geschlechterLos ? `; über den letzten Sitz entschied das Los zugunsten der ${a.geschlechterLos === "w" ? "Frauen" : "Männer"}` : ""}.`
                     : "Über den letzten Sitz ist durch Los zu entscheiden; Ergebnis: ______________________."}
@@ -188,7 +280,9 @@ export default async function SitzungPage({
                 <tbody>
                   {objections.map((o) => (
                     <tr key={o.id} className="border-b">
-                      <td className="py-1 pr-3">{formatBerlinDateTime(o.eingangAm)}</td>
+                      <td className="py-1 pr-3">
+                        {formatBerlinDateTime(o.eingangAm)}
+                      </td>
                       <td className="py-1 pr-3">{o.voter?.lfdNr ?? "–"}</td>
                       <td className="py-1">{ENTSCHEIDUNG[o.entscheidung]}</td>
                     </tr>
@@ -196,7 +290,10 @@ export default async function SitzungPage({
                 </tbody>
               </table>
             )}
-            <p className="mt-1">Die Begründungen ergeben sich aus den Einspruchsakten. Das Wählerverzeichnis wird bei begründeten Einsprüchen berichtigt.</p>
+            <p className="mt-1">
+              Die Begründungen ergeben sich aus den Einspruchsakten. Das
+              Wählerverzeichnis wird bei begründeten Einsprüchen berichtigt.
+            </p>
             <Beschluss />
           </section>
         )}
@@ -222,8 +319,12 @@ export default async function SitzungPage({
                   {nominations.map((n) => (
                     <tr key={n.id} className="border-b">
                       <td className="py-1 pr-3">{n.ordnungsnummer ?? "–"}</td>
-                      <td className="py-1 pr-3">{n.kennwort ?? "ohne Kennwort"}</td>
-                      <td className="py-1 pr-3">{formatBerlinDateTime(n.eingangAm)}</td>
+                      <td className="py-1 pr-3">
+                        {n.kennwort ?? "ohne Kennwort"}
+                      </td>
+                      <td className="py-1 pr-3">
+                        {formatBerlinDateTime(n.eingangAm)}
+                      </td>
                       <td className="py-1">{STATUS_LABEL[n.status]}</td>
                     </tr>
                   ))}
@@ -231,8 +332,10 @@ export default async function SitzungPage({
               </table>
             )}
             <p className="mt-1">
-              Die gültigen Wahlvorschläge erhalten Ordnungsnummern in der Reihenfolge ihres Eingangs; bei berichtigten Vorschlägen zählt der
-              Eingang der Berichtigung, bei gleichzeitigem Eingang entscheidet das Los (§ 17 LPVGWO). Gründe für Zurückweisungen ergeben sich aus
+              Die gültigen Wahlvorschläge erhalten Ordnungsnummern in der
+              Reihenfolge ihres Eingangs; bei berichtigten Vorschlägen zählt der
+              Eingang der Berichtigung, bei gleichzeitigem Eingang entscheidet
+              das Los (§ 17 LPVGWO). Gründe für Zurückweisungen ergeben sich aus
               den Prüfprotokollen.
             </p>
             <Beschluss />
@@ -262,7 +365,10 @@ export default async function SitzungPage({
         </section>
 
         <section className="unterschrift mt-6">
-          <p className="mb-8">Unterschriften der Mitglieder des Wahlvorstands (§ 19 Satz 2 LPVGWO):</p>
+          <p className="mb-8">
+            Unterschriften der Mitglieder des Wahlvorstands (§ 19 Satz 2
+            LPVGWO):
+          </p>
           <div className="grid grid-cols-2 gap-x-10 gap-y-10">
             {vorstand.map((m) => (
               <span key={m.name} className="border-t border-black pt-1">

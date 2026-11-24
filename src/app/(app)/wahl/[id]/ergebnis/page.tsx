@@ -3,18 +3,34 @@ import { notFound } from "next/navigation";
 import { ErgebnisTabellen } from "@/components/ergebnis-tabellen";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { formatBerlinDateTime } from "@/lib/dates";
 import { prisma } from "@/lib/prisma";
 import { hasPermission } from "@/lib/rbac";
 import { requireSession } from "@/lib/session";
 import { loadErgebnis, VERSAMMLUNG_KENNWORT } from "@/server/ergebnis";
-import { addVersammlungsBewerberAction, removeVersammlungsBewerberAction } from "./actions";
-import { AuszaehlungForm, FeststellenForm, LosForm, type StimmenFeld } from "./forms";
+import {
+  addVersammlungsBewerberAction,
+  removeVersammlungsBewerberAction,
+} from "./actions";
+import {
+  AuszaehlungForm,
+  FeststellenForm,
+  LosForm,
+  type StimmenFeld,
+} from "./forms";
 
 export const metadata = { title: "Ergebnis" };
 
-export default async function ErgebnisPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function ErgebnisPage({
+  params,
+}: Readonly<{ params: Promise<{ id: string }> }>) {
   const session = await requireSession();
   const role = session.user.role;
   if (!hasPermission(role, "voters.edit")) notFound();
@@ -35,8 +51,13 @@ export default async function ErgebnisPage({ params }: { params: Promise<{ id: s
   const felder: StimmenFeld[] = [...d.bewerber.values()].map((b) => ({
     name: `bewerber_${b.candidateId}`,
     label: `${b.listenplatz}. ${b.nachname}, ${b.vorname}`,
-    gruppe: d.wahlverfahren === "verhaeltnis" ? listenLabel(b.nominationId) : undefined,
-    defaultValue: result ? (d.stimmenJeBewerber.get(b.candidateId) ?? null) : null,
+    gruppe:
+      d.wahlverfahren === "verhaeltnis"
+        ? listenLabel(b.nominationId)
+        : undefined,
+    defaultValue: result
+      ? (d.stimmenJeBewerber.get(b.candidateId) ?? null)
+      : null,
   }));
 
   const versammlungsBewerber =
@@ -49,14 +70,25 @@ export default async function ErgebnisPage({ params }: { params: Promise<{ id: s
       : [];
   const schonBewerber = new Set(
     election.verfahren === "wahlversammlung"
-      ? (await prisma.nominationCandidate.findMany({ where: { nomination: { electionId: id, kennwort: VERSAMMLUNG_KENNWORT } }, select: { voterId: true } })).map(
-          (c) => c.voterId,
-        )
+      ? (
+          await prisma.nominationCandidate.findMany({
+            where: {
+              nomination: { electionId: id, kennwort: VERSAMMLUNG_KENNWORT },
+            },
+            select: { voterId: true },
+          })
+        ).map((c) => c.voterId)
       : [],
   );
 
   const losBeteiligte = d.los
-    ? d.los.ids.map((x) => ({ id: x, label: d.wahlverfahren === "verhaeltnis" ? listenLabel(x) : (d.bewerber.get(x)?.name ?? x) }))
+    ? d.los.ids.map((x) => ({
+        id: x,
+        label:
+          d.wahlverfahren === "verhaeltnis"
+            ? listenLabel(x)
+            : (d.bewerber.get(x)?.name ?? x),
+      }))
     : [];
 
   return (
@@ -71,7 +103,15 @@ export default async function ErgebnisPage({ params }: { params: Promise<{ id: s
           </p>
           <div className="flex flex-wrap items-center gap-3">
             <h1 className="text-3xl">Auszählung und Ergebnis</h1>
-            {festgestellt ? <Badge variant="secondary">festgestellt {result?.festgestelltAm && formatBerlinDateTime(result.festgestelltAm)}</Badge> : <Badge variant="warning">Entwurf</Badge>}
+            {festgestellt ? (
+              <Badge variant="secondary">
+                festgestellt{" "}
+                {result?.festgestelltAm &&
+                  formatBerlinDateTime(result.festgestelltAm)}
+              </Badge>
+            ) : (
+              <Badge variant="warning">Entwurf</Badge>
+            )}
           </div>
           <p className="text-muted-foreground">
             {d.wahlverfahren === "verhaeltnis"
@@ -81,8 +121,9 @@ export default async function ErgebnisPage({ params }: { params: Promise<{ id: s
                   ? "Mehrheitswahl (eine zu wählende Person)"
                   : "Mehrheitswahl"
                 : "kein Wahlverfahren"}{" "}
-            ·{" "}
-            {d.sitze} {d.sitze === 1 ? "Sitz" : "Sitze"} · {d.wahlberechtigte} Wahlberechtigte · {d.vermerkt} Stimmabgaben vermerkt (davon {d.brief} Brief)
+            · {d.sitze} {d.sitze === 1 ? "Sitz" : "Sitze"} · {d.wahlberechtigte}{" "}
+            Wahlberechtigte · {d.vermerkt} Stimmabgaben vermerkt (davon{" "}
+            {d.brief} Brief)
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -92,38 +133,58 @@ export default async function ErgebnisPage({ params }: { params: Promise<{ id: s
             </Button>
           )}
           <Button asChild size="sm" variant="outline">
-            <Link href={`/wahl/${id}/ergebnis/bekanntmachung`}>Bekanntmachung</Link>
+            <Link href={`/wahl/${id}/ergebnis/bekanntmachung`}>
+              Bekanntmachung
+            </Link>
           </Button>
           <Button asChild size="sm" variant="outline">
-            <Link href={`/wahl/${id}/ergebnis/niederschrift`}>Niederschrift</Link>
+            <Link href={`/wahl/${id}/ergebnis/niederschrift`}>
+              Niederschrift
+            </Link>
           </Button>
           <Button asChild size="sm" variant="outline">
-            <Link href={`/wahl/${id}/ergebnis/benachrichtigung`}>Benachrichtigungen</Link>
+            <Link href={`/wahl/${id}/ergebnis/benachrichtigung`}>
+              Benachrichtigungen
+            </Link>
           </Button>
         </div>
       </div>
 
       {!d.wahlverfahren && (
-        <p role="alert" className="rounded-md border border-destructive p-4 text-sm text-destructive">
-          Es gibt keinen gültigen Wahlvorschlag. Ohne gültigen Vorschlag kann keine Wahl stattfinden – bitte Nachfrist nach § 16
-          LPVGWO prüfen.
+        <p
+          role="alert"
+          className="rounded-md border border-destructive p-4 text-sm text-destructive"
+        >
+          Es gibt keinen gültigen Wahlvorschlag. Ohne gültigen Vorschlag kann
+          keine Wahl stattfinden – bitte Nachfrist nach § 16 LPVGWO prüfen.
         </p>
       )}
 
       {election.verfahren === "wahlversammlung" && !festgestellt && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Bewerberinnen und Bewerber aus der Wahlversammlung</CardTitle>
-            <CardDescription>In der Versammlung vorgeschlagene, wählbare Personen erfassen.</CardDescription>
+            <CardTitle className="text-base">
+              Bewerberinnen und Bewerber aus der Wahlversammlung
+            </CardTitle>
+            <CardDescription>
+              In der Versammlung vorgeschlagene, wählbare Personen erfassen.
+            </CardDescription>
           </CardHeader>
           <CardContent className="grid gap-3">
             {[...d.bewerber.values()].length > 0 && (
               <ul className="grid gap-1 text-sm">
                 {[...d.bewerber.values()].map((b) => (
-                  <li key={b.candidateId} className="flex items-center justify-between gap-2 border-b py-1">
+                  <li
+                    key={b.candidateId}
+                    className="flex items-center justify-between gap-2 border-b py-1"
+                  >
                     {b.nachname}, {b.vorname}
                     <form action={removeVersammlungsBewerberAction}>
-                      <input type="hidden" name="candidateId" value={b.candidateId} />
+                      <input
+                        type="hidden"
+                        name="candidateId"
+                        value={b.candidateId}
+                      />
                       <Button type="submit" size="sm" variant="ghost">
                         Entfernen
                       </Button>
@@ -132,9 +193,18 @@ export default async function ErgebnisPage({ params }: { params: Promise<{ id: s
                 ))}
               </ul>
             )}
-            <form action={addVersammlungsBewerberAction} className="flex flex-wrap items-center gap-3">
+            <form
+              action={addVersammlungsBewerberAction}
+              className="flex flex-wrap items-center gap-3"
+            >
               <input type="hidden" name="electionId" value={id} />
-              <select name="voterId" required defaultValue="" aria-label="Person" className="h-9 min-w-64 rounded-sm border border-input bg-card px-3 text-sm">
+              <select
+                name="voterId"
+                required
+                defaultValue=""
+                aria-label="Person"
+                className="h-9 min-w-64 rounded-sm border border-input bg-card px-3 text-sm"
+              >
                 <option value="" disabled>
                   Wählbare Person auswählen …
                 </option>
@@ -179,28 +249,38 @@ export default async function ErgebnisPage({ params }: { params: Promise<{ id: s
         </Card>
       )}
 
-      {d.pruefung && (d.pruefung.fehler.length > 0 || d.pruefung.hinweise.length > 0) && (
-        <ul className="grid gap-1 rounded-md border p-4 text-sm">
-          {d.pruefung.fehler.map((f) => (
-            <li key={f} className="text-destructive">
-              {f}
-            </li>
-          ))}
-          {d.pruefung.hinweise.map((h) => (
-            <li key={h} className="text-foreground before:mr-1 before:content-['⚠']">
-              {h}
-            </li>
-          ))}
-        </ul>
-      )}
+      {d.pruefung &&
+        (d.pruefung.fehler.length > 0 || d.pruefung.hinweise.length > 0) && (
+          <ul className="grid gap-1 rounded-md border p-4 text-sm">
+            {d.pruefung.fehler.map((f) => (
+              <li key={f} className="text-destructive">
+                {f}
+              </li>
+            ))}
+            {d.pruefung.hinweise.map((h) => (
+              <li
+                key={h}
+                className="text-foreground before:mr-1 before:content-['⚠']"
+              >
+                {h}
+              </li>
+            ))}
+          </ul>
+        )}
 
       {d.los && !festgestellt && (
         <Card className="border-2 border-primary">
           <CardHeader>
-            <CardTitle className="text-base">Losentscheid erforderlich</CardTitle>
+            <CardTitle className="text-base">
+              Losentscheid erforderlich
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <LosForm electionId={id} beteiligte={losBeteiligte} plaetze={d.los.plaetze} />
+            <LosForm
+              electionId={id}
+              beteiligte={losBeteiligte}
+              plaetze={d.los.plaetze}
+            />
           </CardContent>
         </Card>
       )}
@@ -208,18 +288,28 @@ export default async function ErgebnisPage({ params }: { params: Promise<{ id: s
       {result && d.wahlverfahren && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">{festgestellt ? "Festgestelltes Ergebnis" : "Vorschau"}</CardTitle>
+            <CardTitle className="text-base">
+              {festgestellt ? "Festgestelltes Ergebnis" : "Vorschau"}
+            </CardTitle>
             <CardDescription>
-              {result.stimmzettelGesamt} Stimmzettel, davon {result.stimmzettelGueltig} gültig und {result.stimmzettelUngueltig} ungültig
+              {result.stimmzettelGesamt} Stimmzettel, davon{" "}
+              {result.stimmzettelGueltig} gültig und{" "}
+              {result.stimmzettelUngueltig} ungültig
               {d.losReihenfolge.length > 0 && " · Losentscheid berücksichtigt"}
             </CardDescription>
           </CardHeader>
           <CardContent className="grid gap-6">
             <ErgebnisTabellen d={d} mitHoechstzahlen />
             {canFinalize ? (
-              <FeststellenForm electionId={id} bereit={d.bereit} festgestellt={festgestellt} />
+              <FeststellenForm
+                electionId={id}
+                bereit={d.bereit}
+                festgestellt={festgestellt}
+              />
             ) : (
-              <p className="text-sm text-muted-foreground">Das Ergebnis stellt der Vorsitz des Wahlvorstands fest.</p>
+              <p className="text-sm text-muted-foreground">
+                Das Ergebnis stellt der Vorsitz des Wahlvorstands fest.
+              </p>
             )}
           </CardContent>
         </Card>

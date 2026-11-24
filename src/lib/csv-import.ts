@@ -13,14 +13,26 @@ export type ImportFeld =
   | "ausbildungsende"
   | "geschlecht";
 
-export const IMPORT_FELDER: { key: ImportFeld; label: string; pflicht: boolean }[] = [
+export const IMPORT_FELDER: {
+  key: ImportFeld;
+  label: string;
+  pflicht: boolean;
+}[] = [
   { key: "nachname", label: "Nachname", pflicht: true },
   { key: "vorname", label: "Vorname", pflicht: true },
   { key: "geburtsdatum", label: "Geburtsdatum", pflicht: true },
   { key: "inAusbildung", label: "In Ausbildung (ja/nein)", pflicht: false },
   { key: "ausbildungsende", label: "Ausbildungsende", pflicht: false },
-  { key: "funktion", label: "Amts-/Funktionsbezeichnung bzw. Ausbildungsberuf", pflicht: false },
-  { key: "organisationseinheit", label: "Organisationseinheit", pflicht: false },
+  {
+    key: "funktion",
+    label: "Amts-/Funktionsbezeichnung bzw. Ausbildungsberuf",
+    pflicht: false,
+  },
+  {
+    key: "organisationseinheit",
+    label: "Organisationseinheit",
+    pflicht: false,
+  },
   { key: "geschlecht", label: "Geschlecht (w/m/d)", pflicht: false },
 ];
 
@@ -48,11 +60,17 @@ export interface ImportFehler {
 export function erkenneTrennzeichen(text: string): string {
   const erste = text.split(/\r?\n/, 1)[0] ?? "";
   const kandidaten = [";", ",", "\t"];
-  return kandidaten.reduce((best, c) => (erste.split(c).length > erste.split(best).length ? c : best), ";");
+  return kandidaten.reduce(
+    (best, c) => (erste.split(c).length > erste.split(best).length ? c : best),
+    ";",
+  );
 }
 
 /** CSV nach RFC 4180 (Anführungszeichen, verdoppelte Anführungszeichen, Zeilenumbrüche in Feldern). */
-export function parseCsv(input: string, trenn = erkenneTrennzeichen(input)): string[][] {
+export function parseCsv(
+  input: string,
+  trenn = erkenneTrennzeichen(input),
+): string[][] {
   const text = input.replace(/^﻿/, "");
   const rows: string[][] = [];
   let row: string[] = [];
@@ -96,8 +114,18 @@ const norm = (s: string) =>
 /** Ordnet Spalten anhand der Überschriften zu. */
 export function rateZuordnung(kopf: string[]): Zuordnung {
   const h = kopf.map(norm);
-  const finde = (test: (x: string) => boolean, belegt: number[]) => h.findIndex((x, i) => !belegt.includes(i) && test(x));
-  const z: Zuordnung = { nachname: -1, vorname: -1, organisationseinheit: -1, funktion: -1, geburtsdatum: -1, inAusbildung: -1, ausbildungsende: -1, geschlecht: -1 };
+  const finde = (test: (x: string) => boolean, belegt: number[]) =>
+    h.findIndex((x, i) => !belegt.includes(i) && test(x));
+  const z: Zuordnung = {
+    nachname: -1,
+    vorname: -1,
+    organisationseinheit: -1,
+    funktion: -1,
+    geburtsdatum: -1,
+    inAusbildung: -1,
+    ausbildungsende: -1,
+    geschlecht: -1,
+  };
   const belegt: number[] = [];
   const setze = (k: ImportFeld, i: number) => {
     if (i >= 0) {
@@ -105,16 +133,75 @@ export function rateZuordnung(kopf: string[]): Zuordnung {
       belegt.push(i);
     }
   };
-  setze("vorname", finde((x) => x.includes("vorname") || x === "firstname", belegt));
-  setze("nachname", finde((x) => x.includes("nachname") || x.includes("familienname") || x === "name" || x === "lastname", belegt));
-  setze("geburtsdatum", finde((x) => x.includes("geburt") || x.startsWith("gebdat") || x.includes("birth"), belegt));
-  setze("ausbildungsende", finde((x) => (x.includes("ausbildung") || x.includes("azubi")) && x.includes("ende"), belegt));
+  setze(
+    "vorname",
+    finde((x) => x.includes("vorname") || x === "firstname", belegt),
+  );
+  setze(
+    "nachname",
+    finde(
+      (x) =>
+        x.includes("nachname") ||
+        x.includes("familienname") ||
+        x === "name" ||
+        x === "lastname",
+      belegt,
+    ),
+  );
+  setze(
+    "geburtsdatum",
+    finde(
+      (x) =>
+        x.includes("geburt") || x.startsWith("gebdat") || x.includes("birth"),
+      belegt,
+    ),
+  );
+  setze(
+    "ausbildungsende",
+    finde(
+      (x) =>
+        (x.includes("ausbildung") || x.includes("azubi")) && x.includes("ende"),
+      belegt,
+    ),
+  );
   // vor „Ausbildung“ und „Organisationseinheit“, damit „Ausbildungsberuf“ bzw. „Amtsbezeichnung“ hier landen
-  setze("funktion", finde((x) => /funktion|amtsbez|dienstbez|beruf|taetigkeit|tatigkeit|stellenbez|jobtitle/.test(x), belegt));
-  setze("inAusbildung", finde((x) => x.includes("ausbildung") || x.includes("azubi") || x.includes("auszubild"), belegt));
+  setze(
+    "funktion",
+    finde(
+      (x) =>
+        /funktion|amtsbez|dienstbez|beruf|taetigkeit|tatigkeit|stellenbez|jobtitle/.test(
+          x,
+        ),
+      belegt,
+    ),
+  );
+  setze(
+    "inAusbildung",
+    finde(
+      (x) =>
+        x.includes("ausbildung") ||
+        x.includes("azubi") ||
+        x.includes("auszubild"),
+      belegt,
+    ),
+  );
   // „Amt“ als Organisationseinheit, aber nicht „Amtsbezeichnung“ (das ist die Funktion)
-  setze("organisationseinheit", finde((x) => /organisation|^oe$|abteilung|bereich|referat|dienststelle/.test(x) || (x.includes("amt") && !x.includes("bez")), belegt));
-  setze("geschlecht", finde((x) => x.includes("geschlecht") || x === "gender" || x === "sex", belegt));
+  setze(
+    "organisationseinheit",
+    finde(
+      (x) =>
+        /organisation|^oe$|abteilung|bereich|referat|dienststelle/.test(x) ||
+        (x.includes("amt") && !x.includes("bez")),
+      belegt,
+    ),
+  );
+  setze(
+    "geschlecht",
+    finde(
+      (x) => x.includes("geschlecht") || x === "gender" || x === "sex",
+      belegt,
+    ),
+  );
   return z;
 }
 
@@ -137,19 +224,41 @@ export function parseDatum(raw: string, heute = new Date()): string | null {
     }
   } else return null;
   const dt = new Date(Date.UTC(y, m - 1, d));
-  if (dt.getUTCFullYear() !== y || dt.getUTCMonth() !== m - 1 || dt.getUTCDate() !== d) return null;
+  if (
+    dt.getUTCFullYear() !== y ||
+    dt.getUTCMonth() !== m - 1 ||
+    dt.getUTCDate() !== d
+  )
+    return null;
   return dt.toISOString().slice(0, 10);
 }
 
 export function parseJaNein(raw: string): boolean | null {
   if (raw.trim() === "") return false;
   const s = norm(raw);
-  if (["nein", "n", "0", "false", "falsch", "no", "keine"].includes(s)) return false;
-  if (["ja", "j", "x", "1", "true", "wahr", "yes", "azubi", "auszubildende", "auszubildender"].includes(s)) return true;
+  if (["nein", "n", "0", "false", "falsch", "no", "keine"].includes(s))
+    return false;
+  if (
+    [
+      "ja",
+      "j",
+      "x",
+      "1",
+      "true",
+      "wahr",
+      "yes",
+      "azubi",
+      "auszubildende",
+      "auszubildender",
+    ].includes(s)
+  )
+    return true;
   return null;
 }
 
-export function parseGeschlecht(raw: string): "w" | "m" | "d" | null | undefined {
+export function parseGeschlecht(
+  raw: string,
+): "w" | "m" | "d" | null | undefined {
   if (raw.trim() === "") return null;
   const s = norm(raw);
   if (["w", "weiblich", "f", "female", "frau"].includes(s)) return "w";
@@ -159,7 +268,12 @@ export function parseGeschlecht(raw: string): "w" | "m" | "d" | null | undefined
 }
 
 /** Wandelt Rohzeilen anhand der Zuordnung in geprüfte Importzeilen um. */
-export function wandleZeilen(rows: string[][], z: Zuordnung, mitKopfzeile: boolean, heute = new Date()): { zeilen: ImportZeile[]; fehler: ImportFehler[] } {
+export function wandleZeilen(
+  rows: string[][],
+  z: Zuordnung,
+  mitKopfzeile: boolean,
+  heute = new Date(),
+): { zeilen: ImportZeile[]; fehler: ImportFehler[] } {
   const zeilen: ImportZeile[] = [];
   const fehler: ImportFehler[] = [];
   const daten = mitKopfzeile ? rows.slice(1) : rows;
@@ -175,23 +289,34 @@ export function wandleZeilen(rows: string[][], z: Zuordnung, mitKopfzeile: boole
     const vorname = wert("vorname");
     if (!nachname) probleme.push("Nachname fehlt");
     if (!vorname) probleme.push("Vorname fehlt");
-    if (nachname.length > 120 || vorname.length > 120) probleme.push("Name zu lang");
+    if (nachname.length > 120 || vorname.length > 120)
+      probleme.push("Name zu lang");
 
     const geburtsdatum = parseDatum(wert("geburtsdatum"), heute);
-    if (!geburtsdatum) probleme.push(`Geburtsdatum „${wert("geburtsdatum")}“ nicht lesbar`);
-    else if (geburtsdatum < "1940-01-01" || geburtsdatum > heuteIso) probleme.push("Geburtsdatum nicht plausibel");
+    if (!geburtsdatum)
+      probleme.push(`Geburtsdatum „${wert("geburtsdatum")}“ nicht lesbar`);
+    else if (geburtsdatum < "1940-01-01" || geburtsdatum > heuteIso)
+      probleme.push("Geburtsdatum nicht plausibel");
 
-    const inAusbildung = z.inAusbildung >= 0 ? parseJaNein(wert("inAusbildung")) : false;
-    if (inAusbildung === null) probleme.push(`Ausbildung „${wert("inAusbildung")}“ nicht erkannt (ja/nein)`);
+    const inAusbildung =
+      z.inAusbildung >= 0 ? parseJaNein(wert("inAusbildung")) : false;
+    if (inAusbildung === null)
+      probleme.push(
+        `Ausbildung „${wert("inAusbildung")}“ nicht erkannt (ja/nein)`,
+      );
 
     let ausbildungsende: string | null = null;
     if (wert("ausbildungsende")) {
       ausbildungsende = parseDatum(wert("ausbildungsende"), heute);
-      if (!ausbildungsende) probleme.push(`Ausbildungsende „${wert("ausbildungsende")}“ nicht lesbar`);
+      if (!ausbildungsende)
+        probleme.push(
+          `Ausbildungsende „${wert("ausbildungsende")}“ nicht lesbar`,
+        );
     }
 
     const geschlecht = parseGeschlecht(wert("geschlecht"));
-    if (geschlecht === undefined) probleme.push(`Geschlecht „${wert("geschlecht")}“ nicht erkannt (w/m/d)`);
+    if (geschlecht === undefined)
+      probleme.push(`Geschlecht „${wert("geschlecht")}“ nicht erkannt (w/m/d)`);
 
     const oe = wert("organisationseinheit");
     const funktion = wert("funktion");
@@ -215,5 +340,8 @@ export function wandleZeilen(rows: string[][], z: Zuordnung, mitKopfzeile: boole
 }
 
 /** Schlüssel zur Erkennung von Dubletten */
-export const dublettenSchluessel = (z: { nachname: string; vorname: string; geburtsdatum: string }) =>
-  `${norm(z.nachname)}|${norm(z.vorname)}|${z.geburtsdatum}`;
+export const dublettenSchluessel = (z: {
+  nachname: string;
+  vorname: string;
+  geburtsdatum: string;
+}) => `${norm(z.nachname)}|${norm(z.vorname)}|${z.geburtsdatum}`;

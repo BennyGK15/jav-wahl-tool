@@ -19,15 +19,37 @@ export const datenschutzAngabenSchema = z.object({
 });
 export type DatenschutzAngaben = z.infer<typeof datenschutzAngabenSchema>;
 
-export const DATENSCHUTZ_FELDER: { key: keyof DatenschutzAngaben; label: string; hinweis?: string; vorgabe?: string }[] = [
-  { key: "verantwortlicheStelle", label: "Verantwortliche Stelle", hinweis: "z. B. die Dienststelle" },
+export const DATENSCHUTZ_FELDER: {
+  key: keyof DatenschutzAngaben;
+  label: string;
+  hinweis?: string;
+  vorgabe?: string;
+}[] = [
+  {
+    key: "verantwortlicheStelle",
+    label: "Verantwortliche Stelle",
+    hinweis: "z. B. die Dienststelle",
+  },
   { key: "anschrift", label: "Anschrift" },
   { key: "leitung", label: "Vertreten durch (Leitung)" },
-  { key: "ansprechperson", label: "Ansprechperson für die Wahl", hinweis: "z. B. Vorsitz des Wahlvorstands mit Kontakt" },
+  {
+    key: "ansprechperson",
+    label: "Ansprechperson für die Wahl",
+    hinweis: "z. B. Vorsitz des Wahlvorstands mit Kontakt",
+  },
   { key: "dsbName", label: "Datenschutzbeauftragte/r" },
   { key: "dsbKontakt", label: "Kontakt der/des Datenschutzbeauftragten" },
-  { key: "betrieb", label: "Betrieb der Anwendung", vorgabe: "Eigener Betrieb durch die IT der Dienststelle – keine Auftragsverarbeitung" },
-  { key: "serverstandort", label: "Serverstandort", vorgabe: "Eigene Server der Dienststelle in Deutschland" },
+  {
+    key: "betrieb",
+    label: "Betrieb der Anwendung",
+    vorgabe:
+      "Eigener Betrieb durch die IT der Dienststelle – keine Auftragsverarbeitung",
+  },
+  {
+    key: "serverstandort",
+    label: "Serverstandort",
+    vorgabe: "Eigene Server der Dienststelle in Deutschland",
+  },
 ];
 
 export function parseDatenschutzAngaben(v: unknown): DatenschutzAngaben {
@@ -36,8 +58,13 @@ export function parseDatenschutzAngaben(v: unknown): DatenschutzAngaben {
 }
 
 /** Wert oder Vorgabe; null, wenn beides fehlt. */
-export function angabe(a: DatenschutzAngaben, key: keyof DatenschutzAngaben): string | null {
-  return a[key] || DATENSCHUTZ_FELDER.find((f) => f.key === key)?.vorgabe || null;
+export function angabe(
+  a: DatenschutzAngaben,
+  key: keyof DatenschutzAngaben,
+): string | null {
+  return (
+    a[key] || DATENSCHUTZ_FELDER.find((f) => f.key === key)?.vorgabe || null
+  );
 }
 
 /** Frist für alles, was Gesetz und Wahlordnung nicht regeln (Festlegung des Wahlvorstands). */
@@ -53,21 +80,26 @@ export interface Loeschfrist {
 /** Löschkonzept: gesetzliche Vorgaben, sonst 30 Tage nach Abschluss der Wahl; während einer laufenden Wahl keine Löschung. */
 export const LOESCHFRISTEN: Loeschfrist[] = [
   {
-    daten: "Elektronische Wahldaten: Wählerverzeichnis, Stimmabgabevermerke, Briefwahl, Einsprüche, Wahlvorschläge, Ergebnis",
+    daten:
+      "Elektronische Wahldaten: Wählerverzeichnis, Stimmabgabevermerke, Briefwahl, Einsprüche, Wahlvorschläge, Ergebnis",
     frist:
       "Unverzüglich, sobald die Gültigkeit oder Ungültigkeit der Wahl feststeht: frühestens am Tag nach Ende der Anfechtungsfrist (12 Arbeitstage ab Bekanntgabe des Ergebnisses), bei Anfechtung nach rechtskräftigem Abschluss des Verfahrens",
     grundlage: "§ 32 LPVGWO, § 21 Abs. 1 LPVG",
-    umsetzung: "Löschtermin wird vorgeschlagen; Löschung erst nach Abschluss der Wahl, bei laufender Anfechtung gesperrt",
+    umsetzung:
+      "Löschtermin wird vorgeschlagen; Löschung erst nach Abschluss der Wahl, bei laufender Anfechtung gesperrt",
   },
   {
-    daten: "Wahlunterlagen in Papierform: Niederschriften, Bekanntmachungen, Stimmzettel",
-    frist: "Aufbewahrung durch den Personalrat mindestens bis zur Durchführung der nächsten Personalratswahl; personenbezogene Daten in Niederschriften spätestens am Ende des achten Jahres",
+    daten:
+      "Wahlunterlagen in Papierform: Niederschriften, Bekanntmachungen, Stimmzettel",
+    frist:
+      "Aufbewahrung durch den Personalrat mindestens bis zur Durchführung der nächsten Personalratswahl; personenbezogene Daten in Niederschriften spätestens am Ende des achten Jahres",
     grundlage: "§ 32 LPVGWO, § 67 Abs. 4 LPVG",
     umsetzung: "Organisatorisch (Personalrat)",
   },
   {
     daten: "Zurückgewiesene Wahlbriefe",
-    frist: "Einen Monat nach Bekanntmachung des Wahlergebnisses vernichten, bei Anfechtung einen Monat nach rechtskräftigem Abschluss",
+    frist:
+      "Einen Monat nach Bekanntmachung des Wahlergebnisses vernichten, bei Anfechtung einen Monat nach rechtskräftigem Abschluss",
     grundlage: "§ 23 Abs. 7 LPVGWO",
     umsetzung: "Organisatorisch (Wahlvorstand)",
   },
@@ -109,18 +141,46 @@ export const LOESCHFRISTEN: Loeschfrist[] = [
  * auch von Hand abhaken (Dienststellen ohne DSB-Konto in der Anwendung).
  */
 export const DATENSCHUTZ_AUFGABEN = [
-  { key: "angaben", text: "Angaben zur verantwortlichen Stelle und zur/zum Datenschutzbeauftragten in der Anwendung ausfüllen", automatisch: true },
-  { key: "sicherung", text: "Datensicherung einrichten (Häufigkeit, Ort, Verschlüsselung, Löschung der Sicherungen, Wiederherstellungstest)" },
-  { key: "personalrat", text: "Personalrat beteiligen und Einsatz der Anwendung abstimmen" },
-  { key: "dsfa", text: "Datenschutz-Folgenabschätzung mit der/dem Datenschutzbeauftragten abstimmen und freigeben", durchEinreichung: true },
-  { key: "hinweis", text: "Datenschutzhinweis mit dem Wahlausschreiben bekanntmachen" },
-  { key: "divers", text: "Umgang mit dem Geschlechtseintrag „divers“ bei der anteiligen Vertretung (§ 8 LPVGWO) abstimmen" },
-] as const satisfies readonly { key: string; text: string; automatisch?: boolean; durchEinreichung?: boolean }[];
+  {
+    key: "angaben",
+    text: "Angaben zur verantwortlichen Stelle und zur/zum Datenschutzbeauftragten in der Anwendung ausfüllen",
+    automatisch: true,
+  },
+  {
+    key: "sicherung",
+    text: "Datensicherung einrichten (Häufigkeit, Ort, Verschlüsselung, Löschung der Sicherungen, Wiederherstellungstest)",
+  },
+  {
+    key: "personalrat",
+    text: "Personalrat beteiligen und Einsatz der Anwendung abstimmen",
+  },
+  {
+    key: "dsfa",
+    text: "Datenschutz-Folgenabschätzung mit der/dem Datenschutzbeauftragten abstimmen und freigeben",
+    durchEinreichung: true,
+  },
+  {
+    key: "hinweis",
+    text: "Datenschutzhinweis mit dem Wahlausschreiben bekanntmachen",
+  },
+  {
+    key: "divers",
+    text: "Umgang mit dem Geschlechtseintrag „divers“ bei der anteiligen Vertretung (§ 8 LPVGWO) abstimmen",
+  },
+] as const satisfies readonly {
+  key: string;
+  text: string;
+  automatisch?: boolean;
+  durchEinreichung?: boolean;
+}[];
 
 export type AufgabeKey = (typeof DATENSCHUTZ_AUFGABEN)[number]["key"];
 
 /** Gespeicherter Stand der von Hand abgehakten Aufgaben: Schlüssel → erledigt am (ISO-Zeitstempel) */
-export const aufgabenStandSchema = z.record(z.string(), z.object({ erledigtAm: z.string(), von: z.string().optional() }));
+export const aufgabenStandSchema = z.record(
+  z.string(),
+  z.object({ erledigtAm: z.string(), von: z.string().optional() }),
+);
 export type AufgabenStand = z.infer<typeof aufgabenStandSchema>;
 
 /** Sind alle Pflichtangaben (ohne Vorgabe) ausgefüllt? */
@@ -139,16 +199,27 @@ export interface AufgabeStatus {
 }
 
 /** `eingereicht`: Es liegt eine aktuelle Einreichung vor (Status „eingereicht“, nicht „geändert“). */
-export function aufgabenStatus(a: DatenschutzAngaben, stand: AufgabenStand, eingereicht = false): AufgabeStatus[] {
+export function aufgabenStatus(
+  a: DatenschutzAngaben,
+  stand: AufgabenStand,
+  eingereicht = false,
+): AufgabeStatus[] {
   return DATENSCHUTZ_AUFGABEN.map((x) => {
     const automatisch = "automatisch" in x && x.automatisch === true;
     const manuell = stand[x.key];
-    const durchEinreichung = !automatisch && !manuell && eingereicht && "durchEinreichung" in x && x.durchEinreichung === true;
+    const durchEinreichung =
+      !automatisch &&
+      !manuell &&
+      eingereicht &&
+      "durchEinreichung" in x &&
+      x.durchEinreichung === true;
     return {
       key: x.key,
       text: x.text,
       automatisch,
-      erledigt: automatisch ? angabenVollstaendig(a) : Boolean(manuell) || durchEinreichung,
+      erledigt: automatisch
+        ? angabenVollstaendig(a)
+        : Boolean(manuell) || durchEinreichung,
       erledigtAm: automatisch ? null : (manuell?.erledigtAm ?? null),
       durchEinreichung,
     };
@@ -156,10 +227,27 @@ export function aufgabenStatus(a: DatenschutzAngaben, stand: AufgabenStand, eing
 }
 
 export const DATENSCHUTZ_DOKUMENTE = {
-  verzeichnis: { titel: "Verzeichnis von Verarbeitungstätigkeiten", kurz: "Verarbeitungsverzeichnis", grundlage: "Art. 30 DSGVO" },
-  tom: { titel: "Technische und organisatorische Maßnahmen", kurz: "TOM", grundlage: "Art. 32 DSGVO" },
-  dsfa: { titel: "Datenschutz-Folgenabschätzung", kurz: "Folgenabschätzung", grundlage: "Art. 35 DSGVO" },
-  hinweis: { titel: "Datenschutzhinweis zur Wahl der Jugend- und Auszubildendenvertretung", kurz: "Datenschutzhinweis", grundlage: "Art. 13, 14 DSGVO" },
+  verzeichnis: {
+    titel: "Verzeichnis von Verarbeitungstätigkeiten",
+    kurz: "Verarbeitungsverzeichnis",
+    grundlage: "Art. 30 DSGVO",
+  },
+  tom: {
+    titel: "Technische und organisatorische Maßnahmen",
+    kurz: "TOM",
+    grundlage: "Art. 32 DSGVO",
+  },
+  dsfa: {
+    titel: "Datenschutz-Folgenabschätzung",
+    kurz: "Folgenabschätzung",
+    grundlage: "Art. 35 DSGVO",
+  },
+  hinweis: {
+    titel:
+      "Datenschutzhinweis zur Wahl der Jugend- und Auszubildendenvertretung",
+    kurz: "Datenschutzhinweis",
+    grundlage: "Art. 13, 14 DSGVO",
+  },
 } as const;
 export type DatenschutzDokument = keyof typeof DATENSCHUTZ_DOKUMENTE;
 
@@ -175,11 +263,26 @@ export type Einreichung = z.infer<typeof einreichungSchema>;
 export type EinreichungStatus =
   | { art: "offen" }
   /** „geaendert“: Die Angaben wurden nach der Einreichung noch einmal gespeichert – bitte erneut einreichen. */
-  | { art: "eingereicht" | "geaendert"; eingereichtAm: Date; von: string | null; anmerkung: string | null };
+  | {
+      art: "eingereicht" | "geaendert";
+      eingereichtAm: Date;
+      von: string | null;
+      anmerkung: string | null;
+    };
 
-export function einreichungStatus(e: Einreichung | null, angabenGeaendertAm: Date | null): EinreichungStatus {
+export function einreichungStatus(
+  e: Einreichung | null,
+  angabenGeaendertAm: Date | null,
+): EinreichungStatus {
   if (!e) return { art: "offen" };
   const eingereichtAm = new Date(e.eingereichtAm);
-  const geaendert = angabenGeaendertAm !== null && angabenGeaendertAm.getTime() > eingereichtAm.getTime();
-  return { art: geaendert ? "geaendert" : "eingereicht", eingereichtAm, von: e.von ?? null, anmerkung: e.anmerkung || null };
+  const geaendert =
+    angabenGeaendertAm !== null &&
+    angabenGeaendertAm.getTime() > eingereichtAm.getTime();
+  return {
+    art: geaendert ? "geaendert" : "eingereicht",
+    eingereichtAm,
+    von: e.von ?? null,
+    anmerkung: e.anmerkung || null,
+  };
 }

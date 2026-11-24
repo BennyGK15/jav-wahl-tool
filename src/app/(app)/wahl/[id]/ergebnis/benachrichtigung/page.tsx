@@ -13,7 +13,11 @@ import { gewaehlteUndErsatz, loadErgebnis } from "@/server/ergebnis";
 export const metadata = { title: "Benachrichtigung der Gewählten" };
 
 /** Je gewählter Person ein Schreiben mit Rückmeldeabschnitt; jede Seite wird einzeln gedruckt. */
-export default async function BenachrichtigungPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function BenachrichtigungPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const session = await requireSession();
   if (!hasPermission(session.user.role, "voters.edit")) notFound();
   const { id } = await params;
@@ -29,15 +33,25 @@ export default async function BenachrichtigungPage({ params }: { params: Promise
     );
   }
   const { gewaehlt } = gewaehlteUndErsatz(d);
-  const ort = parseAngaben(d.election.wahlausschreibenAngaben).ausstellungsort ?? "________________";
+  const ort =
+    parseAngaben(d.election.wahlausschreibenAngaben).ausstellungsort ??
+    "________________";
   const wahltag = formatIsoDate(fromDbDate(d.election.wahltag));
-  await writeAudit({ userId: session.user.id, action: "result.letters.generated", objectType: "election", objectId: id });
+  await writeAudit({
+    userId: session.user.id,
+    action: "result.letters.generated",
+    objectType: "election",
+    objectId: id,
+  });
 
   return (
     <DruckRahmen
       zurueck={{ href: `/wahl/${id}/ergebnis`, label: "Ergebnis" }}
       titel="Benachrichtigungen"
-      fuss={{ text: `JAV-Wahl ${d.election.dienststelle} · Benachrichtigung`, seiten: false }}
+      fuss={{
+        text: `JAV-Wahl ${d.election.dienststelle} · Benachrichtigung`,
+        seiten: false,
+      }}
       entwurf={!d.festgestellt}
       hinweis="Benachrichtigung und Frist für die Erklärung nach § 30 LPVGWO prüfen und ggf. im Text ergänzen."
     >
@@ -47,8 +61,15 @@ export default async function BenachrichtigungPage({ params }: { params: Promise
         gewaehlt.map((cid, i) => {
           const b = d.bewerber.get(cid)!;
           return (
-            <article key={cid} className={`grid gap-4 text-sm ${i < gewaehlt.length - 1 ? "mb-16 break-after-page print:mb-0" : ""}`}>
-              <Briefkopf dienststelle={d.election.dienststelle} art="Benachrichtigung" datum={`${ort}, ${formatIsoDate(todayBerlin())}`} />
+            <article
+              key={cid}
+              className={`grid gap-4 text-sm ${i < gewaehlt.length - 1 ? "mb-16 break-after-page print:mb-0" : ""}`}
+            >
+              <Briefkopf
+                dienststelle={d.election.dienststelle}
+                art="Benachrichtigung"
+                datum={`${ort}, ${formatIsoDate(todayBerlin())}`}
+              />
               <p>
                 An
                 <br />
@@ -58,17 +79,21 @@ export default async function BenachrichtigungPage({ params }: { params: Promise
                 <br />
                 {d.election.dienststelle}
               </p>
-              <h1 className="font-bold">Ihre Wahl in die Jugend- und Auszubildendenvertretung</h1>
+              <h1 className="font-bold">
+                Ihre Wahl in die Jugend- und Auszubildendenvertretung
+              </h1>
               <p>
                 Guten Tag {b.vorname} {b.nachname},
               </p>
               <p>
-                der Wahlvorstand teilt Ihnen mit, dass Sie bei der Wahl am {wahltag} zum Mitglied der Jugend- und
-                Auszubildendenvertretung gewählt worden sind.
+                der Wahlvorstand teilt Ihnen mit, dass Sie bei der Wahl am{" "}
+                {wahltag} zum Mitglied der Jugend- und Auszubildendenvertretung
+                gewählt worden sind.
               </p>
               <p>
-                Bitte erklären Sie dem Wahlvorstand schriftlich, ob Sie die Wahl annehmen. Geben Sie dazu den unteren
-                Abschnitt unterschrieben beim Wahlvorstand ab.
+                Bitte erklären Sie dem Wahlvorstand schriftlich, ob Sie die Wahl
+                annehmen. Geben Sie dazu den unteren Abschnitt unterschrieben
+                beim Wahlvorstand ab.
               </p>
               <p>Wir gratulieren Ihnen herzlich.</p>
               <p className="unterschrift mt-6">Der Wahlvorstand</p>
@@ -76,9 +101,12 @@ export default async function BenachrichtigungPage({ params }: { params: Promise
               <div className="unterschrift mt-8 border-t border-dashed pt-4">
                 <p className="font-semibold">Erklärung</p>
                 <p className="mt-2">
-                  Ich, {b.vorname} {b.nachname}, wurde am {wahltag} in die Jugend- und Auszubildendenvertretung gewählt.
+                  Ich, {b.vorname} {b.nachname}, wurde am {wahltag} in die
+                  Jugend- und Auszubildendenvertretung gewählt.
                 </p>
-                <p className="mt-2">☐ Ich nehme die Wahl an. &nbsp;&nbsp; ☐ Ich lehne die Wahl ab.</p>
+                <p className="mt-2">
+                  ☐ Ich nehme die Wahl an. &nbsp;&nbsp; ☐ Ich lehne die Wahl ab.
+                </p>
                 <div className="mt-10 grid grid-cols-2 gap-6 text-xs">
                   <span className="border-t pt-1">Ort, Datum</span>
                   <span className="border-t pt-1">Unterschrift</span>

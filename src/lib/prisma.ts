@@ -16,12 +16,15 @@ function createAdapter(): PrismaMariaDb {
     password: decodeURIComponent(url.password),
     database: url.pathname.replace(/^\//, ""),
     connectionLimit: 10,
-    ...(process.env.DB_SSL === "true" ? { ssl: { rejectUnauthorized: true } } : {}),
+    ...(process.env.DB_SSL === "true"
+      ? { ssl: { rejectUnauthorized: true } }
+      : {}),
   });
 }
 
 const globalForPrisma = globalThis as unknown as { jav_prisma?: PrismaClient };
 
-export const prisma = globalForPrisma.jav_prisma ?? new PrismaClient({ adapter: createAdapter() });
+export const prisma =
+  globalForPrisma.jav_prisma ?? new PrismaClient({ adapter: createAdapter() });
 
 if (process.env.NODE_ENV !== "production") globalForPrisma.jav_prisma = prisma;

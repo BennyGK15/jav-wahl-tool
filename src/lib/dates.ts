@@ -55,7 +55,13 @@ function berlinOffsetMinutes(at: Date): number {
 export function berlinLocalToDate(local: string): Date {
   const m = /^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})$/.exec(local);
   if (!m) throw new Error(`Ungültiger Zeitpunkt: ${local}`);
-  const naive = Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3]), Number(m[4]), Number(m[5]));
+  const naive = Date.UTC(
+    Number(m[1]),
+    Number(m[2]) - 1,
+    Number(m[3]),
+    Number(m[4]),
+    Number(m[5]),
+  );
   let ts = naive - berlinOffsetMinutes(new Date(naive)) * 60_000;
   ts = naive - berlinOffsetMinutes(new Date(ts)) * 60_000; // zweiter Schritt für die Zeitumstellung
   return new Date(ts);

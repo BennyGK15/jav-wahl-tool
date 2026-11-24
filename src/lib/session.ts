@@ -9,10 +9,13 @@ export async function getSession() {
 }
 
 /** Für Seiten: leitet ohne gültige Sitzung zum Login um. */
-export async function requireSession({ allowPasswordChangePending = false } = {}) {
+export async function requireSession({
+  allowPasswordChangePending = false,
+} = {}) {
   const s = await getSession();
   if (!s || s.user.banned) redirect("/login");
-  if (s.user.mustChangePassword && !allowPasswordChangePending) redirect("/passwort");
+  if (s.user.mustChangePassword && !allowPasswordChangePending)
+    redirect("/passwort");
   return s;
 }
 
@@ -25,7 +28,8 @@ export class ForbiddenError extends Error {
 /** Für Server Actions: wirft, statt umzuleiten. Immer als ERSTE Zeile jeder Action aufrufen. */
 export async function requirePermission(permission: Permission) {
   const s = await getSession();
-  if (!s || s.user.banned || s.user.mustChangePassword) throw new ForbiddenError();
+  if (!s || s.user.banned || s.user.mustChangePassword)
+    throw new ForbiddenError();
   if (!hasPermission(s.user.role, permission)) throw new ForbiddenError();
   return s;
 }

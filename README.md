@@ -38,16 +38,16 @@ Landespersonalvertretungsgesetz (LPVG) und seiner Wahlordnung (LPVGWO).
 
 Die Anwendung begleitet den Wahlvorstand durch alle Phasen einer JAV-Wahl:
 
-| Phase | Funktionen |
-| --- | --- |
-| Vorbereitung | Einrichtungsassistent, Wahlvorstand und Ersatzmitglieder, Einladung zur konstituierenden Sitzung, Sitzungsniederschrift |
-| Fristen | Wahlkalender mit Arbeitstagen nach § 55 LPVGWO und gesetzlichen Feiertagen in Baden-Württemberg; Fristregeln einzeln prüf- und freigebbar |
-| Wählerverzeichnis | CSV-Import mit Spaltenzuordnung, Prüfung von Wahlberechtigung und Wählbarkeit, Auslageversion, Einsprüche mit Entscheidungsschreiben |
-| Wahlausschreiben | Erfassung aller Angaben, Druckfassung, Geschlechterverteilung und Sitzzahl |
-| Wahlvorschläge | Vordruck, Erfassung und Prüfung, Mängel- und Zurückweisungsschreiben, Nachfrist, Bekanntmachung |
-| Wahltag | Stimmzettel, Briefwahl, Stimmabgabevermerke (auch durch Wahlhelfer), Urnenansicht |
-| Ergebnis | Auszählung nach Verhältnis- oder Mehrheitswahl, Losentscheid, Wahlniederschrift, Bekanntmachung, Benachrichtigung der Gewählten |
-| Nachbereitung | Checklisten je Phase, Aufbewahrungs- und Löschfristen, Audit-Log |
+| Phase             | Funktionen                                                                                                                                |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| Vorbereitung      | Einrichtungsassistent, Wahlvorstand und Ersatzmitglieder, Einladung zur konstituierenden Sitzung, Sitzungsniederschrift                   |
+| Fristen           | Wahlkalender mit Arbeitstagen nach § 55 LPVGWO und gesetzlichen Feiertagen in Baden-Württemberg; Fristregeln einzeln prüf- und freigebbar |
+| Wählerverzeichnis | CSV-Import mit Spaltenzuordnung, Prüfung von Wahlberechtigung und Wählbarkeit, Auslageversion, Einsprüche mit Entscheidungsschreiben      |
+| Wahlausschreiben  | Erfassung aller Angaben, Druckfassung, Geschlechterverteilung und Sitzzahl                                                                |
+| Wahlvorschläge    | Vordruck, Erfassung und Prüfung, Mängel- und Zurückweisungsschreiben, Nachfrist, Bekanntmachung                                           |
+| Wahltag           | Stimmzettel, Briefwahl, Stimmabgabevermerke (auch durch Wahlhelfer), Urnenansicht                                                         |
+| Ergebnis          | Auszählung nach Verhältnis- oder Mehrheitswahl, Losentscheid, Wahlniederschrift, Bekanntmachung, Benachrichtigung der Gewählten           |
+| Nachbereitung     | Checklisten je Phase, Aufbewahrungs- und Löschfristen, Audit-Log                                                                          |
 
 Alle Schreiben und Aushänge werden als druckoptimierte Seiten erzeugt. Für die
 Datenschutz-Dokumentation erstellt die Anwendung Entwürfe für Verarbeitungsverzeichnis,
@@ -90,14 +90,14 @@ TOM, Datenschutz-Folgenabschätzung und Datenschutzhinweis.
 
 ## Technik
 
-| Bereich | Einsatz |
-| --- | --- |
-| Framework | Next.js 16 (App Router), React 19, TypeScript (strict) |
-| Oberfläche | Tailwind CSS 4, shadcn/ui |
-| Authentifizierung | better-auth 1.7 (Benutzername und Passwort, optional TOTP) |
-| Datenbank | MariaDB 11 oder MySQL 8 über Prisma ORM 7 |
-| Validierung und Tests | Zod, Vitest |
-| Betrieb | Node.js ≥ 20.9 (empfohlen 22), Docker-Image (standalone) |
+| Bereich               | Einsatz                                                    |
+| --------------------- | ---------------------------------------------------------- |
+| Framework             | Next.js 16 (App Router), React 19, TypeScript (strict)     |
+| Oberfläche            | Tailwind CSS 4, shadcn/ui                                  |
+| Authentifizierung     | better-auth 1.7 (Benutzername und Passwort, optional TOTP) |
+| Datenbank             | MariaDB 11 oder MySQL 8 über Prisma ORM 7                  |
+| Validierung und Tests | Zod, Vitest                                                |
+| Betrieb               | Node.js ≥ 20.9 (empfohlen 22), Docker-Image (standalone)   |
 
 ## Installation
 
@@ -139,12 +139,12 @@ erforderlich.
 
 ## Rollen und Berechtigungen
 
-| Rolle | Berechtigungen |
-| --- | --- |
-| `admin` | Benutzerkonten verwalten, Audit-Log einsehen, Datenschutz-Angaben pflegen – **kein** Zugriff auf Wahldaten |
-| `vorsitz` | Vollzugriff auf die Wahl, Freigabe von Dokumenten und Fristregeln, Feststellung des Ergebnisses |
-| `mitglied` | Wählerverzeichnis, Wahlvorschläge und Wahlkalender bearbeiten |
-| `wahlhelfer` | Stimmabgabe vermerken, Fristen einsehen |
+| Rolle         | Berechtigungen                                                                                                                  |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `admin`       | Benutzerkonten verwalten, Audit-Log einsehen, Datenschutz-Angaben pflegen – **kein** Zugriff auf Wahldaten                      |
+| `vorsitz`     | Vollzugriff auf die Wahl, Freigabe von Dokumenten und Fristregeln, Feststellung des Ergebnisses                                 |
+| `mitglied`    | Wählerverzeichnis, Wahlvorschläge und Wahlkalender bearbeiten                                                                   |
+| `wahlhelfer`  | Stimmabgabe vermerken, Fristen einsehen                                                                                         |
 | `datenschutz` | Datenschutzbeauftragte/r: Datenschutz-Angaben pflegen, Aufgaben abhaken, Unterlagen einreichen – **kein** Zugriff auf Wahldaten |
 
 Berechtigungen werden bei jeder Seite und jeder Server Action serverseitig geprüft
@@ -190,16 +190,16 @@ src/
 
 ## Entwicklung
 
-| Befehl | Zweck |
-| --- | --- |
-| `pnpm dev` | Entwicklungsserver |
-| `pnpm typecheck` | TypeScript-Prüfung |
-| `pnpm lint` | ESLint |
-| `pnpm test` | Unit-Tests (Vitest) |
-| `pnpm build` | Produktions-Build |
-| `pnpm seed:dummy` | Erfundene Testpersonen für die laufende Wahl anlegen (nicht in Produktion) |
+| Befehl                | Zweck                                                                         |
+| --------------------- | ----------------------------------------------------------------------------- |
+| `pnpm dev`            | Entwicklungsserver                                                            |
+| `pnpm typecheck`      | TypeScript-Prüfung                                                            |
+| `pnpm lint`           | ESLint                                                                        |
+| `pnpm test`           | Unit-Tests (Vitest)                                                           |
+| `pnpm build`          | Produktions-Build                                                             |
+| `pnpm seed:dummy`     | Erfundene Testpersonen für die laufende Wahl anlegen (nicht in Produktion)    |
 | `pnpm dev:reset --ja` | Alle Wahldaten löschen, Benutzerkonten bleiben erhalten (nicht in Produktion) |
-| `pnpm db:studio` | Prisma Studio |
+| `pnpm db:studio`      | Prisma Studio                                                                 |
 
 ## Offene Punkte
 

@@ -6,12 +6,23 @@ import { Label } from "@/components/ui/label";
 import { ANMERKUNG_MAX } from "@/lib/datenschutz";
 import { einreichenAction, type EinreichungState } from "./actions";
 
-export function EinreichungForm({ erneut, vollstaendig }: { erneut: boolean; vollstaendig: boolean }) {
-  const [state, action, pending] = useActionState<EinreichungState, FormData>(einreichenAction, {});
+export function EinreichungForm({
+  erneut,
+  vollstaendig,
+}: {
+  erneut: boolean;
+  vollstaendig: boolean;
+}) {
+  const [state, action, pending] = useActionState<EinreichungState, FormData>(
+    einreichenAction,
+    {},
+  );
   return (
     <form action={action} className="grid gap-3">
       <div className="grid gap-1.5">
-        <Label htmlFor="ds-anmerkung">Anmerkung für den Wahlvorstand (optional)</Label>
+        <Label htmlFor="ds-anmerkung">
+          Anmerkung für den Wahlvorstand (optional)
+        </Label>
         <textarea
           id="ds-anmerkung"
           name="anmerkung"
@@ -22,7 +33,10 @@ export function EinreichungForm({ erneut, vollstaendig }: { erneut: boolean; vol
         />
       </div>
       {!vollstaendig && (
-        <p className="text-sm text-muted-foreground">Einreichen ist möglich, sobald alle Angaben unten ausgefüllt und gespeichert sind.</p>
+        <p className="text-sm text-muted-foreground">
+          Einreichen ist möglich, sobald alle Angaben unten ausgefüllt und
+          gespeichert sind.
+        </p>
       )}
       {state.error && (
         <p role="alert" className="text-sm text-destructive">
@@ -35,8 +49,16 @@ export function EinreichungForm({ erneut, vollstaendig }: { erneut: boolean; vol
         </p>
       )}
       <div>
-        <Button type="submit" variant="accent" disabled={pending || !vollstaendig}>
-          {pending ? "Einreichen …" : erneut ? "Erneut einreichen" : "Unterlagen einreichen"}
+        <Button
+          type="submit"
+          variant="accent"
+          disabled={pending || !vollstaendig}
+        >
+          {pending
+            ? "Einreichen …"
+            : erneut
+              ? "Erneut einreichen"
+              : "Unterlagen einreichen"}
         </Button>
       </div>
     </form>

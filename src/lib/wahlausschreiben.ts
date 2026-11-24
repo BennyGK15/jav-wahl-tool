@@ -1,6 +1,8 @@
 import { z } from "zod";
 
-const zeit = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Uhrzeit im Format HH:MM");
+const zeit = z
+  .string()
+  .regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Uhrzeit im Format HH:MM");
 const text = (max = 255) => z.string().trim().max(max);
 
 /** Mitglieder des Wahlvorstands mit Ersatzmitgliedern in der vom Personalrat bestimmten Reihenfolge (§ 1 Abs. 3 LPVGWO). */
@@ -19,7 +21,11 @@ export const wahlvorstandSchema = z
 
 export type WahlvorstandMitglied = z.infer<typeof wahlvorstandSchema>[number];
 
-export const FUNKTION_LABEL = { vorsitz: "Vorsitz", stellvertretung: "Stellvertretender Vorsitz", mitglied: "Mitglied" } as const;
+export const FUNKTION_LABEL = {
+  vorsitz: "Vorsitz",
+  stellvertretung: "Stellvertretender Vorsitz",
+  mitglied: "Mitglied",
+} as const;
 
 /** Organisatorische Angaben, die nicht aus dem Wahlkalender kommen. Alle optional – Fehlendes wird markiert. */
 export const angabenSchema = z.object({
@@ -41,7 +47,11 @@ export const angabenSchema = z.object({
   /** Wahlvorstand (strukturiert); ungültige Altdaten werden verworfen statt alle Angaben zu verlieren */
   wahlvorstand: wahlvorstandSchema.optional().catch(undefined),
   /** Tag der Bestimmung des Wahlvorstands durch den Personalrat */
-  wahlvorstandBestelltAm: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().catch(undefined),
+  wahlvorstandBestelltAm: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .optional()
+    .catch(undefined),
 });
 
 export type Angaben = z.infer<typeof angabenSchema>;

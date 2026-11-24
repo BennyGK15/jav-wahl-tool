@@ -1,15 +1,32 @@
 import Link from "next/link";
 import { ArrowRight, FileText } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Check, Send } from "lucide-react";
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { angabenVollstaendig, aufgabenStatus, DATENSCHUTZ_DOKUMENTE, DATENSCHUTZ_FELDER, LOESCHFRISTEN, type DatenschutzDokument } from "@/lib/datenschutz";
+import {
+  angabenVollstaendig,
+  aufgabenStatus,
+  DATENSCHUTZ_DOKUMENTE,
+  DATENSCHUTZ_FELDER,
+  LOESCHFRISTEN,
+  type DatenschutzDokument,
+} from "@/lib/datenschutz";
 import { formatBerlinDateTime } from "@/lib/dates";
 import { hasPermission } from "@/lib/rbac";
 import { requireSession } from "@/lib/session";
-import { loadAufgabenStand, loadDatenschutzAngaben, loadEinreichungStatus } from "@/server/einstellungen";
+import {
+  loadAufgabenStand,
+  loadDatenschutzAngaben,
+  loadEinreichungStatus,
+} from "@/server/einstellungen";
 import { toggleAufgabeAction, zurueckziehenAction } from "./actions";
 import { DatenschutzForm } from "./datenschutz-form";
 import { EinreichungForm } from "./einreichung-form";
@@ -22,8 +39,14 @@ export default async function DatenschutzPage() {
   const darfEinreichen = hasPermission(session.user.role, "privacy.submit");
   const { angaben, geaendertAm } = await loadDatenschutzAngaben();
   const einreichung = await loadEinreichungStatus(geaendertAm);
-  const aufgaben = aufgabenStatus(angaben, await loadAufgabenStand(), einreichung.art === "eingereicht");
-  const fehlend = DATENSCHUTZ_FELDER.filter((f) => !f.vorgabe && !angaben[f.key]);
+  const aufgaben = aufgabenStatus(
+    angaben,
+    await loadAufgabenStand(),
+    einreichung.art === "eingereicht",
+  );
+  const fehlend = DATENSCHUTZ_FELDER.filter(
+    (f) => !f.vorgabe && !angaben[f.key],
+  );
   const offen = aufgaben.filter((a) => !a.erledigt).length;
 
   return (
@@ -31,18 +54,39 @@ export default async function DatenschutzPage() {
       <div>
         <h1 className="text-3xl">Datenschutz-Unterlagen</h1>
         <p className="max-w-3xl text-muted-foreground">
-          Unterlagen für die Dienststelle und die/den Datenschutzbeauftragte(n). Sie beschreiben, was das JAV-Wahl-Tool tatsächlich
-          tut, und übernehmen die Angaben unten. Jedes Dokument lässt sich drucken oder im Druckdialog als PDF speichern. Keine
-          Rechtsberatung – bitte vor dem Einsatz abstimmen.
+          Unterlagen für die Dienststelle und die/den Datenschutzbeauftragte(n).
+          Sie beschreiben, was das JAV-Wahl-Tool tatsächlich tut, und übernehmen
+          die Angaben unten. Jedes Dokument lässt sich drucken oder im
+          Druckdialog als PDF speichern. Keine Rechtsberatung – bitte vor dem
+          Einsatz abstimmen.
         </p>
       </div>
 
-      <Card className={einreichung.art === "eingereicht" ? undefined : "border-l-[6px] border-l-brand-yellow"}>
+      <Card
+        className={
+          einreichung.art === "eingereicht"
+            ? undefined
+            : "border-l-[6px] border-l-brand-yellow"
+        }
+      >
         <CardHeader>
           <CardTitle className="flex flex-wrap items-center gap-2 text-base">
-            <Send aria-hidden className="size-4" /> Einreichung durch die/den Datenschutzbeauftragte(n)
-            <Badge variant={einreichung.art === "eingereicht" ? "success" : einreichung.art === "geaendert" ? "warning" : "secondary"}>
-              {einreichung.art === "offen" ? "noch nicht eingereicht" : einreichung.art === "eingereicht" ? "eingereicht" : "nach Einreichung geändert"}
+            <Send aria-hidden className="size-4" /> Einreichung durch die/den
+            Datenschutzbeauftragte(n)
+            <Badge
+              variant={
+                einreichung.art === "eingereicht"
+                  ? "success"
+                  : einreichung.art === "geaendert"
+                    ? "warning"
+                    : "secondary"
+              }
+            >
+              {einreichung.art === "offen"
+                ? "noch nicht eingereicht"
+                : einreichung.art === "eingereicht"
+                  ? "eingereicht"
+                  : "nach Einreichung geändert"}
             </Badge>
           </CardTitle>
           <CardDescription>
@@ -51,62 +95,93 @@ export default async function DatenschutzPage() {
                 ? "Angaben ausfüllen, Entwürfe prüfen, erledigte Aufgaben abhaken – und die Unterlagen dann für den Wahlvorstand einreichen."
                 : "Die/der Datenschutzbeauftragte hat die Unterlagen noch nicht eingereicht."
               : `Eingereicht am ${formatBerlinDateTime(einreichung.eingereichtAm)}${einreichung.name ? ` von ${einreichung.name}` : ""}.`}
-            {einreichung.art === "geaendert" && " Die Angaben wurden danach noch einmal geändert – bitte erneut einreichen."}
+            {einreichung.art === "geaendert" &&
+              " Die Angaben wurden danach noch einmal geändert – bitte erneut einreichen."}
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4">
           {einreichung.art !== "offen" && einreichung.anmerkung && (
-            <blockquote className="border-l-4 border-l-border pl-4 text-sm whitespace-pre-line">{einreichung.anmerkung}</blockquote>
+            <blockquote className="border-l-4 border-l-border pl-4 text-sm whitespace-pre-line">
+              {einreichung.anmerkung}
+            </blockquote>
           )}
           {darfEinreichen && einreichung.art !== "eingereicht" && (
-            <EinreichungForm erneut={einreichung.art === "geaendert"} vollstaendig={angabenVollstaendig(angaben)} />
+            <EinreichungForm
+              erneut={einreichung.art === "geaendert"}
+              vollstaendig={angabenVollstaendig(angaben)}
+            />
           )}
           {darfEinreichen && einreichung.art !== "offen" && (
             <form action={zurueckziehenAction}>
-              <ConfirmSubmitButton variant="outline" size="sm" confirmText="Einreichung wirklich zurückziehen?">
+              <ConfirmSubmitButton
+                variant="outline"
+                size="sm"
+                confirmText="Einreichung wirklich zurückziehen?"
+              >
                 Einreichung zurückziehen
               </ConfirmSubmitButton>
             </form>
           )}
           {!darfEinreichen && einreichung.art === "offen" && (
             <p className="text-sm text-muted-foreground">
-              Für die Einreichung braucht die/der Datenschutzbeauftragte ein Konto mit der Rolle „Datenschutzbeauftragte/r“ – anzulegen
-              von der Administration unter Benutzer.
+              Für die Einreichung braucht die/der Datenschutzbeauftragte ein
+              Konto mit der Rolle „Datenschutzbeauftragte/r“ – anzulegen von der
+              Administration unter Benutzer.
             </p>
           )}
         </CardContent>
       </Card>
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {(Object.keys(DATENSCHUTZ_DOKUMENTE) as DatenschutzDokument[]).map((k) => (
-          <Link key={k} href={`/datenschutz/${k}`} className="group flex flex-col gap-3 rounded-sm border bg-card p-5 no-underline hover:border-foreground">
-            <span aria-hidden className="flex size-9 items-center justify-center bg-brand-yellow text-brand-ink">
-              <FileText className="size-5" />
-            </span>
-            <span className="text-lg leading-tight font-bold text-foreground">{DATENSCHUTZ_DOKUMENTE[k].titel}</span>
-            <span className="text-sm text-muted-foreground">{DATENSCHUTZ_DOKUMENTE[k].grundlage}</span>
-            <span className="mt-auto inline-flex items-center gap-1.5 pt-2 text-sm font-semibold text-foreground">
-              <ArrowRight aria-hidden className="size-4" /> Öffnen, drucken, als PDF speichern
-            </span>
-          </Link>
-        ))}
+        {(Object.keys(DATENSCHUTZ_DOKUMENTE) as DatenschutzDokument[]).map(
+          (k) => (
+            <Link
+              key={k}
+              href={`/datenschutz/${k}`}
+              className="group flex flex-col gap-3 rounded-sm border bg-card p-5 no-underline hover:border-foreground"
+            >
+              <span
+                aria-hidden
+                className="flex size-9 items-center justify-center bg-brand-yellow text-brand-ink"
+              >
+                <FileText className="size-5" />
+              </span>
+              <span className="text-lg leading-tight font-bold text-foreground">
+                {DATENSCHUTZ_DOKUMENTE[k].titel}
+              </span>
+              <span className="text-sm text-muted-foreground">
+                {DATENSCHUTZ_DOKUMENTE[k].grundlage}
+              </span>
+              <span className="mt-auto inline-flex items-center gap-1.5 pt-2 text-sm font-semibold text-foreground">
+                <ArrowRight aria-hidden className="size-4" /> Öffnen, drucken,
+                als PDF speichern
+              </span>
+            </Link>
+          ),
+        )}
       </section>
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Verantwortliche Stelle und Ansprechpersonen</CardTitle>
+          <CardTitle className="text-base">
+            Verantwortliche Stelle und Ansprechpersonen
+          </CardTitle>
           <CardDescription>
             {fehlend.length
               ? `Noch offen: ${fehlend.map((f) => f.label).join(", ")} – in den Dokumenten rot markiert.`
               : "Alle Angaben sind ausgefüllt."}
-            {geaendertAm && ` Zuletzt geändert am ${formatBerlinDateTime(geaendertAm)}.`}
+            {geaendertAm &&
+              ` Zuletzt geändert am ${formatBerlinDateTime(geaendertAm)}.`}
           </CardDescription>
         </CardHeader>
         <CardContent>
           {darfBearbeiten ? (
             <DatenschutzForm angaben={angaben} />
           ) : (
-            <p className="text-sm text-muted-foreground">Bearbeiten können der Vorsitz des Wahlvorstands, die/der Datenschutzbeauftragte und die Administration.</p>
+            <p className="text-sm text-muted-foreground">
+              Bearbeiten können der Vorsitz des Wahlvorstands, die/der
+              Datenschutzbeauftragte und die Administration.
+            </p>
           )}
         </CardContent>
       </Card>
@@ -115,8 +190,9 @@ export default async function DatenschutzPage() {
         <CardHeader>
           <CardTitle className="text-base">Löschfristen</CardTitle>
           <CardDescription>
-            Gesetzliche Vorgaben aus LPVG und LPVGWO; wo nichts geregelt ist, 30 Tage nach Abschluss der Wahl. Während einer laufenden
-            Wahl wird nichts gelöscht.
+            Gesetzliche Vorgaben aus LPVG und LPVGWO; wo nichts geregelt ist, 30
+            Tage nach Abschluss der Wahl. Während einer laufenden Wahl wird
+            nichts gelöscht.
           </CardDescription>
         </CardHeader>
         <CardContent className="overflow-x-auto">
@@ -145,9 +221,14 @@ export default async function DatenschutzPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Vor dem Einsatz zu erledigen</CardTitle>
+          <CardTitle className="text-base">
+            Vor dem Einsatz zu erledigen
+          </CardTitle>
           <CardDescription>
-            {offen ? `${offen} von ${aufgaben.length} offen.` : "Alles erledigt."} In den Dokumenten erscheinen nur offene Aufgaben.
+            {offen
+              ? `${offen} von ${aufgaben.length} offen.`
+              : "Alles erledigt."}{" "}
+            In den Dokumenten erscheinen nur offene Aufgaben.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -169,16 +250,41 @@ export default async function DatenschutzPage() {
                       size="sm"
                       variant={a.erledigt ? "default" : "outline"}
                       className="size-6 p-0"
-                      aria-label={a.erledigt ? `Wieder öffnen: ${a.text}` : `Als erledigt markieren: ${a.text}`}
+                      aria-label={
+                        a.erledigt
+                          ? `Wieder öffnen: ${a.text}`
+                          : `Als erledigt markieren: ${a.text}`
+                      }
                     >
                       {a.erledigt && <Check className="size-4" />}
                     </Button>
                   </form>
                 )}
-                <span className={a.erledigt ? "text-muted-foreground line-through" : undefined}>{a.text}</span>
-                {a.automatisch && <span className="text-xs text-muted-foreground">(automatisch, sobald alle Angaben oben ausgefüllt sind)</span>}
-                {a.durchEinreichung && <span className="text-xs text-muted-foreground">(erledigt durch die Einreichung der/des Datenschutzbeauftragten)</span>}
-                {a.erledigtAm && <span className="text-xs text-muted-foreground">erledigt am {formatBerlinDateTime(new Date(a.erledigtAm))}</span>}
+                <span
+                  className={
+                    a.erledigt
+                      ? "text-muted-foreground line-through"
+                      : undefined
+                  }
+                >
+                  {a.text}
+                </span>
+                {a.automatisch && (
+                  <span className="text-xs text-muted-foreground">
+                    (automatisch, sobald alle Angaben oben ausgefüllt sind)
+                  </span>
+                )}
+                {a.durchEinreichung && (
+                  <span className="text-xs text-muted-foreground">
+                    (erledigt durch die Einreichung der/des
+                    Datenschutzbeauftragten)
+                  </span>
+                )}
+                {a.erledigtAm && (
+                  <span className="text-xs text-muted-foreground">
+                    erledigt am {formatBerlinDateTime(new Date(a.erledigtAm))}
+                  </span>
+                )}
               </li>
             ))}
           </ul>

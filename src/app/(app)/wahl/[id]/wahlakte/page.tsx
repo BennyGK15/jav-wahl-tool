@@ -20,7 +20,12 @@ const FORM: Record<AkteForm, string> = {
 };
 
 function Kaestchen() {
-  return <span aria-hidden className="inline-block size-4 border-[1.5px] border-current align-middle" />;
+  return (
+    <span
+      aria-hidden
+      className="inline-block size-4 border-[1.5px] border-current align-middle"
+    />
+  );
 }
 
 /**
@@ -28,23 +33,62 @@ function Kaestchen() {
  * aufbewahrt (§ 32 LPVGWO). Auf dem Bildschirm mit Links zu den Druckseiten; der Ausdruck dient als
  * Deckblatt der Akte und als Quittung der Übergabe.
  */
-export default async function WahlaktePage({ params }: { params: Promise<{ id: string }> }) {
+export default async function WahlaktePage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const session = await requireSession();
   const role = session.user.role;
   if (!hasPermission(role, "voters.edit")) notFound();
   const { id } = await params;
 
-  const election = await prisma.election.findUnique({ where: { id }, include: { result: { select: { festgestelltAm: true } } } });
+  const election = await prisma.election.findUnique({
+    where: { id },
+    include: { result: { select: { festgestelltAm: true } } },
+  });
   if (!election) notFound();
 
-  const [freigabe, einsprueche, einspruecheOffen, wahlvorschlaege, beanstandet, briefwahl, gewaehlte] = await Promise.all([
-    prisma.document.findFirst({ where: { electionId: id, typ: "wahlausschreiben", freigegebenAm: { not: null } }, select: { id: true } }),
-    prisma.objection.count({ where: { electionId: id, entscheidung: { not: "offen" } } }),
-    prisma.objection.count({ where: { electionId: id, entscheidung: "offen" } }),
+  const [
+    freigabe,
+    einsprueche,
+    einspruecheOffen,
+    wahlvorschlaege,
+    beanstandet,
+    briefwahl,
+    gewaehlte,
+  ] = await Promise.all([
+    prisma.document.findFirst({
+      where: {
+        electionId: id,
+        typ: "wahlausschreiben",
+        freigegebenAm: { not: null },
+      },
+      select: { id: true },
+    }),
+    prisma.objection.count({
+      where: { electionId: id, entscheidung: { not: "offen" } },
+    }),
+    prisma.objection.count({
+      where: { electionId: id, entscheidung: "offen" },
+    }),
     prisma.nomination.count({ where: { electionId: id } }),
-    prisma.nomination.count({ where: { electionId: id, status: { in: ["ungueltig", "zurueckgegeben"] } } }),
-    prisma.voter.count({ where: { electionId: id, wahlberechtigt: true, briefwahlBeantragtAm: { not: null } } }),
-    prisma.resultEntry.count({ where: { electionId: id, ergebnis: "gewaehlt" } }),
+    prisma.nomination.count({
+      where: {
+        electionId: id,
+        status: { in: ["ungueltig", "zurueckgegeben"] },
+      },
+    }),
+    prisma.voter.count({
+      where: {
+        electionId: id,
+        wahlberechtigt: true,
+        briefwahlBeantragtAm: { not: null },
+      },
+    }),
+    prisma.resultEntry.count({
+      where: { electionId: id, ergebnis: "gewaehlt" },
+    }),
   ]);
 
   const festgestellt = Boolean(election.result?.festgestelltAm);
@@ -65,7 +109,9 @@ export default async function WahlaktePage({ params }: { params: Promise<{ id: s
 
   const a = parseAngaben(election.wahlausschreibenAngaben);
   const wahltag = formatIsoDate(fromDbDate(election.wahltag));
-  const loeschtermin = election.retentionUntil ? formatIsoDate(fromDbDate(election.retentionUntil)) : null;
+  const loeschtermin = election.retentionUntil
+    ? formatIsoDate(fromDbDate(election.retentionUntil))
+    : null;
   const base = `/wahl/${id}`;
 
   return (
@@ -73,12 +119,19 @@ export default async function WahlaktePage({ params }: { params: Promise<{ id: s
       zurueck={{ href: `${base}/ergebnis`, label: "Ergebnis" }}
       titel="Wahlakte für den Personalrat"
       entwurf={false}
-      kopf={{ dienststelle: election.dienststelle, art: "Übergabe der Wahlunterlagen", datum: [a.ausstellungsort, formatIsoDate(todayBerlin())].filter(Boolean).join(", ") }}
+      kopf={{
+        dienststelle: election.dienststelle,
+        art: "Übergabe der Wahlunterlagen",
+        datum: [a.ausstellungsort, formatIsoDate(todayBerlin())]
+          .filter(Boolean)
+          .join(", "),
+      }}
       hinweis={
         <div className="grid gap-1">
           <p>
-            <strong>Vor dem Löschen drucken:</strong> Alles mit „drucken“ lässt sich nur aus der Anwendung erzeugen, solange die Daten der
-            Wahl gespeichert sind.{" "}
+            <strong>Vor dem Löschen drucken:</strong> Alles mit „drucken“ lässt
+            sich nur aus der Anwendung erzeugen, solange die Daten der Wahl
+            gespeichert sind.{" "}
             {loeschtermin ? (
               <>
                 Festgelegter Löschtermin: <strong>{loeschtermin}</strong>.
@@ -89,23 +142,35 @@ export default async function WahlaktePage({ params }: { params: Promise<{ id: s
           </p>
           {offen.length > 0 && (
             <p>
-              Noch nicht vollständig: {offen.map((x) => `${x.titel} (${x.offen})`).join("; ")}
+              Noch nicht vollständig:{" "}
+              {offen.map((x) => `${x.titel} (${x.offen})`).join("; ")}
             </p>
           )}
-          <p>Diese Seite ausdrucken und als Deckblatt vor die Unterlagen legen; bei der Übergabe abhaken und unterschreiben.</p>
+          <p>
+            Diese Seite ausdrucken und als Deckblatt vor die Unterlagen legen;
+            bei der Übergabe abhaken und unterschreiben.
+          </p>
         </div>
       }
     >
       <article className="grid gap-6 text-sm leading-relaxed">
         <header>
-          <h1 className="text-xl font-semibold">Wahlakte – Verzeichnis der Wahlunterlagen</h1>
+          <h1 className="text-xl font-semibold">
+            Wahlakte – Verzeichnis der Wahlunterlagen
+          </h1>
           <p>
-            Wahl der Jugend- und Auszubildendenvertretung · {election.dienststelle} ·{" "}
-            {election.verfahren === "wahlversammlung" ? "Wahlversammlung" : "Wahltag"} am {wahltag}
+            Wahl der Jugend- und Auszubildendenvertretung ·{" "}
+            {election.dienststelle} ·{" "}
+            {election.verfahren === "wahlversammlung"
+              ? "Wahlversammlung"
+              : "Wahltag"}{" "}
+            am {wahltag}
           </p>
           <p className="mt-2">
-            Die Wahlunterlagen werden vom Personalrat in schriftlicher Form mindestens bis zur nächsten Personalratswahl aufbewahrt
-            (§ 32 LPVGWO). Sie enthalten personenbezogene Daten und sind verschlossen aufzubewahren.
+            Die Wahlunterlagen werden vom Personalrat in schriftlicher Form
+            mindestens bis zur nächsten Personalratswahl aufbewahrt (§ 32
+            LPVGWO). Sie enthalten personenbezogene Daten und sind verschlossen
+            aufzubewahren.
           </p>
         </header>
 
@@ -122,32 +187,52 @@ export default async function WahlaktePage({ params }: { params: Promise<{ id: s
           {abschnitte.map((abschnitt) => (
             <tbody key={abschnitt.key}>
               <tr>
-                <th colSpan={5} className="pt-4 pb-1 text-left text-xs font-bold tracking-wide uppercase">
+                <th
+                  colSpan={5}
+                  className="pt-4 pb-1 text-left text-xs font-bold tracking-wide uppercase"
+                >
                   {abschnitt.titel}
                 </th>
               </tr>
               {abschnitt.eintraege.map((x) => {
-                const darf = x.pfad && x.rechte?.some((r) => hasPermission(role, r));
+                const darf =
+                  x.pfad && x.rechte?.some((r) => hasPermission(role, r));
                 return (
-                  <tr key={x.key} className="border-b align-top break-inside-avoid">
+                  <tr
+                    key={x.key}
+                    className="border-b align-top break-inside-avoid"
+                  >
                     <td className="py-2 pr-3 tabular-nums">{nr.get(x.key)}</td>
                     <td className="py-2 pr-3">
                       {darf ? (
-                        <Link href={`${base}/${x.pfad}`} className="inline-flex items-center gap-1 font-semibold">
-                          {x.titel} <ArrowRight aria-hidden className="size-3.5 print:hidden" />
+                        <Link
+                          href={`${base}/${x.pfad}`}
+                          className="inline-flex items-center gap-1 font-semibold"
+                        >
+                          {x.titel}{" "}
+                          <ArrowRight
+                            aria-hidden
+                            className="size-3.5 print:hidden"
+                          />
                         </Link>
                       ) : (
                         <span className="font-semibold">{x.titel}</span>
                       )}
-                      {x.hinweis && <span className="block text-xs">{x.hinweis}</span>}
+                      {x.hinweis && (
+                        <span className="block text-xs">{x.hinweis}</span>
+                      )}
                       {x.offen && (
                         <Badge variant="warning" className="mt-1 print:hidden">
                           {x.offen}
                         </Badge>
                       )}
                     </td>
-                    <td className="py-2 pr-3 text-xs print:hidden">{FORM[x.form]}</td>
-                    <td className="py-2 pr-3 tabular-nums">{x.anzahl !== undefined ? x.anzahl : "______"}</td>
+                    <td className="py-2 pr-3 text-xs print:hidden">
+                      {FORM[x.form]}
+                    </td>
+                    <td className="py-2 pr-3 tabular-nums">
+                      {x.anzahl !== undefined ? x.anzahl : "______"}
+                    </td>
                     <td className="py-2 text-center">
                       <Kaestchen />
                     </td>
@@ -158,7 +243,10 @@ export default async function WahlaktePage({ params }: { params: Promise<{ id: s
           ))}
           <tbody>
             <tr>
-              <th colSpan={5} className="pt-4 pb-1 text-left text-xs font-bold tracking-wide uppercase">
+              <th
+                colSpan={5}
+                className="pt-4 pb-1 text-left text-xs font-bold tracking-wide uppercase"
+              >
                 Weitere Unterlagen
               </th>
             </tr>
@@ -179,18 +267,31 @@ export default async function WahlaktePage({ params }: { params: Promise<{ id: s
         <section className="unterschrift grid gap-3">
           <h2 className="font-bold">Übergabevermerk</h2>
           <p>
-            Die oben abgehakten Wahlunterlagen wurden vom Wahlvorstand an den Personalrat zur Aufbewahrung übergeben. Die elektronisch
-            gespeicherten Daten der Wahl werden nach Feststellung der Gültigkeit der Wahl gelöscht (§ 32 LPVGWO).
+            Die oben abgehakten Wahlunterlagen wurden vom Wahlvorstand an den
+            Personalrat zur Aufbewahrung übergeben. Die elektronisch
+            gespeicherten Daten der Wahl werden nach Feststellung der Gültigkeit
+            der Wahl gelöscht (§ 32 LPVGWO).
           </p>
-          <p>Anzahl Ordner / Pakete: ______ · davon versiegelt (Stimmzettel): ______</p>
+          <p>
+            Anzahl Ordner / Pakete: ______ · davon versiegelt (Stimmzettel):
+            ______
+          </p>
           <div className="mt-10 grid gap-10 sm:grid-cols-2 print:grid-cols-2">
             <div className="grid gap-8">
-              <span className="border-t border-black pt-1 text-xs">Ort, Datum</span>
-              <span className="border-t border-black pt-1 text-xs">Für den Wahlvorstand (Vorsitz) – übergeben</span>
+              <span className="border-t border-black pt-1 text-xs">
+                Ort, Datum
+              </span>
+              <span className="border-t border-black pt-1 text-xs">
+                Für den Wahlvorstand (Vorsitz) – übergeben
+              </span>
             </div>
             <div className="grid gap-8">
-              <span className="border-t border-black pt-1 text-xs">Ort, Datum</span>
-              <span className="border-t border-black pt-1 text-xs">Für den Personalrat – erhalten</span>
+              <span className="border-t border-black pt-1 text-xs">
+                Ort, Datum
+              </span>
+              <span className="border-t border-black pt-1 text-xs">
+                Für den Personalrat – erhalten
+              </span>
             </div>
           </div>
         </section>

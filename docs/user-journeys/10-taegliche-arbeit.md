@@ -2,11 +2,11 @@
 
 [← Übersicht](README.md)
 
-| | |
-| --- | --- |
-| **Rollen** | alle; was angezeigt wird, hängt von der Rolle ab |
+|              |                                                                                            |
+| ------------ | ------------------------------------------------------------------------------------------ |
+| **Rollen**   | alle; was angezeigt wird, hängt von der Rolle ab                                           |
 | **Auslöser** | Ein Mitglied des Wahlvorstands meldet sich an und will wissen, was als Nächstes zu tun ist |
-| **Ergebnis** | Der nächste fällige Schritt ist erledigt oder abgehakt; keine Frist wird übersehen |
+| **Ergebnis** | Der nächste fällige Schritt ist erledigt oder abgehakt; keine Frist wird übersehen         |
 
 ## Ablauf
 
@@ -25,24 +25,24 @@ flowchart TD
 
 ## Was die Übersicht zeigt
 
-| Rolle | Inhalt |
-| --- | --- |
-| `vorsitz`, `mitglied` | Status der Wahl, Zahl der Wahlberechtigten, **Jetzt zu tun** mit Frist und Knopf „Jetzt erledigen“, darunter die nächsten vier offenen Schritte |
-| `vorsitz` während der Einrichtung | Fortschritt des Einrichtungsassistenten, Knopf „Einrichtung fortsetzen“ |
-| `wahlhelfer` | Wahltag mit Datum und Knopf „Wahltag-Ansicht öffnen“ |
-| `vorsitz`, `admin` | Warnhinweis, wenn bei einer Wahl die Aufbewahrungsfrist abgelaufen ist |
-| `datenschutz` | Stand der Datenschutz-Unterlagen (eingereicht, geändert, offen; Zahl der offenen Aufgaben) mit Knopf zu den Unterlagen |
+| Rolle                             | Inhalt                                                                                                                                          |
+| --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `vorsitz`, `mitglied`             | Status der Wahl, Zahl der Wahlberechtigten, **Jetzt zu tun** mit Frist und Knopf „Jetzt erledigen“, darunter die nächsten vier offenen Schritte |
+| `vorsitz` während der Einrichtung | Fortschritt des Einrichtungsassistenten, Knopf „Einrichtung fortsetzen“                                                                         |
+| `wahlhelfer`                      | Wahltag mit Datum und Knopf „Wahltag-Ansicht öffnen“                                                                                            |
+| `vorsitz`, `admin`                | Warnhinweis, wenn bei einer Wahl die Aufbewahrungsfrist abgelaufen ist                                                                          |
+| `datenschutz`                     | Stand der Datenschutz-Unterlagen (eingereicht, geändert, offen; Zahl der offenen Aufgaben) mit Knopf zu den Unterlagen                          |
 
 ## Werkzeuge für den Überblick
 
-| Seite | Zweck | Wo |
-| --- | --- | --- |
-| Wahlkalender | Alle Termine mit Datum, Uhrzeit des Fristendes, Rechtsgrundlage und Erledigt-Status; Uhrzeiten einzeln oder für alle auf den Dienstschluss setzen; Kalender neu berechnen (vorsitz) | `/wahl/:id` |
-| Aushänge | Welches Dokument hängt wann wo aus bzw. liegt zur Einsicht aus – Status *kommt*, *hängt*, *beendet*; ungeprüfte Zeiträume sind markiert | `/wahl/:id/aushaenge` |
-| Checklisten | Standardpunkte je Phase (Vorbereitung, Wahltag, Abschluss), eigene Punkte ergänzen | `/wahl/:id/checklisten` |
-| Sitzungen | Niederschrift über Sitzungen des Wahlvorstands | `/wahl/:id/sitzung` |
-| Fristenrechner | Fristen unabhängig von der Wahl ausrechnen (Arbeitstage, Feiertage in BW) | `/fristen` |
-| Phasen-Navigation | Phasen mit Status (erledigt ✓, aktuell hervorgehoben, offen); darunter die Seiten der aktiven Phase | Kopfzeile |
+| Seite             | Zweck                                                                                                                                                                               | Wo                      |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------- |
+| Wahlkalender      | Alle Termine mit Datum, Uhrzeit des Fristendes, Rechtsgrundlage und Erledigt-Status; Uhrzeiten einzeln oder für alle auf den Dienstschluss setzen; Kalender neu berechnen (vorsitz) | `/wahl/:id`             |
+| Aushänge          | Welches Dokument hängt wann wo aus bzw. liegt zur Einsicht aus – Status _kommt_, _hängt_, _beendet_; ungeprüfte Zeiträume sind markiert                                             | `/wahl/:id/aushaenge`   |
+| Checklisten       | Standardpunkte je Phase (Vorbereitung, Wahltag, Abschluss), eigene Punkte ergänzen                                                                                                  | `/wahl/:id/checklisten` |
+| Sitzungen         | Niederschrift über Sitzungen des Wahlvorstands                                                                                                                                      | `/wahl/:id/sitzung`     |
+| Fristenrechner    | Fristen unabhängig von der Wahl ausrechnen (Arbeitstage, Feiertage in BW)                                                                                                           | `/fristen`              |
+| Phasen-Navigation | Phasen mit Status (erledigt ✓, aktuell hervorgehoben, offen); darunter die Seiten der aktiven Phase                                                                                 | Kopfzeile               |
 
 ## Regeln hinter „Jetzt zu tun“
 

@@ -12,7 +12,7 @@ import { authClient } from "@/lib/auth-client";
 const GENERIC_ERROR =
   "Anmeldung fehlgeschlagen. Bitte Benutzername und Passwort prüfen. Nach mehreren Fehlversuchen ist das Konto 15 Minuten gesperrt.";
 
-export function LoginForm({ ziel }: { ziel: string }) {
+export function LoginForm({ ziel }: Readonly<{ ziel: string }>) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [zeigen, setZeigen] = useState(false);
@@ -28,10 +28,17 @@ export function LoginForm({ ziel }: { ziel: string }) {
       return;
     }
     startTransition(async () => {
-      const { data, error: signInError } = await authClient.signIn.username({ username, password });
+      const { data, error: signInError } = await authClient.signIn.username({
+        username,
+        password,
+      });
       if (signInError) {
         // Gesperrte Konten bekommen dieselbe Meldung – sonst ließe sich erkennen, welche Benutzernamen existieren
-        setError(signInError.status === 429 ? "Zu viele Versuche. Bitte einige Minuten warten." : GENERIC_ERROR);
+        setError(
+          signInError.status === 429
+            ? "Zu viele Versuche. Bitte einige Minuten warten."
+            : GENERIC_ERROR,
+        );
         return;
       }
       // Mit aktivem zweiten Faktor leitet das Plugin selbst zu /login/2fa weiter
@@ -41,13 +48,23 @@ export function LoginForm({ ziel }: { ziel: string }) {
     });
   }
 
-  const pruefeFeststell = (e: React.KeyboardEvent<HTMLInputElement>) => setFeststell(e.getModifierState?.("CapsLock") ?? false);
+  const pruefeFeststell = (e: React.KeyboardEvent<HTMLInputElement>) =>
+    setFeststell(e.getModifierState?.("CapsLock") ?? false);
 
   return (
     <form action={onSubmit} className="grid gap-5" noValidate>
       <div className="grid gap-2">
         <Label htmlFor="username">Benutzername</Label>
-        <Input id="username" name="username" autoComplete="username" autoCapitalize="none" spellCheck={false} autoFocus required className="h-11" />
+        <Input
+          id="username"
+          name="username"
+          autoComplete="username"
+          autoCapitalize="none"
+          spellCheck={false}
+          autoFocus
+          required
+          className="h-11"
+        />
       </div>
       <div className="grid gap-2">
         <Label htmlFor="password">Passwort</Label>
@@ -70,7 +87,11 @@ export function LoginForm({ ziel }: { ziel: string }) {
             aria-label={zeigen ? "Passwort verbergen" : "Passwort anzeigen"}
             aria-pressed={zeigen}
           >
-            {zeigen ? <EyeOff aria-hidden className="size-5" /> : <Eye aria-hidden className="size-5" />}
+            {zeigen ? (
+              <EyeOff aria-hidden className="size-5" />
+            ) : (
+              <Eye aria-hidden className="size-5" />
+            )}
           </button>
         </div>
         {feststell && (
@@ -80,9 +101,18 @@ export function LoginForm({ ziel }: { ziel: string }) {
         )}
       </div>
       <div aria-live="assertive">
-        {error && <p className="border-l-4 border-l-destructive bg-destructive/5 p-3 text-sm text-destructive">{error}</p>}
+        {error && (
+          <p className="border-l-4 border-l-destructive bg-destructive/5 p-3 text-sm text-destructive">
+            {error}
+          </p>
+        )}
       </div>
-      <Button type="submit" size="lg" className="h-12 w-full text-base" disabled={pending}>
+      <Button
+        type="submit"
+        size="lg"
+        className="h-12 w-full text-base"
+        disabled={pending}
+      >
         {pending ? "Anmelden …" : "Anmelden"}
       </Button>
     </form>

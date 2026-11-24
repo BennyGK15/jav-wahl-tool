@@ -5,7 +5,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { briefwahlStepAction, markVotedAction, undoVotedAction, type VoteResult } from "./actions";
+import {
+  briefwahlStepAction,
+  markVotedAction,
+  undoVotedAction,
+  type VoteResult,
+} from "./actions";
 
 export interface VoteRow {
   id: string;
@@ -20,12 +25,22 @@ export interface VoteRow {
 }
 
 type Filter = "alle" | "offen" | "gewaehlt" | "brief";
-const FILTER: Record<Filter, string> = { alle: "Alle", offen: "Noch nicht gewählt", gewaehlt: "Gewählt", brief: "Briefwahl" };
+const FILTER: Record<Filter, string> = {
+  alle: "Alle",
+  offen: "Noch nicht gewählt",
+  gewaehlt: "Gewählt",
+  brief: "Briefwahl",
+};
 
-export function VoteList({ rows, canCorrect }: { rows: VoteRow[]; canCorrect: boolean }) {
+export function VoteList({
+  rows,
+  canCorrect,
+}: Readonly<{ rows: VoteRow[]; canCorrect: boolean }>) {
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<Filter>("offen");
-  const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
+  const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(
+    null,
+  );
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [, startTransition] = useTransition();
 
@@ -36,7 +51,11 @@ export function VoteList({ rows, canCorrect }: { rows: VoteRow[]; canCorrect: bo
       if (filter === "gewaehlt" && !r.votedAt) return false;
       if (filter === "brief" && !r.briefBeantragt) return false;
       if (!q) return true;
-      return String(r.lfdNr) === q || `${r.nachname} ${r.vorname}`.toLowerCase().includes(q) || `${r.vorname} ${r.nachname}`.toLowerCase().includes(q);
+      return (
+        String(r.lfdNr) === q ||
+        `${r.nachname} ${r.vorname}`.toLowerCase().includes(q) ||
+        `${r.vorname} ${r.nachname}`.toLowerCase().includes(q)
+      );
     });
   }, [rows, query, filter]);
 
@@ -44,7 +63,10 @@ export function VoteList({ rows, canCorrect }: { rows: VoteRow[]; canCorrect: bo
     setPendingId(id);
     startTransition(async () => {
       const res = await fn();
-      setMessage({ ok: res.ok, text: res.ok ? label : (res.message ?? "Fehler") });
+      setMessage({
+        ok: res.ok,
+        text: res.ok ? label : (res.message ?? "Fehler"),
+      });
       setPendingId(null);
     });
   }
@@ -70,7 +92,9 @@ export function VoteList({ rows, canCorrect }: { rows: VoteRow[]; canCorrect: bo
               aria-pressed={filter === f}
               className={cn(
                 "rounded-md px-3 py-1 text-sm",
-                filter === f ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-accent",
+                filter === f
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:bg-accent",
               )}
             >
               {FILTER[f]}
@@ -79,7 +103,14 @@ export function VoteList({ rows, canCorrect }: { rows: VoteRow[]; canCorrect: bo
         </div>
       </div>
 
-      <p role="status" aria-live="polite" className={cn("min-h-5 text-sm", message?.ok === false ? "text-destructive" : "text-muted-foreground")}>
+      <p
+        role="status"
+        aria-live="polite"
+        className={cn(
+          "min-h-5 text-sm",
+          message?.ok === false ? "text-destructive" : "text-muted-foreground",
+        )}
+      >
         {message?.text}
       </p>
 
@@ -121,7 +152,13 @@ export function VoteList({ rows, canCorrect }: { rows: VoteRow[]; canCorrect: bo
                               size="sm"
                               variant={done ? "secondary" : "ghost"}
                               disabled={busy || Boolean(r.votedAt)}
-                              onClick={() => run(r.id, `${name}: ${label} ${done ? "zurückgenommen" : "erfasst"}.`, () => briefwahlStepAction(r.id, step))}
+                              onClick={() =>
+                                run(
+                                  r.id,
+                                  `${name}: ${label} ${done ? "zurückgenommen" : "erfasst"}.`,
+                                  () => briefwahlStepAction(r.id, step),
+                                )
+                              }
                               aria-pressed={done}
                             >
                               {done ? "✓ " : ""}
@@ -139,7 +176,8 @@ export function VoteList({ rows, canCorrect }: { rows: VoteRow[]; canCorrect: bo
                       {r.votedAt ? (
                         <div className="flex flex-wrap items-center gap-2">
                           <Badge variant="secondary">
-                            gewählt{r.art === "brief" ? " (Brief)" : ""} · {r.votedAt}
+                            gewählt{r.art === "brief" ? " (Brief)" : ""} ·{" "}
+                            {r.votedAt}
                           </Badge>
                           {canCorrect && (
                             <Button
@@ -147,8 +185,16 @@ export function VoteList({ rows, canCorrect }: { rows: VoteRow[]; canCorrect: bo
                               variant="ghost"
                               disabled={busy}
                               onClick={() => {
-                                if (window.confirm(`Vermerk bei ${name} wirklich zurücknehmen? Nur bei Fehleingabe.`)) {
-                                  run(r.id, `Vermerk bei ${name} zurückgenommen.`, () => undoVotedAction(r.id));
+                                if (
+                                  window.confirm(
+                                    `Vermerk bei ${name} wirklich zurücknehmen? Nur bei Fehleingabe.`,
+                                  )
+                                ) {
+                                  run(
+                                    r.id,
+                                    `Vermerk bei ${name} zurückgenommen.`,
+                                    () => undoVotedAction(r.id),
+                                  );
                                 }
                               }}
                             >
@@ -157,15 +203,31 @@ export function VoteList({ rows, canCorrect }: { rows: VoteRow[]; canCorrect: bo
                           )}
                         </div>
                       ) : r.briefEingegangen ? (
-                        <Button size="sm" disabled={busy} onClick={() => run(r.id, `${name}: Briefwahl vermerkt.`, () => markVotedAction(r.id, "brief"))}>
+                        <Button
+                          size="sm"
+                          disabled={busy}
+                          onClick={() =>
+                            run(r.id, `${name}: Briefwahl vermerkt.`, () =>
+                              markVotedAction(r.id, "brief"),
+                            )
+                          }
+                        >
                           Wahlbrief vermerken
                         </Button>
                       ) : (
                         <Button
                           size="sm"
                           disabled={busy || r.briefVersandt}
-                          title={r.briefVersandt ? "Briefwahlunterlagen wurden versandt" : undefined}
-                          onClick={() => run(r.id, `${name}: Stimmabgabe vermerkt.`, () => markVotedAction(r.id, "urne"))}
+                          title={
+                            r.briefVersandt
+                              ? "Briefwahlunterlagen wurden versandt"
+                              : undefined
+                          }
+                          onClick={() =>
+                            run(r.id, `${name}: Stimmabgabe vermerkt.`, () =>
+                              markVotedAction(r.id, "urne"),
+                            )
+                          }
                         >
                           {busy ? "…" : "Hat gewählt"}
                         </Button>

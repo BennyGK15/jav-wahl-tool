@@ -8,9 +8,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { authClient } from "@/lib/auth-client";
 
-type Schritt = { art: "start" } | { art: "scannen"; qr: string; secret: string; backupCodes: string[] } | { art: "fertig" };
+type Schritt =
+  | { art: "start" }
+  | { art: "scannen"; qr: string; secret: string; backupCodes: string[] }
+  | { art: "fertig" };
 
-export function TwoFactorSetup({ aktiv }: { aktiv: boolean }) {
+export function TwoFactorSetup({ aktiv }: Readonly<{ aktiv: boolean }>) {
   const router = useRouter();
   const [schritt, setSchritt] = useState<Schritt>({ art: "start" });
   const [error, setError] = useState<string | null>(null);
@@ -20,7 +23,9 @@ export function TwoFactorSetup({ aktiv }: { aktiv: boolean }) {
     setError(null);
     const password = String(formData.get("password") ?? "");
     startTransition(async () => {
-      const { data, error: e } = await authClient.twoFactor.enable({ password });
+      const { data, error: e } = await authClient.twoFactor.enable({
+        password,
+      });
       if (e || !data) {
         setError("Das Passwort ist nicht korrekt.");
         return;
@@ -30,7 +35,10 @@ export function TwoFactorSetup({ aktiv }: { aktiv: boolean }) {
         return;
       }
       const secret = new URL(data.totpURI).searchParams.get("secret") ?? "";
-      const qr = await QRCode.toDataURL(data.totpURI, { margin: 1, width: 220 });
+      const qr = await QRCode.toDataURL(data.totpURI, {
+        margin: 1,
+        width: 220,
+      });
       setSchritt({ art: "scannen", qr, secret, backupCodes: data.backupCodes });
     });
   }
@@ -41,7 +49,9 @@ export function TwoFactorSetup({ aktiv }: { aktiv: boolean }) {
     startTransition(async () => {
       const { error: e } = await authClient.twoFactor.verifyTotp({ code });
       if (e) {
-        setError("Der Code stimmt nicht. Bitte Uhrzeit des Geräts prüfen und erneut versuchen.");
+        setError(
+          "Der Code stimmt nicht. Bitte Uhrzeit des Geräts prüfen und erneut versuchen.",
+        );
         return;
       }
       setSchritt({ art: "fertig" });
@@ -52,7 +62,12 @@ export function TwoFactorSetup({ aktiv }: { aktiv: boolean }) {
   function deaktivieren(formData: FormData) {
     setError(null);
     const password = String(formData.get("password") ?? "");
-    if (!window.confirm("Zweiten Faktor wirklich abschalten? Das Konto ist danach nur noch mit dem Passwort geschützt.")) return;
+    if (
+      !window.confirm(
+        "Zweiten Faktor wirklich abschalten? Das Konto ist danach nur noch mit dem Passwort geschützt.",
+      )
+    )
+      return;
     startTransition(async () => {
       const { error: e } = await authClient.twoFactor.disable({ password });
       if (e) {
@@ -76,7 +91,13 @@ export function TwoFactorSetup({ aktiv }: { aktiv: boolean }) {
           Der zweite Faktor ist <strong>aktiv</strong>.
         </p>
         <Label htmlFor="pw-off">Passwort zur Bestätigung</Label>
-        <Input id="pw-off" name="password" type="password" autoComplete="current-password" required />
+        <Input
+          id="pw-off"
+          name="password"
+          type="password"
+          autoComplete="current-password"
+          required
+        />
         {fehler}
         <div>
           <Button type="submit" variant="outline" disabled={pending}>
@@ -92,16 +113,29 @@ export function TwoFactorSetup({ aktiv }: { aktiv: boolean }) {
       <div className="grid gap-6">
         <ol className="grid gap-6 sm:grid-cols-[auto_1fr]">
           <li className="grid content-start gap-2">
-            <p className="text-sm font-semibold">1. QR-Code mit der Authenticator-App scannen</p>
+            <p className="text-sm font-semibold">
+              1. QR-Code mit der Authenticator-App scannen
+            </p>
             {/* eslint-disable-next-line @next/next/no-img-element -- lokal erzeugtes data:-Bild */}
-            <img src={schritt.qr} alt="QR-Code für die Authenticator-App" width={220} height={220} className="border bg-white p-2" />
+            <img
+              src={schritt.qr}
+              alt="QR-Code für die Authenticator-App"
+              width={220}
+              height={220}
+              className="border bg-white p-2"
+            />
             <p className="text-xs text-muted-foreground">
-              Oder manuell eingeben: <code className="break-all">{schritt.secret}</code>
+              Oder manuell eingeben:{" "}
+              <code className="break-all">{schritt.secret}</code>
             </p>
           </li>
           <li className="grid content-start gap-2">
-            <p className="text-sm font-semibold">2. Backup-Codes sicher aufbewahren</p>
-            <p className="text-sm text-muted-foreground">Jeder Code funktioniert einmal, falls das Handy verloren geht.</p>
+            <p className="text-sm font-semibold">
+              2. Backup-Codes sicher aufbewahren
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Jeder Code funktioniert einmal, falls das Handy verloren geht.
+            </p>
             <ul className="grid grid-cols-2 gap-1 bg-secondary p-3 font-mono text-sm">
               {schritt.backupCodes.map((c) => (
                 <li key={c}>{c}</li>
@@ -111,7 +145,15 @@ export function TwoFactorSetup({ aktiv }: { aktiv: boolean }) {
         </ol>
         <form action={bestaetigen} className="grid max-w-sm gap-2">
           <Label htmlFor="code">3. Code aus der App eingeben</Label>
-          <Input id="code" name="code" required inputMode="numeric" autoComplete="one-time-code" maxLength={7} className="tracking-widest" />
+          <Input
+            id="code"
+            name="code"
+            required
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            maxLength={7}
+            className="tracking-widest"
+          />
           {fehler}
           <div>
             <Button type="submit" disabled={pending}>
@@ -124,13 +166,24 @@ export function TwoFactorSetup({ aktiv }: { aktiv: boolean }) {
   }
 
   if (schritt.art === "fertig") {
-    return <p className="text-sm">Der zweite Faktor ist eingerichtet. Ab der nächsten Anmeldung wird der Code abgefragt.</p>;
+    return (
+      <p className="text-sm">
+        Der zweite Faktor ist eingerichtet. Ab der nächsten Anmeldung wird der
+        Code abgefragt.
+      </p>
+    );
   }
 
   return (
     <form action={aktivieren} className="grid max-w-sm gap-3">
       <Label htmlFor="pw-on">Passwort zur Bestätigung</Label>
-      <Input id="pw-on" name="password" type="password" autoComplete="current-password" required />
+      <Input
+        id="pw-on"
+        name="password"
+        type="password"
+        autoComplete="current-password"
+        required
+      />
       {fehler}
       <div>
         <Button type="submit" disabled={pending}>

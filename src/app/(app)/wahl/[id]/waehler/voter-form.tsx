@@ -20,7 +20,10 @@ export interface VoterDefaults {
 
 const initial: VoterFormState = {};
 
-export function VoterForm({ electionId, defaults }: { electionId: string; defaults?: VoterDefaults }) {
+export function VoterForm({
+  electionId,
+  defaults,
+}: Readonly<{ electionId: string; defaults?: VoterDefaults }>) {
   const [state, formAction, pending] = useActionState(saveVoterAction, initial);
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -32,25 +35,53 @@ export function VoterForm({ electionId, defaults }: { electionId: string; defaul
   }, [state, defaults]);
 
   return (
-    <form ref={formRef} action={formAction} className="grid gap-4" autoComplete="off">
+    <form
+      ref={formRef}
+      action={formAction}
+      className="grid gap-4"
+      autoComplete="off"
+    >
       <input type="hidden" name="electionId" value={electionId} />
-      {defaults && <input type="hidden" name="voterId" value={defaults.voterId} />}
+      {defaults && (
+        <input type="hidden" name="voterId" value={defaults.voterId} />
+      )}
 
       <div className="grid gap-4 sm:grid-cols-3">
         <div className="grid gap-2">
           <Label htmlFor="nachname">Nachname</Label>
-          <Input id="nachname" name="nachname" required maxLength={120} defaultValue={defaults?.nachname} />
+          <Input
+            id="nachname"
+            name="nachname"
+            required
+            maxLength={120}
+            defaultValue={defaults?.nachname}
+          />
         </div>
         <div className="grid gap-2">
           <Label htmlFor="vorname">Vorname</Label>
-          <Input id="vorname" name="vorname" required maxLength={120} defaultValue={defaults?.vorname} />
+          <Input
+            id="vorname"
+            name="vorname"
+            required
+            maxLength={120}
+            defaultValue={defaults?.vorname}
+          />
         </div>
         <div className="grid gap-2">
-          <Label htmlFor="organisationseinheit">Organisationseinheit (optional)</Label>
-          <Input id="organisationseinheit" name="organisationseinheit" maxLength={120} defaultValue={defaults?.organisationseinheit ?? ""} />
+          <Label htmlFor="organisationseinheit">
+            Organisationseinheit (optional)
+          </Label>
+          <Input
+            id="organisationseinheit"
+            name="organisationseinheit"
+            maxLength={120}
+            defaultValue={defaults?.organisationseinheit ?? ""}
+          />
         </div>
         <div className="grid gap-2">
-          <Label htmlFor="funktion">Amts- oder Funktionsbezeichnung / Ausbildungsberuf</Label>
+          <Label htmlFor="funktion">
+            Amts- oder Funktionsbezeichnung / Ausbildungsberuf
+          </Label>
           <Input
             id="funktion"
             name="funktion"
@@ -60,7 +91,8 @@ export function VoterForm({ electionId, defaults }: { electionId: string; defaul
             aria-describedby="funktion-hinweis"
           />
           <p id="funktion-hinweis" className="text-xs text-muted-foreground">
-            Pflichtangabe im Wählerverzeichnis (§ 6 Abs. 3 Nr. 5 LPVGWO); erscheint bei Bewerbern auch auf dem Stimmzettel.
+            Pflichtangabe im Wählerverzeichnis (§ 6 Abs. 3 Nr. 5 LPVGWO);
+            erscheint bei Bewerbern auch auf dem Stimmzettel.
           </p>
         </div>
       </div>
@@ -68,22 +100,39 @@ export function VoterForm({ electionId, defaults }: { electionId: string; defaul
       <div className="grid gap-4 sm:grid-cols-3">
         <div className="grid gap-2">
           <Label htmlFor="geburtsdatum">Geburtsdatum</Label>
-          <Input id="geburtsdatum" name="geburtsdatum" type="date" required defaultValue={defaults?.geburtsdatum} />
+          <Input
+            id="geburtsdatum"
+            name="geburtsdatum"
+            type="date"
+            required
+            defaultValue={defaults?.geburtsdatum}
+          />
         </div>
         <div className="grid content-end gap-2 pb-2">
           <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" name="inAusbildung" defaultChecked={defaults?.inAusbildung} />
+            <input
+              type="checkbox"
+              name="inAusbildung"
+              defaultChecked={defaults?.inAusbildung}
+            />{" "}
             In beruflicher Ausbildung
           </label>
         </div>
         <div className="grid gap-2">
           <Label htmlFor="ausbildungsende">Ausbildungsende (optional)</Label>
-          <Input id="ausbildungsende" name="ausbildungsende" type="date" defaultValue={defaults?.ausbildungsende ?? ""} />
+          <Input
+            id="ausbildungsende"
+            name="ausbildungsende"
+            type="date"
+            defaultValue={defaults?.ausbildungsende ?? ""}
+          />
         </div>
       </div>
 
       <div className="grid max-w-xs gap-2">
-        <Label htmlFor="geschlecht">Geschlecht (nur für die Geschlechteranteile)</Label>
+        <Label htmlFor="geschlecht">
+          Geschlecht (nur für die Geschlechteranteile)
+        </Label>
         <select
           id="geschlecht"
           name="geschlecht"
@@ -110,7 +159,11 @@ export function VoterForm({ electionId, defaults }: { electionId: string; defaul
 
       <div>
         <Button type="submit" disabled={pending}>
-          {pending ? "Speichern …" : defaults ? "Änderungen speichern" : "Person erfassen"}
+          {pending
+            ? "Speichern …"
+            : defaults
+              ? "Änderungen speichern"
+              : "Person erfassen"}
         </Button>
       </div>
     </form>

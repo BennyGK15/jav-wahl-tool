@@ -1,6 +1,12 @@
 /** Rollen und Berechtigungen laut Konzept. Prüfung erfolgt IMMER serverseitig. */
 
-export const ROLES = ["admin", "vorsitz", "mitglied", "wahlhelfer", "datenschutz"] as const;
+export const ROLES = [
+  "admin",
+  "vorsitz",
+  "mitglied",
+  "wahlhelfer",
+  "datenschutz",
+] as const;
 export type Role = (typeof ROLES)[number];
 
 export const ROLE_LABELS: Record<Role, string> = {
@@ -33,7 +39,9 @@ const PERMISSIONS = {
 export type Permission = keyof typeof PERMISSIONS;
 
 export function isRole(value: unknown): value is Role {
-  return typeof value === "string" && (ROLES as readonly string[]).includes(value);
+  return (
+    typeof value === "string" && (ROLES as readonly string[]).includes(value)
+  );
 }
 
 export function hasPermission(role: unknown, permission: Permission): boolean {

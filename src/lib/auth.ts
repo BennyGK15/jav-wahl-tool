@@ -9,7 +9,11 @@ import { prisma } from "./prisma";
 const isProd = process.env.NODE_ENV === "production";
 
 /** Kontosperre: nach so vielen Fehlversuchen innerhalb des Zeitfensters wird das Konto vorübergehend gesperrt. */
-export const LOCKOUT = { maxVersuche: 5, fensterMinuten: 15, sperrMinuten: 15 } as const;
+export const LOCKOUT = {
+  maxVersuche: 5,
+  fensterMinuten: 15,
+  sperrMinuten: 15,
+} as const;
 const SPERRGRUND = "Automatisch gesperrt nach wiederholten Fehlversuchen";
 
 /** Zählt fehlgeschlagene Anmeldungen je Benutzername und sperrt bei Überschreitung (über das admin-Plugin). */
@@ -17,27 +21,49 @@ async function protokolliereAnmeldung(username: string, erfolgreich: boolean) {
   const user = await prisma.user.findUnique({ where: { username } });
   if (!user) return; // unbekannte Namen werden nur durch das Rate-Limit gebremst
   if (erfolgreich) {
-    if (user.failedLoginCount > 0) await prisma.user.update({ where: { id: user.id }, data: { failedLoginCount: 0, failedLoginAt: null } });
+    if (user.failedLoginCount > 0)
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { failedLoginCount: 0, failedLoginAt: null },
+      });
     return;
   }
   const fensterBeginn = Date.now() - LOCKOUT.fensterMinuten * 60_000;
-  const imFenster = user.failedLoginAt && user.failedLoginAt.getTime() >= fensterBeginn;
+  const imFenster =
+    user.failedLoginAt && user.failedLoginAt.getTime() >= fensterBeginn;
   const anzahl = (imFenster ? user.failedLoginCount : 0) + 1;
   const sperren = anzahl >= LOCKOUT.maxVersuche;
   await prisma.user.update({
     where: { id: user.id },
     data: sperren
-      ? { failedLoginCount: 0, failedLoginAt: null, banned: true, banReason: SPERRGRUND, banExpires: new Date(Date.now() + LOCKOUT.sperrMinuten * 60_000) }
+      ? {
+          failedLoginCount: 0,
+          failedLoginAt: null,
+          banned: true,
+          banReason: SPERRGRUND,
+          banExpires: new Date(Date.now() + LOCKOUT.sperrMinuten * 60_000),
+        }
       : { failedLoginCount: anzahl, failedLoginAt: new Date() },
   });
   if (sperren) await prisma.session.deleteMany({ where: { userId: user.id } });
   await prisma.auditLog.create({
-    data: { userId: user.id, action: sperren ? "auth.locked" : "auth.failed", objectType: "user", objectId: user.id },
+    data: {
+      userId: user.id,
+      action: sperren ? "auth.locked" : "auth.failed",
+      objectType: "user",
+      objectId: user.id,
+    },
   });
 }
 
-if (isProd && (!process.env.BETTER_AUTH_SECRET || process.env.BETTER_AUTH_SECRET.length < 32)) {
-  throw new Error("BETTER_AUTH_SECRET fehlt oder ist zu kurz (mind. 32 Zeichen)");
+if (
+  isProd &&
+  (!process.env.BETTER_AUTH_SECRET ||
+    process.env.BETTER_AUTH_SECRET.length < 32)
+) {
+  throw new Error(
+    "BETTER_AUTH_SECRET fehlt oder ist zu kurz (mind. 32 Zeichen)",
+  );
 }
 
 export const auth = betterAuth({
@@ -59,7 +85,12 @@ export const auth = betterAuth({
 
   user: {
     additionalFields: {
-      mustChangePassword: { type: "boolean", required: false, defaultValue: true, input: false },
+      mustChangePassword: {
+        type: "boolean",
+        required: false,
+        defaultValue: true,
+        input: false,
+      },
     },
   },
 
@@ -85,7 +116,11 @@ export const auth = betterAuth({
   advanced: {
     useSecureCookies: isProd,
     cookiePrefix: "jav",
-    defaultCookieAttributes: { httpOnly: true, sameSite: "strict", secure: isProd },
+    defaultCookieAttributes: {
+      httpOnly: true,
+      sameSite: "strict",
+      secure: isProd,
+    },
   },
 
   hooks: {
@@ -94,11 +129,17 @@ export const auth = betterAuth({
       const name = (ctx.body as { username?: unknown } | undefined)?.username;
       if (typeof name !== "string" || !name) return;
       const returned = ctx.context.returned;
-      const status = isAPIError(returned) ? returned.statusCode : returned instanceof Response ? returned.status : 200;
+      const status = isAPIError(returned)
+        ? returned.statusCode
+        : returned instanceof Response
+          ? returned.status
+          : 200;
       try {
         // 401 = falsche Zugangsdaten; 403 (gesperrt) zählt nicht erneut
-        if (status === 401) await protokolliereAnmeldung(name.trim().toLowerCase(), false);
-        else if (status < 300) await protokolliereAnmeldung(name.trim().toLowerCase(), true);
+        if (status === 401)
+          await protokolliereAnmeldung(name.trim().toLowerCase(), false);
+        else if (status < 300)
+          await protokolliereAnmeldung(name.trim().toLowerCase(), true);
       } catch (e) {
         console.error("[auth] Protokollierung der Anmeldung fehlgeschlagen", e);
       }

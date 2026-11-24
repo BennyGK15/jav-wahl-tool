@@ -36,11 +36,15 @@ export function proxy(request: NextRequest) {
   requestHeaders.set("x-nonce", nonce);
   requestHeaders.set("Content-Security-Policy", csp);
 
-  const isPublic = PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+  const isPublic = PUBLIC_PATHS.some(
+    (p) => pathname === p || pathname.startsWith(`${p}/`),
+  );
   if (!isPublic && !getSessionCookie(request, { cookiePrefix: "jav" })) {
     // Startadresse: öffentliche Startseite anzeigen (Adresse bleibt „/“)
     if (pathname === "/") {
-      const res = NextResponse.rewrite(new URL("/start", request.url), { request: { headers: requestHeaders } });
+      const res = NextResponse.rewrite(new URL("/start", request.url), {
+        request: { headers: requestHeaders },
+      });
       res.headers.set("Content-Security-Policy", csp);
       return res;
     }
@@ -48,7 +52,8 @@ export function proxy(request: NextRequest) {
     url.pathname = "/login";
     url.search = "";
     // Nur Seitenaufrufe merken, keine Server-Aktionen oder Dateien
-    if (request.method === "GET" && !pathname.startsWith("/api/")) url.searchParams.set("weiter", `${pathname}${request.nextUrl.search}`);
+    if (request.method === "GET" && !pathname.startsWith("/api/"))
+      url.searchParams.set("weiter", `${pathname}${request.nextUrl.search}`);
     const res = NextResponse.redirect(url);
     res.headers.set("Content-Security-Policy", csp);
     return res;

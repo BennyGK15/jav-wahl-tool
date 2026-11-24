@@ -15,15 +15,20 @@ for (const file of [".env.local", ".env"]) {
 }
 
 async function main() {
-  if (process.env.NODE_ENV === "production") throw new Error("Der Neustart ist in Produktion nicht verfügbar.");
+  if (process.env.NODE_ENV === "production")
+    throw new Error("Der Neustart ist in Produktion nicht verfügbar.");
   if (!process.argv.includes("--ja")) {
-    console.log("Löscht ALLE Wahldaten (Benutzer bleiben erhalten). Zum Ausführen: pnpm dev:reset --ja [--datenschutz-behalten]");
+    console.log(
+      "Löscht ALLE Wahldaten (Benutzer bleiben erhalten). Zum Ausführen: pnpm dev:reset --ja [--datenschutz-behalten]",
+    );
     return;
   }
   const { prisma } = await import("../src/lib/prisma");
   const { devReset } = await import("../src/lib/dev-reset");
   try {
-    const r = await devReset({ datenschutz: !process.argv.includes("--datenschutz-behalten") });
+    const r = await devReset({
+      datenschutz: !process.argv.includes("--datenschutz-behalten"),
+    });
     console.log(
       `Neustart erledigt: ${r.wahlen} Wahl(en) mit ${r.personen} Person(en), ${r.fristregeln} Fristregeln, ${r.auditEintraege} Audit-Einträge und ${r.einstellungen} Einstellung(en) gelöscht. Benutzer sind unverändert.`,
     );

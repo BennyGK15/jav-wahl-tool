@@ -32,11 +32,15 @@ export async function changePasswordAction(
 ): Promise<ChangePasswordState> {
   const h = await headers();
   const session = await auth.api.getSession({ headers: h });
-  if (!session || session.user.banned) return { ok: false, message: "Nicht angemeldet" };
+  if (!session || session.user.banned)
+    return { ok: false, message: "Nicht angemeldet" };
 
   const parsed = schema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
-    return { ok: false, message: parsed.error.issues[0]?.message ?? "Eingabe ungültig" };
+    return {
+      ok: false,
+      message: parsed.error.issues[0]?.message ?? "Eingabe ungültig",
+    };
   }
 
   try {
@@ -49,10 +53,22 @@ export async function changePasswordAction(
       },
     });
   } catch {
-    return { ok: false, message: "Passwort konnte nicht geändert werden. Ist das aktuelle Passwort korrekt?" };
+    return {
+      ok: false,
+      message:
+        "Passwort konnte nicht geändert werden. Ist das aktuelle Passwort korrekt?",
+    };
   }
 
-  await prisma.user.update({ where: { id: session.user.id }, data: { mustChangePassword: false } });
-  await writeAudit({ userId: session.user.id, action: "password.changed", objectType: "user", objectId: session.user.id });
+  await prisma.user.update({
+    where: { id: session.user.id },
+    data: { mustChangePassword: false },
+  });
+  await writeAudit({
+    userId: session.user.id,
+    action: "password.changed",
+    objectType: "user",
+    objectId: session.user.id,
+  });
   return { ok: true };
 }

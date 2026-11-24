@@ -5,7 +5,13 @@
 import type { Verfahren } from "./fristen";
 import type { Angaben } from "./wahlausschreiben";
 
-export type SchrittKey = "grunddaten" | "wahlvorstand" | "orte" | "unterschriften" | "datenschutz" | "abschluss";
+export type SchrittKey =
+  | "grunddaten"
+  | "wahlvorstand"
+  | "orte"
+  | "unterschriften"
+  | "datenschutz"
+  | "abschluss";
 
 export interface OrtFeld {
   key: keyof Angaben;
@@ -16,26 +22,110 @@ export interface OrtFeld {
 }
 
 const REGULAER: OrtFeld[] = [
-  { key: "ausstellungsort", label: "Ausstellungsort", typ: "text", hinweis: "Ort für Datum und Unterschrift auf allen Dokumenten, z. B. „Musterstadt“", pflicht: true },
-  { key: "dienstschluss", label: "Dienstschluss der Mehrheit der Wahlberechtigten", typ: "zeit", hinweis: "Fristen enden nicht vor dieser Uhrzeit (§ 55 Abs. 2 LPVGWO); wird für alle Fristenden übernommen", pflicht: true },
-  { key: "einreichungsstelle", label: "Stelle für Wahlvorschläge und Einsprüche", typ: "text", hinweis: "Raum und Erreichbarkeit des Wahlvorstands, z. B. „Raum 2.14, Mo–Fr 8–15 Uhr“", pflicht: true },
-  { key: "bekanntmachungsort", label: "Ort der Bekanntmachungen", typ: "text", hinweis: "Aushang, zusätzlich elektronisch (§ 2 LPVGWO), z. B. „Schwarzes Brett Foyer und Intranet“", pflicht: true },
-  { key: "auslageOrt", label: "Ort der Auslage des Wählerverzeichnisses", typ: "text", pflicht: true },
-  { key: "auslageZeiten", label: "Zeiten der Einsichtnahme", typ: "text", hinweis: "Während der Dienststunden (§ 6 Abs. 4 LPVGWO)", pflicht: true },
+  {
+    key: "ausstellungsort",
+    label: "Ausstellungsort",
+    typ: "text",
+    hinweis:
+      "Ort für Datum und Unterschrift auf allen Dokumenten, z. B. „Musterstadt“",
+    pflicht: true,
+  },
+  {
+    key: "dienstschluss",
+    label: "Dienstschluss der Mehrheit der Wahlberechtigten",
+    typ: "zeit",
+    hinweis:
+      "Fristen enden nicht vor dieser Uhrzeit (§ 55 Abs. 2 LPVGWO); wird für alle Fristenden übernommen",
+    pflicht: true,
+  },
+  {
+    key: "einreichungsstelle",
+    label: "Stelle für Wahlvorschläge und Einsprüche",
+    typ: "text",
+    hinweis:
+      "Raum und Erreichbarkeit des Wahlvorstands, z. B. „Raum 2.14, Mo–Fr 8–15 Uhr“",
+    pflicht: true,
+  },
+  {
+    key: "bekanntmachungsort",
+    label: "Ort der Bekanntmachungen",
+    typ: "text",
+    hinweis:
+      "Aushang, zusätzlich elektronisch (§ 2 LPVGWO), z. B. „Schwarzes Brett Foyer und Intranet“",
+    pflicht: true,
+  },
+  {
+    key: "auslageOrt",
+    label: "Ort der Auslage des Wählerverzeichnisses",
+    typ: "text",
+    pflicht: true,
+  },
+  {
+    key: "auslageZeiten",
+    label: "Zeiten der Einsichtnahme",
+    typ: "text",
+    hinweis: "Während der Dienststunden (§ 6 Abs. 4 LPVGWO)",
+    pflicht: true,
+  },
   { key: "wahlraum", label: "Wahlraum", typ: "text", pflicht: true },
   { key: "wahlzeitVon", label: "Wahlzeit von", typ: "zeit", pflicht: true },
   { key: "wahlzeitBis", label: "Wahlzeit bis", typ: "zeit", pflicht: true },
-  { key: "auszaehlungZeit", label: "Beginn der Auszählung", typ: "zeit", hinweis: "Die Sitzung ist für die Beschäftigten öffentlich (§ 26 Abs. 6 LPVGWO)", pflicht: true },
-  { key: "auszaehlungOrt", label: "Ort der Auszählung", typ: "text", pflicht: true },
-  { key: "briefwahlHinweis", label: "Hinweis zur Briefwahl (optional)", typ: "lang", hinweis: "Erscheint im Wahlausschreiben", pflicht: false },
+  {
+    key: "auszaehlungZeit",
+    label: "Beginn der Auszählung",
+    typ: "zeit",
+    hinweis:
+      "Die Sitzung ist für die Beschäftigten öffentlich (§ 26 Abs. 6 LPVGWO)",
+    pflicht: true,
+  },
+  {
+    key: "auszaehlungOrt",
+    label: "Ort der Auszählung",
+    typ: "text",
+    pflicht: true,
+  },
+  {
+    key: "briefwahlHinweis",
+    label: "Hinweis zur Briefwahl (optional)",
+    typ: "lang",
+    hinweis: "Erscheint im Wahlausschreiben",
+    pflicht: false,
+  },
 ];
 
 const WAHLVERSAMMLUNG: OrtFeld[] = [
-  { key: "ausstellungsort", label: "Ausstellungsort", typ: "text", hinweis: "Ort für Datum und Unterschrift auf allen Dokumenten", pflicht: true },
-  { key: "wahlraum", label: "Ort der Wahlversammlung", typ: "text", pflicht: true },
-  { key: "wahlzeitVon", label: "Beginn der Wahlversammlung", typ: "zeit", pflicht: true },
-  { key: "bekanntmachungsort", label: "Ort der Bekanntmachungen", typ: "text", hinweis: "Aushang, zusätzlich elektronisch (§ 2 LPVGWO)", pflicht: true },
-  { key: "einreichungsstelle", label: "Erreichbarkeit des Wahlvorstands", typ: "text", pflicht: true },
+  {
+    key: "ausstellungsort",
+    label: "Ausstellungsort",
+    typ: "text",
+    hinweis: "Ort für Datum und Unterschrift auf allen Dokumenten",
+    pflicht: true,
+  },
+  {
+    key: "wahlraum",
+    label: "Ort der Wahlversammlung",
+    typ: "text",
+    pflicht: true,
+  },
+  {
+    key: "wahlzeitVon",
+    label: "Beginn der Wahlversammlung",
+    typ: "zeit",
+    pflicht: true,
+  },
+  {
+    key: "bekanntmachungsort",
+    label: "Ort der Bekanntmachungen",
+    typ: "text",
+    hinweis: "Aushang, zusätzlich elektronisch (§ 2 LPVGWO)",
+    pflicht: true,
+  },
+  {
+    key: "einreichungsstelle",
+    label: "Erreichbarkeit des Wahlvorstands",
+    typ: "text",
+    pflicht: true,
+  },
 ];
 
 export function ortFelder(verfahren: Verfahren): OrtFeld[] {
@@ -63,15 +153,37 @@ export function einrichtungsSchritte(s: EinrichtungStand): SchrittStatus[] {
   const vorstandFehlt = [
     ...(vorstand.some((m) => m.funktion === "vorsitz") ? [] : ["Vorsitz"]),
     ...(vorstand.length >= 3 ? [] : ["mindestens drei Mitglieder"]),
-    ...(vorstand.some((m) => m.prWaehlbar) ? [] : ["ein in den Personalrat wählbares Mitglied (§ 54 Abs. 1 Nr. 3 LPVGWO)"]),
+    ...(vorstand.some((m) => m.prWaehlbar)
+      ? []
+      : [
+          "ein in den Personalrat wählbares Mitglied (§ 54 Abs. 1 Nr. 3 LPVGWO)",
+        ]),
   ];
   const orteFehlt = ortFelder(s.verfahren)
     .filter((f) => f.pflicht && !s.angaben[f.key])
     .map((f) => f.label);
   const schritte: SchrittStatus[] = [
-    { key: "grunddaten", titel: "Grunddaten", kurz: "Dienststelle, Wahlberechtigte, Termine", erledigt: true, fehlt: [] },
-    { key: "wahlvorstand", titel: "Wahlvorstand", kurz: "Mitglieder und Ersatzmitglieder", erledigt: vorstandFehlt.length === 0, fehlt: vorstandFehlt },
-    { key: "orte", titel: "Orte und Zeiten", kurz: "Angaben für Wahlausschreiben und Fristen", erledigt: orteFehlt.length === 0, fehlt: orteFehlt },
+    {
+      key: "grunddaten",
+      titel: "Grunddaten",
+      kurz: "Dienststelle, Wahlberechtigte, Termine",
+      erledigt: true,
+      fehlt: [],
+    },
+    {
+      key: "wahlvorstand",
+      titel: "Wahlvorstand",
+      kurz: "Mitglieder und Ersatzmitglieder",
+      erledigt: vorstandFehlt.length === 0,
+      fehlt: vorstandFehlt,
+    },
+    {
+      key: "orte",
+      titel: "Orte und Zeiten",
+      kurz: "Angaben für Wahlausschreiben und Fristen",
+      erledigt: orteFehlt.length === 0,
+      fehlt: orteFehlt,
+    },
   ];
   if (s.verfahren === "regulaer") {
     schritte.push({
@@ -88,9 +200,17 @@ export function einrichtungsSchritte(s: EinrichtungStand): SchrittStatus[] {
       titel: "Datenschutz",
       kurz: "Verantwortliche Stelle und Datenschutzbeauftragte/r",
       erledigt: s.datenschutzVollstaendig,
-      fehlt: s.datenschutzVollstaendig ? [] : ["Angaben zur verantwortlichen Stelle"],
+      fehlt: s.datenschutzVollstaendig
+        ? []
+        : ["Angaben zur verantwortlichen Stelle"],
     },
-    { key: "abschluss", titel: "Abschluss", kurz: "Prüfen und Wahlkalender freischalten", erledigt: false, fehlt: [] },
+    {
+      key: "abschluss",
+      titel: "Abschluss",
+      kurz: "Prüfen und Wahlkalender freischalten",
+      erledigt: false,
+      fehlt: [],
+    },
   );
   return schritte;
 }

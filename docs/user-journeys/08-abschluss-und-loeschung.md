@@ -2,10 +2,10 @@
 
 [← Übersicht](README.md)
 
-| | |
-| --- | --- |
-| **Rollen** | `vorsitz` (Wahlakte, Abschluss), `admin` und `vorsitz` (Aufbewahrung und Löschung) |
-| **Auslöser** | Das Ergebnis ist festgestellt und bekanntgemacht |
+|              |                                                                                                                                                   |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Rollen**   | `vorsitz` (Wahlakte, Abschluss), `admin` und `vorsitz` (Aufbewahrung und Löschung)                                                                |
+| **Auslöser** | Das Ergebnis ist festgestellt und bekanntgemacht                                                                                                  |
 | **Ergebnis** | Wahlakte in Papierform an den Personalrat übergeben, Wahl abgeschlossen, nach Ablauf der Aufbewahrungsfrist alle personenbezogenen Daten gelöscht |
 
 ## Ablauf
@@ -26,14 +26,14 @@ flowchart TD
 
 ## Schritte
 
-| # | Wer | Was | Wo |
-| --- | --- | --- | --- |
-| 1 | vorsitz | Wahlakte nach § 32 LPVGWO zusammenstellen. Die Seite unterscheidet Dokumente, die **vor der Löschung** ausgedruckt werden müssen, und Papieroriginale, die nur beim Wahlvorstand liegen (Unterschriften, Stimmzettel …) | *Abschließen → Wahlakte* (`/wahl/:id/wahlakte`) |
-| 2 | vorsitz | Checkliste *Abschluss* abarbeiten | *Checklisten* |
-| 3 | vorsitz, admin | Aufbewahrungsfrist festlegen; sie muss nach dem Ende der Anfechtungsfrist liegen | *Abschließen → Abschluss & Löschung* (`/aufbewahrung`) |
-| 4 | vorsitz, admin | Ggf. eine Wahlanfechtung (§ 21 LPVG) mit Datum erfassen und später ihren Abschluss eintragen | `/aufbewahrung` |
-| 5 | vorsitz, admin | Wahl abschließen (setzt festgestelltes Ergebnis und Aufbewahrungsfrist voraus) | `/aufbewahrung` |
-| 6 | vorsitz, admin | Nach Fristablauf löschen; zur Bestätigung den Namen der Dienststelle exakt eingeben | `/aufbewahrung` |
+| #   | Wer            | Was                                                                                                                                                                                                                     | Wo                                                     |
+| --- | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| 1   | vorsitz        | Wahlakte nach § 32 LPVGWO zusammenstellen. Die Seite unterscheidet Dokumente, die **vor der Löschung** ausgedruckt werden müssen, und Papieroriginale, die nur beim Wahlvorstand liegen (Unterschriften, Stimmzettel …) | _Abschließen → Wahlakte_ (`/wahl/:id/wahlakte`)        |
+| 2   | vorsitz        | Checkliste _Abschluss_ abarbeiten                                                                                                                                                                                       | _Checklisten_                                          |
+| 3   | vorsitz, admin | Aufbewahrungsfrist festlegen; sie muss nach dem Ende der Anfechtungsfrist liegen                                                                                                                                        | _Abschließen → Abschluss & Löschung_ (`/aufbewahrung`) |
+| 4   | vorsitz, admin | Ggf. eine Wahlanfechtung (§ 21 LPVG) mit Datum erfassen und später ihren Abschluss eintragen                                                                                                                            | `/aufbewahrung`                                        |
+| 5   | vorsitz, admin | Wahl abschließen (setzt festgestelltes Ergebnis und Aufbewahrungsfrist voraus)                                                                                                                                          | `/aufbewahrung`                                        |
+| 6   | vorsitz, admin | Nach Fristablauf löschen; zur Bestätigung den Namen der Dienststelle exakt eingeben                                                                                                                                     | `/aufbewahrung`                                        |
 
 ## Was gelöscht wird
 

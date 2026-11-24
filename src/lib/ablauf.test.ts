@@ -2,11 +2,26 @@ import { describe, expect, it } from "vitest";
 import { berechneAblauf, fristText, SCHRITTE } from "./ablauf";
 import { computeSchedule, DEFAULT_RULES } from "./fristen";
 
-const schedule = computeSchedule("2027-01-20", undefined, { wahlausschreibenAm: "2026-11-20" });
+const schedule = computeSchedule("2027-01-20", undefined, {
+  wahlausschreibenAm: "2026-11-20",
+});
 const termine = (heute: string) =>
-  schedule.map((e, i) => ({ id: String(i), key: e.key, datum: e.date, uhrzeit: null, label: e.label, erledigt: e.date < heute }));
+  schedule.map((e, i) => ({
+    id: String(i),
+    key: e.key,
+    datum: e.date,
+    uhrzeit: null,
+    label: e.label,
+    erledigt: e.date < heute,
+  }));
 const ablauf = (heute: string, festgestellt = false) =>
-  berechneAblauf({ verfahren: "regulaer", termine: termine(heute), wahltag: "2027-01-20", ergebnisFestgestellt: festgestellt, heute });
+  berechneAblauf({
+    verfahren: "regulaer",
+    termine: termine(heute),
+    wahltag: "2027-01-20",
+    ergebnisFestgestellt: festgestellt,
+    heute,
+  });
 
 describe("Ablauf in Phasen", () => {
   it("ordnet jeder Standardregel eine Aufgabe und Seite zu", () => {
@@ -39,6 +54,8 @@ describe("fristText", () => {
     expect(fristText("2026-11-04", "2026-11-04").text).toBe("heute");
     expect(fristText("2026-11-04", "2026-11-05").text).toBe("morgen");
     expect(fristText("2026-11-04", "2026-11-02").ton).toBe("ueberfaellig");
-    expect(fristText("2026-11-04", "2026-11-20").text).toBe("in 12 Arbeitstagen (16 Tage)");
+    expect(fristText("2026-11-04", "2026-11-20").text).toBe(
+      "in 12 Arbeitstagen (16 Tage)",
+    );
   });
 });

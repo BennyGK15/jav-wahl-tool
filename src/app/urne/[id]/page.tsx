@@ -9,13 +9,19 @@ import { UrneAnsicht, type UrneZeile } from "./urne-ansicht";
 
 export const metadata = { title: "Wahltag – Stimmabgabe" };
 
-const uhrzeit = new Intl.DateTimeFormat("de-DE", { timeZone: "Europe/Berlin", hour: "2-digit", minute: "2-digit" });
+const uhrzeit = new Intl.DateTimeFormat("de-DE", {
+  timeZone: "Europe/Berlin",
+  hour: "2-digit",
+  minute: "2-digit",
+});
 
 /**
  * Reduzierte Wahltag-Ansicht für Wahlhelferinnen und Wahlhelfer am Tablet: Suchen, bestätigen, vermerken.
  * Bewusst ohne Navigation und ohne Liste aller Namen (Bildschirm ist am Wahltisch für Wählende sichtbar).
  */
-export default async function UrnePage({ params }: { params: Promise<{ id: string }> }) {
+export default async function UrnePage({
+  params,
+}: Readonly<{ params: Promise<{ id: string }> }>) {
   const session = await requireSession();
   if (!hasPermission(session.user.role, "voters.markVoted")) notFound();
   const { id } = await params;
@@ -26,7 +32,15 @@ export default async function UrnePage({ params }: { params: Promise<{ id: strin
   const voters = await prisma.voter.findMany({
     where: { electionId: id, wahlberechtigt: true },
     orderBy: { lfdNr: "asc" },
-    select: { id: true, lfdNr: true, nachname: true, vorname: true, votedAt: true, stimmabgabeArt: true, briefwahlVersandtAm: true },
+    select: {
+      id: true,
+      lfdNr: true,
+      nachname: true,
+      vorname: true,
+      votedAt: true,
+      stimmabgabeArt: true,
+      briefwahlVersandtAm: true,
+    },
   });
   const zeilen: UrneZeile[] = voters.map((v) => ({
     id: v.id,
@@ -38,21 +52,27 @@ export default async function UrnePage({ params }: { params: Promise<{ id: strin
     briefUnterlagen: Boolean(v.briefwahlVersandtAm),
   }));
   const wahltag = fromDbDate(election.wahltag);
-  const name = session.user.displayUsername ?? session.user.username ?? session.user.name;
+  const name =
+    session.user.displayUsername ?? session.user.username ?? session.user.name;
 
   return (
     <div className="flex min-h-dvh flex-col bg-background">
       <header className="bg-brand-yellow text-brand-ink">
         <div className="mx-auto flex max-w-4xl flex-wrap items-center justify-between gap-3 px-4 py-3">
           <div className="leading-tight">
-            <p className="text-xs font-bold tracking-[0.12em] uppercase">Wahltag · Stimmabgabe</p>
+            <p className="text-xs font-bold tracking-[0.12em] uppercase">
+              Wahltag · Stimmabgabe
+            </p>
             <p className="text-sm">
               {election.dienststelle} · {formatIsoDate(wahltag)}
             </p>
           </div>
           <div className="flex items-center gap-3 text-sm">
             <span className="hidden sm:inline">{name}</span>
-            <Link href="/" className="rounded-sm px-3 py-2 font-semibold no-underline hover:bg-brand-ink hover:text-brand-yellow">
+            <Link
+              href="/"
+              className="rounded-sm px-3 py-2 font-semibold no-underline hover:bg-brand-ink hover:text-brand-yellow"
+            >
               Beenden
             </Link>
           </div>
@@ -60,8 +80,12 @@ export default async function UrnePage({ params }: { params: Promise<{ id: strin
       </header>
       <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-6">
         {todayBerlin() !== wahltag && (
-          <p role="note" className="mb-4 border-l-4 border-l-foreground bg-highlight p-3 text-sm">
-            Heute ist nicht der Wahltag ({formatIsoDate(wahltag)}). Stimmabgaben bitte nur am Wahltag vermerken.
+          <p
+            role="note"
+            className="mb-4 border-l-4 border-l-foreground bg-highlight p-3 text-sm"
+          >
+            Heute ist nicht der Wahltag ({formatIsoDate(wahltag)}). Stimmabgaben
+            bitte nur am Wahltag vermerken.
           </p>
         )}
         <UrneAnsicht zeilen={zeilen} />

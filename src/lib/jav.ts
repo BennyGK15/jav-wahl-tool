@@ -9,7 +9,11 @@ export type IsoDate = string;
 
 /** Vollendete Lebensjahre an einem Stichtag. */
 export function ageOn(birthDate: IsoDate, day: IsoDate): number {
-  const [by, bm, bd] = birthDate.split("-").map(Number) as [number, number, number];
+  const [by, bm, bd] = birthDate.split("-").map(Number) as [
+    number,
+    number,
+    number,
+  ];
   const [y, m, d] = day.split("-").map(Number) as [number, number, number];
   let age = y - by;
   if (m < bm || (m === bm && d < bd)) age -= 1;
@@ -30,7 +34,11 @@ export interface Eligibility {
   age: number;
 }
 
-export function eligibility({ birthDate, inTraining, electionDay }: EligibilityInput): Eligibility {
+export function eligibility({
+  birthDate,
+  inTraining,
+  electionDay,
+}: EligibilityInput): Eligibility {
   const age = ageOn(birthDate, electionDay);
   return {
     wahlberechtigt: inTraining || age < 18,
@@ -68,7 +76,9 @@ export interface Verfahrensauskunft {
 }
 
 /** Was folgt aus der Zahl der Wahlberechtigten für Größe und Verfahren? */
-export function verfahrensauskunft(wahlberechtigte: number): Verfahrensauskunft {
+export function verfahrensauskunft(
+  wahlberechtigte: number,
+): Verfahrensauskunft {
   return {
     javMoeglich: wahlberechtigte >= 5,
     mitglieder: javSize(wahlberechtigte),
@@ -80,7 +90,11 @@ export function verfahrensauskunft(wahlberechtigte: number): Verfahrensauskunft 
  * In Ausbildung am Stichtag: Ausbildungsverhältnis besteht und endet nicht vor dem Stichtag.
  * (Ausbildungsende = letzter Tag der Ausbildung.)
  */
-export function inAusbildungAm(inAusbildung: boolean, ausbildungsende: IsoDate | null | undefined, day: IsoDate): boolean {
+export function inAusbildungAm(
+  inAusbildung: boolean,
+  ausbildungsende: IsoDate | null | undefined,
+  day: IsoDate,
+): boolean {
   if (!inAusbildung) return false;
   return !ausbildungsende || ausbildungsende >= day;
 }
@@ -98,7 +112,9 @@ export function schwellenHinweise(
   const jetzt = verfahrensauskunft(tatsaechlich);
   const hinweise: string[] = [];
   if (!jetzt.javMoeglich) {
-    hinweise.push(`Laut Verzeichnis gibt es nur ${tatsaechlich} Wahlberechtigte – unter 5 wird keine JAV gebildet (§ 59 LPVG BW).`);
+    hinweise.push(
+      `Laut Verzeichnis gibt es nur ${tatsaechlich} Wahlberechtigte – unter 5 wird keine JAV gebildet (§ 59 LPVG BW).`,
+    );
     return hinweise;
   }
   if (vorher.mitglieder !== jetzt.mitglieder) {
@@ -107,7 +123,9 @@ export function schwellenHinweise(
     );
   }
   if (verfahren === "wahlversammlung" && !jetzt.wahlversammlungMoeglich) {
-    hinweise.push(`Mit ${tatsaechlich} Wahlberechtigten ist keine Wahlversammlung mehr zulässig (höchstens 20, § 62 Abs. 2 LPVG BW).`);
+    hinweise.push(
+      `Mit ${tatsaechlich} Wahlberechtigten ist keine Wahlversammlung mehr zulässig (höchstens 20, § 62 Abs. 2 LPVG BW).`,
+    );
   }
   return hinweise;
 }
@@ -120,7 +138,8 @@ export function schwellenHinweise(
  * Satz 3 (entsprechend) genügen in jedem Fall 50. „Mindestens ein Zwanzigstel“ → aufrunden.
  * (Fassung vom 12.03.2015, Stand der geprüften Gesamtausgabe 2020 – vor Verwendung gegen die aktuelle Fassung prüfen.)
  */
-export const STUETZ_RECHTSGRUNDLAGE = "§ 62 Abs. 1 i. V. m. § 13 Abs. 6 und Abs. 4 Satz 3 LPVG BW";
+export const STUETZ_RECHTSGRUNDLAGE =
+  "§ 62 Abs. 1 i. V. m. § 13 Abs. 6 und Abs. 4 Satz 3 LPVG BW";
 
 export function mindestStuetzunterschriften(wahlberechtigte: number): number {
   if (!Number.isFinite(wahlberechtigte) || wahlberechtigte <= 0) return 0;

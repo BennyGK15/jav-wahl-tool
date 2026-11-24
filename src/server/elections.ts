@@ -29,10 +29,19 @@ export async function ensureDefaultRules(): Promise<void> {
   if (!abgeglichen) {
     const jetzt = new Date();
     await prisma.$transaction([
-      prisma.deadlineRule.deleteMany({ where: { key: { in: [...ENTFALLENE_REGELN] } } }),
+      prisma.deadlineRule.deleteMany({
+        where: { key: { in: [...ENTFALLENE_REGELN] } },
+      }),
       ...DEFAULT_RULES.map((r) =>
         prisma.deadlineRule.updateMany({
-          where: { key: r.key, anchor: r.anchor, direction: r.direction, unit: r.unit, amount: r.amount, verifiedBy: null },
+          where: {
+            key: r.key,
+            anchor: r.anchor,
+            direction: r.direction,
+            unit: r.unit,
+            amount: r.amount,
+            verifiedBy: null,
+          },
           data: {
             label: r.label,
             legalBasis: r.legalBasis,
@@ -63,7 +72,9 @@ export async function ensureDefaultRules(): Promise<void> {
   });
 }
 
-export async function loadRules(verfahren?: Verfahren): Promise<DeadlineRule[]> {
+export async function loadRules(
+  verfahren?: Verfahren,
+): Promise<DeadlineRule[]> {
   await ensureDefaultRules();
   const rows = await prisma.deadlineRule.findMany({
     where: verfahren ? { verfahren } : undefined,
@@ -102,8 +113,12 @@ export async function recalculateDeadlines(electionId: string) {
   });
   const rules = await loadRules(election.verfahren);
   const schedule = computeSchedule(fromDbDate(election.wahltag), rules, {
-    wahlausschreibenAm: election.wahlausschreibenAm ? fromDbDate(election.wahlausschreibenAm) : undefined,
-    amtszeitEnde: election.amtszeitEnde ? fromDbDate(election.amtszeitEnde) : undefined,
+    wahlausschreibenAm: election.wahlausschreibenAm
+      ? fromDbDate(election.wahlausschreibenAm)
+      : undefined,
+    amtszeitEnde: election.amtszeitEnde
+      ? fromDbDate(election.amtszeitEnde)
+      : undefined,
   });
 
   // Ereignisbezogene Frist: Nachfrist für Wahlvorschläge (§ 16 LPVGWO)
@@ -120,14 +135,31 @@ export async function recalculateDeadlines(electionId: string) {
   // Nach der Feststellung: Aushang des Ergebnisses (§ 31 Abs. 2 LPVGWO) und Anfechtungsfrist (§ 21 LPVG).
   // Annahme: Das Ergebnis wird am Tag der Feststellung bekanntgegeben.
   if (election.result?.festgestelltAm) {
-    const bekanntgabe = toBerlinLocal(election.result.festgestelltAm).slice(0, 10);
+    const bekanntgabe = toBerlinLocal(election.result.festgestelltAm).slice(
+      0,
+      10,
+    );
     schedule.push(
-      { key: AUSHANG_ERGEBNIS.key, label: AUSHANG_ERGEBNIS.label, date: aushangErgebnisEnde(bekanntgabe), legalBasis: AUSHANG_ERGEBNIS.legalBasis, verified: true },
-      { key: ANFECHTUNGSFRIST.key, label: ANFECHTUNGSFRIST.label, date: anfechtungsfristEnde(bekanntgabe), legalBasis: ANFECHTUNGSFRIST.legalBasis, verified: true },
+      {
+        key: AUSHANG_ERGEBNIS.key,
+        label: AUSHANG_ERGEBNIS.label,
+        date: aushangErgebnisEnde(bekanntgabe),
+        legalBasis: AUSHANG_ERGEBNIS.legalBasis,
+        verified: true,
+      },
+      {
+        key: ANFECHTUNGSFRIST.key,
+        label: ANFECHTUNGSFRIST.label,
+        date: anfechtungsfristEnde(bekanntgabe),
+        legalBasis: ANFECHTUNGSFRIST.legalBasis,
+        verified: true,
+      },
     );
   }
 
-  const dienstschluss = parseAngaben(election.wahlausschreibenAngaben).dienstschluss;
+  const dienstschluss = parseAngaben(
+    election.wahlausschreibenAngaben,
+  ).dienstschluss;
   const existing = await prisma.deadline.findMany({ where: { electionId } });
   const byKey = new Map(existing.map((d) => [d.ruleKey, d]));
   const validKeys = new Set(schedule.map((s) => s.key));
@@ -142,13 +174,19 @@ export async function recalculateDeadlines(electionId: string) {
             electionId,
             ruleKey: s.key,
             datum: toDbDate(s.date),
-            uhrzeit: FRISTENDEN_MIT_UHRZEIT.includes(s.key) ? (dienstschluss ?? null) : null,
+            uhrzeit: FRISTENDEN_MIT_UHRZEIT.includes(s.key)
+              ? (dienstschluss ?? null)
+              : null,
           },
           update: { datum: toDbDate(s.date) },
         }),
       ),
     prisma.deadline.deleteMany({
-      where: { electionId, ruleKey: { notIn: [...validKeys] }, erledigtAm: null },
+      where: {
+        electionId,
+        ruleKey: { notIn: [...validKeys] },
+        erledigtAm: null,
+      },
     }),
   ]);
 
@@ -156,7 +194,12 @@ export async function recalculateDeadlines(electionId: string) {
 }
 
 /** Fristende einer gespeicherten Frist als Berliner Ortszeit "YYYY-MM-DD HH:MM" (ohne Uhrzeit: 23:59). */
-export async function getDeadlineEnd(electionId: string, ruleKey: string): Promise<string | null> {
-  const d = await prisma.deadline.findUnique({ where: { electionId_ruleKey: { electionId, ruleKey } } });
+export async function getDeadlineEnd(
+  electionId: string,
+  ruleKey: string,
+): Promise<string | null> {
+  const d = await prisma.deadline.findUnique({
+    where: { electionId_ruleKey: { electionId, ruleKey } },
+  });
   return d ? `${fromDbDate(d.datum)} ${d.uhrzeit || "23:59"}` : null;
 }

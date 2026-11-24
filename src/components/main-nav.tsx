@@ -11,11 +11,19 @@ export interface NavItem {
   exact?: boolean;
 }
 
-export function MainNav({ items, label }: { items: NavItem[]; label: string }) {
+export function MainNav({
+  items,
+  label,
+}: Readonly<{ items: NavItem[]; label: string }>) {
   const pathname = usePathname();
-  const isActive = (i: NavItem) => (i.exact || i.href === "/" ? pathname === i.href : pathname === i.href || pathname.startsWith(`${i.href}/`));
+  const isActive = (i: NavItem) =>
+    i.exact || i.href === "/"
+      ? pathname === i.href
+      : pathname === i.href || pathname.startsWith(`${i.href}/`);
   // Spezifischster Treffer gewinnt (z. B. /fristen/regeln vor /fristen)
-  const active = items.filter(isActive).sort((a, b) => b.href.length - a.href.length)[0];
+  const active = items
+    .filter(isActive)
+    .sort((a, b) => b.href.length - a.href.length)[0];
 
   return (
     <nav aria-label={label} className="-mb-px overflow-x-auto">
@@ -29,7 +37,9 @@ export function MainNav({ items, label }: { items: NavItem[]; label: string }) {
                 aria-current={current ? "page" : undefined}
                 className={cn(
                   "inline-flex h-12 items-center border-b-[3px] px-3 text-sm font-semibold whitespace-nowrap no-underline transition-colors",
-                  current ? "border-foreground text-foreground" : "border-transparent text-muted-foreground hover:border-border hover:text-foreground",
+                  current
+                    ? "border-foreground text-foreground"
+                    : "border-transparent text-muted-foreground hover:border-border hover:text-foreground",
                 )}
               >
                 {i.label}

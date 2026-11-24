@@ -61,7 +61,12 @@ export interface AushangEingabe {
  * Status am Tag `heute`. Fehlt der Beginn, entscheidet `ohneBeginn`, ob das Dokument schon hängt
  * (z. B. Wahlvorstand) oder erst später kommt (z. B. Wahlergebnis).
  */
-export function aushangStatus(heute: IsoDate, von: IsoDate | null, bis: IsoDate | null, ohneBeginn: "haengt" | "kommt"): AushangStatus {
+export function aushangStatus(
+  heute: IsoDate,
+  von: IsoDate | null,
+  bis: IsoDate | null,
+  ohneBeginn: "haengt" | "kommt",
+): AushangStatus {
   if (bis && heute > bis) return "beendet";
   if (von) return heute < von ? "kommt" : "haengt";
   return ohneBeginn;
@@ -70,7 +75,9 @@ export function aushangStatus(heute: IsoDate, von: IsoDate | null, bis: IsoDate 
 export function berechneAushaenge(e: AushangEingabe): Aushang[] {
   const { heute, wahltag } = e;
   const versammlung = e.verfahren === "wahlversammlung";
-  const stimmabgabe = versammlung ? "Ende der Wahlversammlung" : "Abschluss der Stimmabgabe";
+  const stimmabgabe = versammlung
+    ? "Ende der Wahlversammlung"
+    : "Abschluss der Stimmabgabe";
   const liste: Omit<Aushang, "status">[] = [];
   const status = new Map<string, "haengt" | "kommt">();
 
@@ -81,7 +88,9 @@ export function berechneAushaenge(e: AushangEingabe): Aushang[] {
     art: "aushang",
     von: e.wahlvorstandBestelltAm,
     bis: e.ergebnisBekanntgabe,
-    vonText: e.wahlvorstandBestelltAm ? "ab der Bestimmung (unverzüglich)" : "unverzüglich nach der Bestimmung",
+    vonText: e.wahlvorstandBestelltAm
+      ? "ab der Bestimmung (unverzüglich)"
+      : "unverzüglich nach der Bestimmung",
     bisText: "bis zur Bekanntmachung des Wahlergebnisses",
     rechtsgrundlage: "§ 1 Abs. 3 LPVGWO",
     geprueft: true,
@@ -116,14 +125,18 @@ export function berechneAushaenge(e: AushangEingabe): Aushang[] {
       art: "aushang",
       von: e.wahlausschreibenAm,
       bis: wahltag,
-      vonText: e.wahlausschreibenErlassen ? "ab dem Erlass" : "ab dem Erlass (spätestens)",
+      vonText: e.wahlausschreibenErlassen
+        ? "ab dem Erlass"
+        : "ab dem Erlass (spätestens)",
       bisText: `bis zum ${stimmabgabe}`,
       rechtsgrundlage: "§ 9 LPVGWO",
       geprueft: false,
       ort: e.bekanntmachungsort,
       pfad: "wahlausschreiben/druck",
       rechte: ["deadlines.read"],
-      hinweis: e.wahlausschreibenFreigegeben ? undefined : "Noch nicht freigegeben – erst nach Freigabe und Unterschrift aushängen.",
+      hinweis: e.wahlausschreibenFreigegeben
+        ? undefined
+        : "Noch nicht freigegeben – erst nach Freigabe und Unterschrift aushängen.",
     });
     status.set("wahlausschreiben", "kommt");
 
@@ -141,7 +154,8 @@ export function berechneAushaenge(e: AushangEingabe): Aushang[] {
       ort: e.auslageOrt,
       pfad: "waehler/auslage",
       rechte: ["voters.edit"],
-      hinweis: "Ohne Geburtsdaten auslegen; Einsicht zu den im Wahlausschreiben genannten Zeiten.",
+      hinweis:
+        "Ohne Geburtsdaten auslegen; Einsicht zu den im Wahlausschreiben genannten Zeiten.",
     });
     status.set("waehlerverzeichnis", "kommt");
 
@@ -207,7 +221,9 @@ export function berechneAushaenge(e: AushangEingabe): Aushang[] {
     titel: "Bekanntmachung des Wahlergebnisses",
     art: "aushang",
     von: e.ergebnisBekanntgabe,
-    bis: e.aushangErgebnisEnde ?? (e.ergebnisBekanntgabe ? addDays(e.ergebnisBekanntgabe, 14) : null),
+    bis:
+      e.aushangErgebnisEnde ??
+      (e.ergebnisBekanntgabe ? addDays(e.ergebnisBekanntgabe, 14) : null),
     vonText: "ab der Feststellung des Ergebnisses",
     bisText: "zwei Wochen lang",
     rechtsgrundlage: "§ 31 Abs. 2 LPVGWO",
@@ -218,11 +234,24 @@ export function berechneAushaenge(e: AushangEingabe): Aushang[] {
   });
   status.set("ergebnis", "kommt");
 
-  return liste.map((a) => ({ ...a, status: aushangStatus(heute, a.von, a.bis, status.get(a.key) ?? "kommt") }));
+  return liste.map((a) => ({
+    ...a,
+    status: aushangStatus(heute, a.von, a.bis, status.get(a.key) ?? "kommt"),
+  }));
 }
 
 /** Zeitraum für die Zeitleiste: vom frühesten Beginn bis zum spätesten Ende (mindestens heute und Wahltag). */
-export function zeitleistenBereich(aushaenge: readonly Aushang[], heute: IsoDate, wahltag: IsoDate): { von: IsoDate; bis: IsoDate } {
-  const daten = [heute, wahltag, ...aushaenge.flatMap((a) => [a.von, a.bis]).filter((d): d is IsoDate => Boolean(d))].sort();
+export function zeitleistenBereich(
+  aushaenge: readonly Aushang[],
+  heute: IsoDate,
+  wahltag: IsoDate,
+): { von: IsoDate; bis: IsoDate } {
+  const daten = [
+    heute,
+    wahltag,
+    ...aushaenge
+      .flatMap((a) => [a.von, a.bis])
+      .filter((d): d is IsoDate => Boolean(d)),
+  ].sort();
   return { von: daten[0]!, bis: daten[daten.length - 1]! };
 }

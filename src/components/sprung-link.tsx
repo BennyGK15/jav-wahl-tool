@@ -7,7 +7,10 @@ import type { ReactNode } from "react";
  * Link zu einer Stelle: bei „#id“ auf derselben Seite wird gescrollt und das Feld fokussiert,
  * sonst normal navigiert (das Ziel wird per :target hervorgehoben).
  */
-export function SprungLink({ href, children }: { href: string; children: ReactNode }) {
+export function SprungLink({
+  href,
+  children,
+}: Readonly<{ href: string; children: ReactNode }>) {
   if (href.startsWith("#")) {
     return (
       <a
@@ -29,7 +32,10 @@ export function SprungLink({ href, children }: { href: string; children: ReactNo
     );
   }
   return (
-    <Link href={href} className="underline decoration-1 underline-offset-4 hover:decoration-2">
+    <Link
+      href={href}
+      className="underline decoration-1 underline-offset-4 hover:decoration-2"
+    >
       {children}
     </Link>
   );

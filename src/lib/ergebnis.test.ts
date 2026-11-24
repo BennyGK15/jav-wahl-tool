@@ -1,12 +1,25 @@
 import { describe, expect, it } from "vitest";
-import { bestimmeWahlverfahren, dHondt, mehrheitswahl, pruefeZahlen, verhaeltniswahl } from "./ergebnis";
+import {
+  bestimmeWahlverfahren,
+  dHondt,
+  mehrheitswahl,
+  pruefeZahlen,
+  verhaeltniswahl,
+} from "./ergebnis";
 
-const liste = (id: string, stimmen: number, n: number) => ({ id, stimmen, bewerber: Array.from({ length: n }, (_, i) => `${id}${i + 1}`) });
+const liste = (id: string, stimmen: number, n: number) => ({
+  id,
+  stimmen,
+  bewerber: Array.from({ length: n }, (_, i) => `${id}${i + 1}`),
+});
 
 describe("d'Hondt", () => {
   it("verteilt 5 Sitze nach Höchstzahlen", () => {
     // A 100: 100, 50, 33.3 · B 60: 60, 30 · C 25: 25
-    const r = dHondt([liste("A", 100, 5), liste("B", 60, 5), liste("C", 25, 5)], 5);
+    const r = dHondt(
+      [liste("A", 100, 5), liste("B", 60, 5), liste("C", 25, 5)],
+      5,
+    );
     expect(r.sitzeJeListe).toEqual({ A: 3, B: 2, C: 0 });
     expect(r.gewaehlt).toEqual(["A1", "A2", "A3", "B1", "B2"]);
     expect(r.ersatzJeListe.C).toEqual(["C1", "C2", "C3", "C4", "C5"]);
@@ -50,7 +63,10 @@ describe("Mehrheitswahl", () => {
   });
   it("verlangt bei Gleichstand an der Grenze ein Los und übernimmt es", () => {
     const kandidaten = [k("a", 9), k("b", 7), k("c", 7)];
-    expect(mehrheitswahl(kandidaten, 2).los).toEqual({ ids: ["b", "c"], plaetze: 1 });
+    expect(mehrheitswahl(kandidaten, 2).los).toEqual({
+      ids: ["b", "c"],
+      plaetze: 1,
+    });
     const r = mehrheitswahl(kandidaten, 2, ["c", "b"]);
     expect(r.los).toBeNull();
     expect(r.gewaehlt).toEqual(["a", "c"]);
@@ -72,24 +88,51 @@ describe("Verfahren und Plausibilität", () => {
     expect(bestimmeWahlverfahren("wahlversammlung", 0)).toBe("mehrheit");
   });
   it("prüft die Zahlen", () => {
-    const base = { wahlverfahren: "verhaeltnis" as const, sitze: 3, stimmzettelGesamt: 20, stimmzettelUngueltig: 2, vermerkteStimmabgaben: 20, summeStimmen: 18 };
+    const base = {
+      wahlverfahren: "verhaeltnis" as const,
+      sitze: 3,
+      stimmzettelGesamt: 20,
+      stimmzettelUngueltig: 2,
+      vermerkteStimmabgaben: 20,
+      summeStimmen: 18,
+    };
     expect(pruefeZahlen(base)).toEqual({ fehler: [], hinweise: [] });
     // 18 gültige Stimmzettel × 3 Stimmen = höchstens 54
     expect(pruefeZahlen({ ...base, summeStimmen: 54 }).fehler).toEqual([]);
     expect(pruefeZahlen({ ...base, summeStimmen: 55 }).fehler).toHaveLength(1);
     // kumulieren: höchstens 3 Stimmen je Stimmzettel für eine Person
-    expect(pruefeZahlen({ ...base, maxBewerberStimmen: 54 }).fehler).toEqual([]);
-    expect(pruefeZahlen({ ...base, maxBewerberStimmen: 55 }).fehler).toHaveLength(1);
+    expect(pruefeZahlen({ ...base, maxBewerberStimmen: 54 }).fehler).toEqual(
+      [],
+    );
+    expect(
+      pruefeZahlen({ ...base, maxBewerberStimmen: 55 }).fehler,
+    ).toHaveLength(1);
     // Mehrheitswahl: höchstens 1 Stimme je Stimmzettel für eine Person
-    expect(pruefeZahlen({ ...base, wahlverfahren: "mehrheit", maxBewerberStimmen: 19 }).fehler).toHaveLength(1);
-    expect(pruefeZahlen({ ...base, vermerkteStimmabgaben: 19 }).hinweise).toHaveLength(1);
-    expect(pruefeZahlen({ ...base, wahlverfahren: "mehrheit", summeStimmen: 55 }).fehler).toHaveLength(1);
-    expect(pruefeZahlen({ ...base, stimmzettelUngueltig: 21 }).fehler.length).toBeGreaterThan(0);
+    expect(
+      pruefeZahlen({
+        ...base,
+        wahlverfahren: "mehrheit",
+        maxBewerberStimmen: 19,
+      }).fehler,
+    ).toHaveLength(1);
+    expect(
+      pruefeZahlen({ ...base, vermerkteStimmabgaben: 19 }).hinweise,
+    ).toHaveLength(1);
+    expect(
+      pruefeZahlen({ ...base, wahlverfahren: "mehrheit", summeStimmen: 55 })
+        .fehler,
+    ).toHaveLength(1);
+    expect(
+      pruefeZahlen({ ...base, stimmzettelUngueltig: 21 }).fehler.length,
+    ).toBeGreaterThan(0);
   });
 });
 
 describe("Verhältniswahl nach BW-Recht (§§ 33, 37, 38 LPVGWO)", () => {
-  const v = (id: string, ...stimmen: number[]) => ({ id, bewerber: stimmen.map((s, i) => ({ id: `${id}${i + 1}`, stimmen: s })) });
+  const v = (id: string, ...stimmen: number[]) => ({
+    id,
+    bewerber: stimmen.map((s, i) => ({ id: `${id}${i + 1}`, stimmen: s })),
+  });
 
   it("summiert die Personenstimmen je Vorschlag und vergibt Sitze nach persönlichen Stimmen", () => {
     // A: 10 + 25 + 4 = 39 · B: 20 + 3 = 23 → Höchstzahlen 39 (A), 23 (B), 19,5 (A)

@@ -13,14 +13,20 @@ export const metadata = { title: "Bekanntmachung des Wahlvorstands" };
 
 const REIHENFOLGE = { vorsitz: 0, stellvertretung: 1, mitglied: 2 } as const;
 
-export default async function WahlvorstandBekanntmachungPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function WahlvorstandBekanntmachungPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const session = await requireSession();
   if (!hasPermission(session.user.role, "deadlines.read")) notFound();
   const { id } = await params;
   const election = await prisma.election.findUnique({ where: { id } });
   if (!election) notFound();
   const a = parseAngaben(election.wahlausschreibenAngaben);
-  const liste = [...(a.wahlvorstand ?? [])].sort((x, y) => REIHENFOLGE[x.funktion] - REIHENFOLGE[y.funktion]);
+  const liste = [...(a.wahlvorstand ?? [])].sort(
+    (x, y) => REIHENFOLGE[x.funktion] - REIHENFOLGE[y.funktion],
+  );
   if (liste.length === 0) {
     return (
       <NochNichtVerfuegbar
@@ -30,8 +36,15 @@ export default async function WahlvorstandBekanntmachungPage({ params }: { param
       />
     );
   }
-  await writeAudit({ userId: session.user.id, action: "election.wahlvorstand.notice", objectType: "election", objectId: id });
-  const datum = a.ausstellungsort ? `${a.ausstellungsort}, ${formatIsoDate(todayBerlin())}` : `Stand: ${formatIsoDate(todayBerlin())}`;
+  await writeAudit({
+    userId: session.user.id,
+    action: "election.wahlvorstand.notice",
+    objectType: "election",
+    objectId: id,
+  });
+  const datum = a.ausstellungsort
+    ? `${a.ausstellungsort}, ${formatIsoDate(todayBerlin())}`
+    : `Stand: ${formatIsoDate(todayBerlin())}`;
   const vorsitz = liste.find((m) => m.funktion === "vorsitz");
 
   return (
@@ -39,18 +52,30 @@ export default async function WahlvorstandBekanntmachungPage({ params }: { param
       zurueck={{ href: `/wahl/${id}/wahlvorstand`, label: "Wahlvorstand" }}
       titel="Bekanntmachung"
       entwurf={false}
-      kopf={{ dienststelle: election.dienststelle, art: "Bekanntmachung", datum }}
+      kopf={{
+        dienststelle: election.dienststelle,
+        art: "Bekanntmachung",
+        datum,
+      }}
       hinweis="Unverzüglich nach der Bestimmung aushängen und bis zur Bekanntmachung des Wahlergebnisses hängen lassen (§ 1 Abs. 3 LPVGWO); zusätzlich elektronisch bekanntmachen (§ 2 Abs. 2)."
     >
       <article className="grid gap-5 text-sm leading-relaxed">
         <header className="text-center">
-          <h1 className="text-xl font-bold">Bekanntmachung des Wahlvorstands</h1>
+          <h1 className="text-xl font-bold">
+            Bekanntmachung des Wahlvorstands
+          </h1>
           <p>für die Wahl der Jugend- und Auszubildendenvertretung</p>
         </header>
         <p>
-          Der Personalrat hat {a.wahlvorstandBestelltAm ? `am ${formatIsoDate(a.wahlvorstandBestelltAm)} ` : ""}für die Wahl der Jugend- und
-          Auszubildendenvertretung bei <strong>{election.dienststelle}</strong> folgenden Wahlvorstand bestimmt (§ 62 Abs. 1 LPVG). Die
-          Ersatzmitglieder treten in der angegebenen Reihenfolge für das jeweilige Mitglied ein (§ 1 Abs. 3 LPVGWO).
+          Der Personalrat hat{" "}
+          {a.wahlvorstandBestelltAm
+            ? `am ${formatIsoDate(a.wahlvorstandBestelltAm)} `
+            : ""}
+          für die Wahl der Jugend- und Auszubildendenvertretung bei{" "}
+          <strong>{election.dienststelle}</strong> folgenden Wahlvorstand
+          bestimmt (§ 62 Abs. 1 LPVG). Die Ersatzmitglieder treten in der
+          angegebenen Reihenfolge für das jeweilige Mitglied ein (§ 1 Abs. 3
+          LPVGWO).
         </p>
         <table className="w-full border-collapse">
           <thead>
@@ -72,11 +97,16 @@ export default async function WahlvorstandBekanntmachungPage({ params }: { param
         </table>
         {a.einreichungsstelle && (
           <p>
-            Erreichbar ist der Wahlvorstand: <strong>{a.einreichungsstelle}</strong>.
+            Erreichbar ist der Wahlvorstand:{" "}
+            <strong>{a.einreichungsstelle}</strong>.
           </p>
         )}
         <div className="unterschrift mt-10 grid w-64 gap-1">
-          <span className="border-t border-black pt-1">{vorsitz ? `${vorsitz.name}, Vorsitz des Wahlvorstands` : "Vorsitz des Wahlvorstands"}</span>
+          <span className="border-t border-black pt-1">
+            {vorsitz
+              ? `${vorsitz.name}, Vorsitz des Wahlvorstands`
+              : "Vorsitz des Wahlvorstands"}
+          </span>
         </div>
       </article>
     </DruckRahmen>

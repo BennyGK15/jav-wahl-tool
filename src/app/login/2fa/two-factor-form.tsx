@@ -24,7 +24,11 @@ export function TwoFactorForm() {
         ? await authClient.twoFactor.verifyBackupCode({ code, trustDevice })
         : await authClient.twoFactor.verifyTotp({ code, trustDevice });
       if (e) {
-        setError(e.status === 429 ? "Zu viele Versuche. Bitte später erneut versuchen." : "Der Code ist ungültig oder abgelaufen.");
+        setError(
+          e.status === 429
+            ? "Zu viele Versuche. Bitte später erneut versuchen."
+            : "Der Code ist ungültig oder abgelaufen.",
+        );
         return;
       }
       router.replace("/");
@@ -37,7 +41,9 @@ export function TwoFactorForm() {
       <CardContent className="pt-6">
         <form action={onSubmit} className="grid gap-5">
           <div className="grid gap-2">
-            <Label htmlFor="code">{backup ? "Backup-Code" : "Code aus der App"}</Label>
+            <Label htmlFor="code">
+              {backup ? "Backup-Code" : "Code aus der App"}
+            </Label>
             <Input
               id="code"
               name="code"
@@ -51,11 +57,14 @@ export function TwoFactorForm() {
             />
           </div>
           <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" name="trustDevice" />
-            Diesem Gerät 30 Tage vertrauen (nur auf eigenen Geräten)
+            <input type="checkbox" name="trustDevice" /> Diesem Gerät 30 Tage
+            vertrauen (nur auf eigenen Geräten)
           </label>
           {error && (
-            <p role="alert" className="border-l-4 border-l-destructive bg-destructive/5 p-3 text-sm text-destructive">
+            <p
+              role="alert"
+              className="border-l-4 border-l-destructive bg-destructive/5 p-3 text-sm text-destructive"
+            >
               {error}
             </p>
           )}
@@ -63,7 +72,11 @@ export function TwoFactorForm() {
             {pending ? "Prüfen …" : "Bestätigen"}
           </Button>
           <div className="flex flex-wrap justify-between gap-2 text-sm">
-            <button type="button" className="underline" onClick={() => setBackup(!backup)}>
+            <button
+              type="button"
+              className="underline"
+              onClick={() => setBackup(!backup)}
+            >
               {backup ? "Code aus der App verwenden" : "Backup-Code verwenden"}
             </button>
             <Link href="/login">Zurück zur Anmeldung</Link>

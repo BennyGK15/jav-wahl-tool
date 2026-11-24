@@ -2,10 +2,10 @@
 
 [← Übersicht](README.md)
 
-| | |
-| --- | --- |
-| **Rollen** | `admin`, `vorsitz`, `datenschutz` |
-| **Auslöser** | Vor dem Start der Wahl (Datenschutz-Unterlagen) und laufend (Kontrolle) |
+|              |                                                                                                                            |
+| ------------ | -------------------------------------------------------------------------------------------------------------------------- |
+| **Rollen**   | `admin`, `vorsitz`, `datenschutz`                                                                                          |
+| **Auslöser** | Vor dem Start der Wahl (Datenschutz-Unterlagen) und laufend (Kontrolle)                                                    |
 | **Ergebnis** | Datenschutz-Dokumentation liegt vor und ist von der/dem Datenschutzbeauftragten eingereicht; Zugriffe sind nachvollziehbar |
 
 ## Datenschutz-Unterlagen
@@ -22,13 +22,13 @@ flowchart LR
     H --> I[Einreichen<br/><i>datenschutz</i>]
 ```
 
-| # | Wer | Was | Wo |
-| --- | --- | --- | --- |
-| 1 | admin, vorsitz, datenschutz | Angaben zur verantwortlichen Stelle und zur/zum Datenschutzbeauftragten pflegen (Voraussetzung für den Einrichtungsschritt „Datenschutz“) | *Verwaltung → Datenschutz-Unterlagen* (`/datenschutz`) |
-| 2 | alle | Entwürfe ansehen und drucken | `/datenschutz/:dok` |
-| 3 | admin, vorsitz, datenschutz | Offene Aufgaben abhaken, z. B. Abstimmung mit der/dem Datenschutzbeauftragten | `/datenschutz` |
-| 4 | datenschutz | Unterlagen einreichen, optional mit Anmerkung für den Wahlvorstand; Voraussetzung: alle Angaben sind ausgefüllt | `/datenschutz` |
-| 5 | vorsitz, mitglied | Stand der Einreichung sehen: eingereicht (wann, von wem, Anmerkung), nach Einreichung geändert oder noch offen | `/datenschutz` |
+| #   | Wer                         | Was                                                                                                                                       | Wo                                                     |
+| --- | --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| 1   | admin, vorsitz, datenschutz | Angaben zur verantwortlichen Stelle und zur/zum Datenschutzbeauftragten pflegen (Voraussetzung für den Einrichtungsschritt „Datenschutz“) | _Verwaltung → Datenschutz-Unterlagen_ (`/datenschutz`) |
+| 2   | alle                        | Entwürfe ansehen und drucken                                                                                                              | `/datenschutz/:dok`                                    |
+| 3   | admin, vorsitz, datenschutz | Offene Aufgaben abhaken, z. B. Abstimmung mit der/dem Datenschutzbeauftragten                                                             | `/datenschutz`                                         |
+| 4   | datenschutz                 | Unterlagen einreichen, optional mit Anmerkung für den Wahlvorstand; Voraussetzung: alle Angaben sind ausgefüllt                           | `/datenschutz`                                         |
+| 5   | vorsitz, mitglied           | Stand der Einreichung sehen: eingereicht (wann, von wem, Anmerkung), nach Einreichung geändert oder noch offen                            | `/datenschutz`                                         |
 
 ### Zugang für die/den Datenschutzbeauftragte(n)
 
@@ -48,20 +48,20 @@ Datenschutz-Unterlagen und die Übersicht mit deren Stand.
 
 ## Kontrolle über das Audit-Log
 
-| # | Wer | Was | Wo |
-| --- | --- | --- | --- |
-| 1 | admin, vorsitz | Nachsehen, wer wann was geändert hat (z. B. Stimmabgabe vermerkt, Ergebnis festgestellt, Wahl gelöscht) | *Verwaltung → Audit-Log* (`/audit`) |
+| #   | Wer            | Was                                                                                                     | Wo                                  |
+| --- | -------------- | ------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| 1   | admin, vorsitz | Nachsehen, wer wann was geändert hat (z. B. Stimmabgabe vermerkt, Ergebnis festgestellt, Wahl gelöscht) | _Verwaltung → Audit-Log_ (`/audit`) |
 
 Das Audit-Log enthält keine Inhalte, nur Aktion, Objekt und Feldnamen; IP-Adressen nur als HMAC.
 
 ## Fristregeln
 
-| # | Wer | Was | Wo |
-| --- | --- | --- | --- |
-| 1 | vorsitz | Jede Fristregel gegen den amtlichen Text prüfen und als geprüft markieren; Empfehlungen ohne gesetzliche Frist sind gekennzeichnet | *Verwaltung → Fristregeln* (`/fristen/regeln`) |
+| #   | Wer     | Was                                                                                                                                | Wo                                             |
+| --- | ------- | ---------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
+| 1   | vorsitz | Jede Fristregel gegen den amtlichen Text prüfen und als geprüft markieren; Empfehlungen ohne gesetzliche Frist sind gekennzeichnet | _Verwaltung → Fristregeln_ (`/fristen/regeln`) |
 
 ## Nur in der Entwicklung
 
-`admin` sieht außerhalb der Produktion den Menüpunkt *Neu starten (Entwicklung)*
+`admin` sieht außerhalb der Produktion den Menüpunkt _Neu starten (Entwicklung)_
 (`/entwicklung`), der alle Wahldaten löscht und die Benutzerkonten behält. Gleiches
 leistet `pnpm dev:reset --ja`.

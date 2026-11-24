@@ -9,14 +9,29 @@ import { formatIsoDate } from "@/lib/utils";
 
 export const metadata = { title: "Wählerverzeichnis mit Stimmabgabevermerken" };
 
-const zeit = new Intl.DateTimeFormat("de-DE", { timeZone: "Europe/Berlin", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
-const tag = new Intl.DateTimeFormat("de-DE", { timeZone: "Europe/Berlin", day: "2-digit", month: "2-digit", year: "numeric" });
+const zeit = new Intl.DateTimeFormat("de-DE", {
+  timeZone: "Europe/Berlin",
+  day: "2-digit",
+  month: "2-digit",
+  hour: "2-digit",
+  minute: "2-digit",
+});
+const tag = new Intl.DateTimeFormat("de-DE", {
+  timeZone: "Europe/Berlin",
+  day: "2-digit",
+  month: "2-digit",
+  year: "numeric",
+});
 
 /**
  * Wählerverzeichnis mit den Vermerken über die Stimmabgabe (Urne und Briefwahl) – für die Wahlakte.
  * Wie die Auslagefassung ohne Geburtsdaten (Datenminimierung); enthält nur, was die Akte braucht.
  */
-export default async function VermerkePage({ params }: { params: Promise<{ id: string }> }) {
+export default async function VermerkePage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const session = await requireSession();
   if (!hasPermission(session.user.role, "voters.edit")) notFound();
   const { id } = await params;
@@ -38,10 +53,19 @@ export default async function VermerkePage({ params }: { params: Promise<{ id: s
       briefwahlEingangAm: true,
     },
   });
-  await writeAudit({ userId: session.user.id, action: "voters.vermerke.printed", objectType: "election", objectId: id });
+  await writeAudit({
+    userId: session.user.id,
+    action: "voters.vermerke.printed",
+    objectType: "election",
+    objectId: id,
+  });
 
-  const urne = voters.filter((v) => v.votedAt && v.stimmabgabeArt !== "brief").length;
-  const brief = voters.filter((v) => v.votedAt && v.stimmabgabeArt === "brief").length;
+  const urne = voters.filter(
+    (v) => v.votedAt && v.stimmabgabeArt !== "brief",
+  ).length;
+  const brief = voters.filter(
+    (v) => v.votedAt && v.stimmabgabeArt === "brief",
+  ).length;
   const briefwahl = voters.some((v) => v.briefwahlBeantragtAm);
   const wahltag = fromDbDate(election.wahltag);
   const vorWahltag = todayBerlin() < wahltag;
@@ -51,7 +75,11 @@ export default async function VermerkePage({ params }: { params: Promise<{ id: s
       zurueck={{ href: `/wahl/${id}/wahlakte`, label: "Wahlakte" }}
       titel="Wählerverzeichnis mit Stimmabgabevermerken"
       entwurf={false}
-      kopf={{ dienststelle: election.dienststelle, art: "Wählerverzeichnis", datum: `Stand: ${formatIsoDate(todayBerlin())}` }}
+      kopf={{
+        dienststelle: election.dienststelle,
+        art: "Wählerverzeichnis",
+        datum: `Stand: ${formatIsoDate(todayBerlin())}`,
+      }}
       hinweis={
         vorWahltag
           ? "Die Stimmabgabe hat noch nicht stattgefunden. Für die Wahlakte erst nach Abschluss der Stimmabgabe drucken."
@@ -59,12 +87,17 @@ export default async function VermerkePage({ params }: { params: Promise<{ id: s
       }
     >
       <header className="mb-6">
-        <h1 className="text-xl font-semibold">Wählerverzeichnis mit Stimmabgabevermerken</h1>
+        <h1 className="text-xl font-semibold">
+          Wählerverzeichnis mit Stimmabgabevermerken
+        </h1>
         <p>für die Wahl der Jugend- und Auszubildendenvertretung</p>
         <p className="mt-2 text-sm">
           Dienststelle: {election.dienststelle}
           <br />
-          {election.verfahren === "wahlversammlung" ? "Wahlversammlung" : "Wahltag"}: {formatIsoDate(wahltag)}
+          {election.verfahren === "wahlversammlung"
+            ? "Wahlversammlung"
+            : "Wahltag"}
+          : {formatIsoDate(wahltag)}
         </p>
       </header>
 
@@ -93,12 +126,24 @@ export default async function VermerkePage({ params }: { params: Promise<{ id: s
                 <td className="py-1 pr-3">{v.nachname}</td>
                 <td className="py-1 pr-3">{v.vorname}</td>
                 <td className="py-1 pr-3 tabular-nums">
-                  {v.votedAt ? `✓ ${v.stimmabgabeArt === "brief" ? "Brief" : "Urne"}, ${zeit.format(v.votedAt)}` : "–"}
+                  {v.votedAt
+                    ? `✓ ${v.stimmabgabeArt === "brief" ? "Brief" : "Urne"}, ${zeit.format(v.votedAt)}`
+                    : "–"}
                 </td>
                 {briefwahl && (
                   <>
-                    <td className="py-1 pr-3 tabular-nums">{v.briefwahlVersandtAm ? tag.format(v.briefwahlVersandtAm) : v.briefwahlBeantragtAm ? "beantragt" : ""}</td>
-                    <td className="py-1 tabular-nums">{v.briefwahlEingangAm ? zeit.format(v.briefwahlEingangAm) : ""}</td>
+                    <td className="py-1 pr-3 tabular-nums">
+                      {v.briefwahlVersandtAm
+                        ? tag.format(v.briefwahlVersandtAm)
+                        : v.briefwahlBeantragtAm
+                          ? "beantragt"
+                          : ""}
+                    </td>
+                    <td className="py-1 tabular-nums">
+                      {v.briefwahlEingangAm
+                        ? zeit.format(v.briefwahlEingangAm)
+                        : ""}
+                    </td>
                   </>
                 )}
               </tr>
@@ -110,11 +155,14 @@ export default async function VermerkePage({ params }: { params: Promise<{ id: s
       <footer className="unterschrift mt-6 grid gap-1 text-sm">
         <p>Zahl der Wahlberechtigten: {voters.length}</p>
         <p>
-          Stimmabgabe vermerkt: {urne + brief} (an der Urne {urne}, per Brief {brief})
+          Stimmabgabe vermerkt: {urne + brief} (an der Urne {urne}, per Brief{" "}
+          {brief})
         </p>
         <div className="mt-12 grid grid-cols-2 gap-6 text-xs">
           <span className="border-t border-black pt-1">Ort, Datum</span>
-          <span className="border-t border-black pt-1">Vorsitz des Wahlvorstands</span>
+          <span className="border-t border-black pt-1">
+            Vorsitz des Wahlvorstands
+          </span>
         </div>
       </footer>
     </DruckRahmen>

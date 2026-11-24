@@ -1,8 +1,18 @@
 import { Badge } from "@/components/ui/badge";
-import { EMPFEHLUNGEN, PRUEFER_LANDESRECHT, RECHTSSTAND } from "@/lib/fristen";
+import {
+  EMPFEHLUNGEN,
+  PRUEFER_LANDESRECHT,
+  RECHTSSTAND,
+  describeRule,
+} from "@/lib/fristen";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { describeRule } from "@/lib/fristen";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { prisma } from "@/lib/prisma";
 import { hasPermission } from "@/lib/rbac";
 import { requireSession } from "@/lib/session";
@@ -16,7 +26,10 @@ const VERFAHREN = [
   { key: "wahlversammlung", title: "Wahlversammlung" },
 ] as const;
 
-const dateTime = new Intl.DateTimeFormat("de-DE", { dateStyle: "medium", timeZone: "Europe/Berlin" });
+const dateTime = new Intl.DateTimeFormat("de-DE", {
+  dateStyle: "medium",
+  timeZone: "Europe/Berlin",
+});
 
 export default async function RegelnPage() {
   const session = await requireSession();
@@ -27,11 +40,20 @@ export default async function RegelnPage() {
 
   await ensureDefaultRules();
   const rules = await prisma.deadlineRule.findMany({ orderBy: { key: "asc" } });
-  const verifierIds = [...new Set(rules.map((r) => r.verifiedBy).filter((v): v is string => Boolean(v) && v !== PRUEFER_LANDESRECHT))];
-  const verifiers = new Map(
-    (await prisma.user.findMany({ where: { id: { in: verifierIds } }, select: { id: true, displayUsername: true, username: true } })).map(
-      (u) => [u.id, u.displayUsername ?? u.username ?? "unbekannt"],
+  const verifierIds = [
+    ...new Set(
+      rules
+        .map((r) => r.verifiedBy)
+        .filter((v): v is string => Boolean(v) && v !== PRUEFER_LANDESRECHT),
     ),
+  ];
+  const verifiers = new Map(
+    (
+      await prisma.user.findMany({
+        where: { id: { in: verifierIds } },
+        select: { id: true, displayUsername: true, username: true },
+      })
+    ).map((u) => [u.id, u.displayUsername ?? u.username ?? "unbekannt"]),
   );
 
   return (
@@ -39,10 +61,13 @@ export default async function RegelnPage() {
       <div>
         <h1 className="text-3xl">Fristregeln</h1>
         <p className="max-w-3xl text-muted-foreground">
-          Grundlage aller Wahlkalender. Die Standardregeln sind mit dem amtlichen Text auf landesrecht-bw.de abgeglichen
-          (Stand {RECHTSSTAND.geprueftAm.split("-").reverse().join(".")}): {RECHTSSTAND.lpvg}; {RECHTSSTAND.lpvgwo}. Regeln
-          ohne gesetzliche Frist sind als Empfehlung gekennzeichnet und bleiben ungeprüft. Ändert ihr eine Regel, prüft sie
-          bitte selbst und wählt danach im Wahlkalender „Kalender neu berechnen“.
+          Grundlage aller Wahlkalender. Die Standardregeln sind mit dem
+          amtlichen Text auf landesrecht-bw.de abgeglichen (Stand{" "}
+          {RECHTSSTAND.geprueftAm.split("-").reverse().join(".")}):{" "}
+          {RECHTSSTAND.lpvg}; {RECHTSSTAND.lpvgwo}. Regeln ohne gesetzliche
+          Frist sind als Empfehlung gekennzeichnet und bleiben ungeprüft. Ändert
+          ihr eine Regel, prüft sie bitte selbst und wählt danach im
+          Wahlkalender „Kalender neu berechnen“.
         </p>
       </div>
 
@@ -51,8 +76,8 @@ export default async function RegelnPage() {
           <CardHeader>
             <CardTitle>{v.title}</CardTitle>
             <CardDescription>
-              {rules.filter((r) => r.verfahren === v.key && r.verified).length} von{" "}
-              {rules.filter((r) => r.verfahren === v.key).length} geprüft
+              {rules.filter((r) => r.verfahren === v.key && r.verified).length}{" "}
+              von {rules.filter((r) => r.verfahren === v.key).length} geprüft
             </CardDescription>
           </CardHeader>
           <CardContent className="overflow-x-auto">
@@ -72,7 +97,9 @@ export default async function RegelnPage() {
                     <tr key={r.key} className="border-t align-top">
                       <td className="py-2 pr-4">{r.label}</td>
                       <td className="py-2 pr-4">{describeRule(r)}</td>
-                      <td className="py-2 pr-4 whitespace-nowrap">{r.legalBasis}</td>
+                      <td className="py-2 pr-4 whitespace-nowrap">
+                        {r.legalBasis}
+                      </td>
                       <td className="py-2">
                         <div className="flex flex-wrap items-center gap-2">
                           {r.verified ? (
@@ -83,10 +110,14 @@ export default async function RegelnPage() {
                                 : r.verifiedBy
                                   ? ` von ${verifiers.get(r.verifiedBy) ?? "?"}`
                                   : ""}
-                              {r.verifiedAt ? ` am ${dateTime.format(r.verifiedAt)}` : ""}
+                              {r.verifiedAt
+                                ? ` am ${dateTime.format(r.verifiedAt)}`
+                                : ""}
                             </Badge>
                           ) : EMPFEHLUNGEN.includes(r.key) ? (
-                            <Badge variant="outline">Empfehlung – keine gesetzliche Frist</Badge>
+                            <Badge variant="outline">
+                              Empfehlung – keine gesetzliche Frist
+                            </Badge>
                           ) : (
                             <Badge variant="warning">ungeprüft</Badge>
                           )}
@@ -94,7 +125,9 @@ export default async function RegelnPage() {
                             <form action={toggleRuleVerified}>
                               <input type="hidden" name="key" value={r.key} />
                               <Button type="submit" size="sm" variant="outline">
-                                {r.verified ? "Prüfung zurücknehmen" : "Als geprüft markieren"}
+                                {r.verified
+                                  ? "Prüfung zurücknehmen"
+                                  : "Als geprüft markieren"}
                               </Button>
                             </form>
                           )}

@@ -19,13 +19,21 @@ let letzterLauf = 0;
 async function bereinigeAuditLog(jetzt: number): Promise<void> {
   const [laufend, anfechtung, letzte] = await Promise.all([
     prisma.election.count({ where: { status: { not: "abgeschlossen" } } }),
-    prisma.election.count({ where: { anfechtungAm: { not: null }, anfechtungErledigtAm: null } }),
-    prisma.election.findFirst({ where: { abgeschlossenAm: { not: null } }, orderBy: { abgeschlossenAm: "desc" }, select: { abgeschlossenAm: true } }),
+    prisma.election.count({
+      where: { anfechtungAm: { not: null }, anfechtungErledigtAm: null },
+    }),
+    prisma.election.findFirst({
+      where: { abgeschlossenAm: { not: null } },
+      orderBy: { abgeschlossenAm: "desc" },
+      select: { abgeschlossenAm: true },
+    }),
   ]);
   if (laufend > 0 || anfechtung > 0 || !letzte?.abgeschlossenAm) return;
   const abschluss = letzte.abgeschlossenAm.getTime();
   if (jetzt < abschluss + TAGE_NACH_ABSCHLUSS * 24 * 60 * 60 * 1000) return;
-  await prisma.auditLog.deleteMany({ where: { at: { lte: letzte.abgeschlossenAm } } });
+  await prisma.auditLog.deleteMany({
+    where: { at: { lte: letzte.abgeschlossenAm } },
+  });
 }
 
 export async function bereinigeAbgelaufenes(): Promise<void> {
@@ -37,11 +45,18 @@ export async function bereinigeAbgelaufenes(): Promise<void> {
     await prisma.$transaction([
       prisma.session.deleteMany({ where: { expiresAt: { lt: grenze } } }),
       prisma.verification.deleteMany({ where: { expiresAt: { lt: grenze } } }),
-      prisma.rateLimit.deleteMany({ where: { lastRequest: { lt: BigInt(jetzt - RATE_LIMIT_AUFBEWAHRUNG_MS) } } }),
+      prisma.rateLimit.deleteMany({
+        where: {
+          lastRequest: { lt: BigInt(jetzt - RATE_LIMIT_AUFBEWAHRUNG_MS) },
+        },
+      }),
     ]);
     await bereinigeAuditLog(jetzt);
   } catch (e) {
     letzterLauf = 0; // beim nächsten Aufruf erneut versuchen
-    console.error("[bereinigung] Abgelaufene Daten konnten nicht gelöscht werden", e);
+    console.error(
+      "[bereinigung] Abgelaufene Daten konnten nicht gelöscht werden",
+      e,
+    );
   }
 }

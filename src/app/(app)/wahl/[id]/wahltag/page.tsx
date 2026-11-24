@@ -1,7 +1,13 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { fromDbDate, todayBerlin } from "@/lib/dates";
 import { prisma } from "@/lib/prisma";
 import { hasPermission } from "@/lib/rbac";
@@ -11,9 +17,17 @@ import { VoteList, type VoteRow } from "./vote-list";
 
 export const metadata = { title: "Wahltag" };
 
-const zeit = new Intl.DateTimeFormat("de-DE", { timeZone: "Europe/Berlin", hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit" });
+const zeit = new Intl.DateTimeFormat("de-DE", {
+  timeZone: "Europe/Berlin",
+  hour: "2-digit",
+  minute: "2-digit",
+  day: "2-digit",
+  month: "2-digit",
+});
 
-export default async function WahltagPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function WahltagPage({
+  params,
+}: Readonly<{ params: Promise<{ id: string }> }>) {
   const session = await requireSession();
   const role = session.user.role;
   if (!hasPermission(role, "voters.markVoted")) notFound();
@@ -55,7 +69,9 @@ export default async function WahltagPage({ params }: { params: Promise<{ id: st
   const gesamt = rows.length;
   const gewaehlt = rows.filter((r) => r.votedAt).length;
   const brief = rows.filter((r) => r.art === "brief").length;
-  const briefOffen = rows.filter((r) => r.briefVersandt && !r.briefEingegangen).length;
+  const briefOffen = rows.filter(
+    (r) => r.briefVersandt && !r.briefEingegangen,
+  ).length;
   const beteiligung = gesamt ? Math.round((gewaehlt / gesamt) * 1000) / 10 : 0;
   const wahltag = fromDbDate(election.wahltag);
   const heute = todayBerlin();
@@ -77,7 +93,9 @@ export default async function WahltagPage({ params }: { params: Promise<{ id: st
             </Button>
             {canCorrect && (
               <Button asChild size="sm" variant="outline">
-                <Link href={`/wahl/${id}/wahltag/briefwahl`}>Briefwahlunterlagen drucken</Link>
+                <Link href={`/wahl/${id}/wahltag/briefwahl`}>
+                  Briefwahlunterlagen drucken
+                </Link>
               </Button>
             )}
           </div>
@@ -88,9 +106,13 @@ export default async function WahltagPage({ params }: { params: Promise<{ id: st
       </div>
 
       {heute !== wahltag && (
-        <p role="note" className="rounded-md border border-l-4 border-l-foreground border-y-0 border-r-0 bg-highlight p-3 text-sm text-foreground">
-          Heute ist nicht der Wahltag. Stimmabgaben an der Urne bitte nur am Wahltag vermerken; Briefwahl-Anträge und
-          -Versand können vorher erfasst werden.
+        <p
+          role="note"
+          className="rounded-md border border-l-4 border-l-foreground border-y-0 border-r-0 bg-highlight p-3 text-sm text-foreground"
+        >
+          Heute ist nicht der Wahltag. Stimmabgaben an der Urne bitte nur am
+          Wahltag vermerken; Briefwahl-Anträge und -Versand können vorher
+          erfasst werden.
         </p>
       )}
 
@@ -102,21 +124,29 @@ export default async function WahltagPage({ params }: { params: Promise<{ id: st
               {gewaehlt} / {gesamt}
             </CardTitle>
           </CardHeader>
-          <CardContent className="text-sm text-muted-foreground">Wahlbeteiligung {beteiligung.toLocaleString("de-DE")} %</CardContent>
+          <CardContent className="text-sm text-muted-foreground">
+            Wahlbeteiligung {beteiligung.toLocaleString("de-DE")} %
+          </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
             <CardDescription>Davon per Brief</CardDescription>
             <CardTitle className="text-3xl tabular-nums">{brief}</CardTitle>
           </CardHeader>
-          <CardContent className="text-sm text-muted-foreground">Wahlbriefe vor Schluss der Wahl in die Urne</CardContent>
+          <CardContent className="text-sm text-muted-foreground">
+            Wahlbriefe vor Schluss der Wahl in die Urne
+          </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
             <CardDescription>Briefwahl ausstehend</CardDescription>
-            <CardTitle className="text-3xl tabular-nums">{briefOffen}</CardTitle>
+            <CardTitle className="text-3xl tabular-nums">
+              {briefOffen}
+            </CardTitle>
           </CardHeader>
-          <CardContent className="text-sm text-muted-foreground">Unterlagen versandt, Wahlbrief noch nicht da</CardContent>
+          <CardContent className="text-sm text-muted-foreground">
+            Unterlagen versandt, Wahlbrief noch nicht da
+          </CardContent>
         </Card>
       </div>
 

@@ -24,10 +24,14 @@ async function main() {
   const { prisma } = await import("../src/lib/prisma");
 
   if (!rawUsername || !/^[a-zA-Z0-9._-]{3,64}$/.test(rawUsername)) {
-    throw new Error("Benutzername fehlt oder ungültig (3–64 Zeichen: a–z, 0–9, . _ -)");
+    throw new Error(
+      "Benutzername fehlt oder ungültig (3–64 Zeichen: a–z, 0–9, . _ -)",
+    );
   }
   if (!(ROLES as readonly string[]).includes(rawRole)) {
-    throw new Error(`Unbekannte Rolle „${rawRole}". Erlaubt: ${ROLES.join(", ")}`);
+    throw new Error(
+      `Unbekannte Rolle „${rawRole}". Erlaubt: ${ROLES.join(", ")}`,
+    );
   }
 
   const username = rawUsername.toLowerCase();
@@ -44,11 +48,18 @@ async function main() {
 
   await prisma.user.update({
     where: { id: created.user.id },
-    data: { role: rawRole, username, displayUsername: rawUsername, mustChangePassword: true },
+    data: {
+      role: rawRole,
+      username,
+      displayUsername: rawUsername,
+      mustChangePassword: true,
+    },
   });
 
   console.log(`Konto „${username}" (${rawRole}) angelegt.`);
-  console.log(`Startpasswort (nur einmal angezeigt, sicher übergeben): ${password}`);
+  console.log(
+    `Startpasswort (nur einmal angezeigt, sicher übergeben): ${password}`,
+  );
   await prisma.$disconnect();
 }
 
@@ -56,5 +67,3 @@ main().catch((err: unknown) => {
   console.error(err instanceof Error ? err.message : err);
   process.exit(1);
 });
-
-export {};

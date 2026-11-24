@@ -36,7 +36,11 @@ export function geschlechterRelevant(sitze: number): boolean {
  * Sitze für Frauen und Männer nach d'Hondt (§ 7 Abs. 2 LPVGWO entsprechend).
  * `los` = Gewinner eines bereits durchgeführten Losentscheids. null, wenn unter drei Sitzen.
  */
-export function geschlechterSitze(z: Pick<GeschlechterZaehlung, "frauen" | "maenner">, sitze: number, los?: GeschlechtFM): GeschlechterVerteilung | null {
+export function geschlechterSitze(
+  z: Pick<GeschlechterZaehlung, "frauen" | "maenner">,
+  sitze: number,
+  los?: GeschlechtFM,
+): GeschlechterVerteilung | null {
   if (!geschlechterRelevant(sitze)) return null;
   const platzhalter = Array.from({ length: sitze }, (_, i) => String(i));
   const losReihenfolge = los ? [los, los === "w" ? "m" : "w"] : [];
@@ -48,11 +52,18 @@ export function geschlechterSitze(z: Pick<GeschlechterZaehlung, "frauen" | "maen
     sitze,
     losReihenfolge,
   );
-  return { sitzeFrauen: r.sitzeJeListe.w ?? 0, sitzeMaenner: r.sitzeJeListe.m ?? 0, losOffen: r.los !== null, hoechstzahlen: r.hoechstzahlen };
+  return {
+    sitzeFrauen: r.sitzeJeListe.w ?? 0,
+    sitzeMaenner: r.sitzeJeListe.m ?? 0,
+    losOffen: r.los !== null,
+    hoechstzahlen: r.hoechstzahlen,
+  };
 }
 
 const prozent = (teil: number, ganz: number) =>
-  ganz > 0 ? `${((teil / ganz) * 100).toLocaleString("de-DE", { maximumFractionDigits: 1 })} %` : "–";
+  ganz > 0
+    ? `${((teil / ganz) * 100).toLocaleString("de-DE", { maximumFractionDigits: 1 })} %`
+    : "–";
 
 /** „12 Frauen (40 %) und 18 Männer (60 %)“ */
 export function anteileText(z: GeschlechterZaehlung): string {
@@ -61,7 +72,9 @@ export function anteileText(z: GeschlechterZaehlung): string {
 }
 
 /** „2 Frauen und 1 Mann“ */
-export function sitzeText(v: Pick<GeschlechterVerteilung, "sitzeFrauen" | "sitzeMaenner">): string {
+export function sitzeText(
+  v: Pick<GeschlechterVerteilung, "sitzeFrauen" | "sitzeMaenner">,
+): string {
   const f = `${v.sitzeFrauen} ${v.sitzeFrauen === 1 ? "Frau" : "Frauen"}`;
   const m = `${v.sitzeMaenner} ${v.sitzeMaenner === 1 ? "Mann" : "Männer"}`;
   return `${f} und ${m}`;
@@ -82,15 +95,31 @@ export function pruefeGeschlechter(args: {
   const maenner = bewerber.filter((b) => b.geschlecht === "m").length;
   const ohne = bewerber.filter((b) => b.geschlecht == null).length;
   const fehlt: string[] = [];
-  if (frauen < v.sitzeFrauen) fehlt.push(`${v.sitzeFrauen - frauen} ${v.sitzeFrauen - frauen === 1 ? "Frau" : "Frauen"}`);
-  if (maenner < v.sitzeMaenner) fehlt.push(`${v.sitzeMaenner - maenner} ${v.sitzeMaenner - maenner === 1 ? "Mann" : "Männer"}`);
+  if (frauen < v.sitzeFrauen)
+    fehlt.push(
+      `${v.sitzeFrauen - frauen} ${v.sitzeFrauen - frauen === 1 ? "Frau" : "Frauen"}`,
+    );
+  if (maenner < v.sitzeMaenner)
+    fehlt.push(
+      `${v.sitzeMaenner - maenner} ${v.sitzeMaenner - maenner === 1 ? "Mann" : "Männer"}`,
+    );
   const soll = `erforderlich sind mindestens ${sitzeText(v)}`;
-  if (fehlt.length === 0) return { status: "ok", text: `Frauen und Männer ausreichend benannt (${frauen} Frauen, ${maenner} Männer; ${soll}).` };
+  if (fehlt.length === 0)
+    return {
+      status: "ok",
+      text: `Frauen und Männer ausreichend benannt (${frauen} Frauen, ${maenner} Männer; ${soll}).`,
+    };
   if (ohne > 0) {
-    return { status: "hinweis", text: `Geschlecht bei ${ohne} Bewerber/innen nicht erfasst – anteilige Vertretung prüfen (${soll}).` };
+    return {
+      status: "hinweis",
+      text: `Geschlecht bei ${ohne} Bewerber/innen nicht erfasst – anteilige Vertretung prüfen (${soll}).`,
+    };
   }
   if (begruendung?.trim()) {
-    return { status: "ok", text: `Es fehlen ${fehlt.join(" und ")} (${soll}); die Abweichung ist schriftlich begründet (§ 12 Abs. 2 Satz 2 LPVGWO).` };
+    return {
+      status: "ok",
+      text: `Es fehlen ${fehlt.join(" und ")} (${soll}); die Abweichung ist schriftlich begründet (§ 12 Abs. 2 Satz 2 LPVGWO).`,
+    };
   }
   return {
     status: "fehler",

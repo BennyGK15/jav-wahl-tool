@@ -5,13 +5,30 @@ import { useMemo, useState, useTransition } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { IMPORT_FELDER, parseCsv, rateZuordnung, wandleZeilen, type ImportFeld, type Zuordnung } from "@/lib/csv-import";
+import {
+  IMPORT_FELDER,
+  parseCsv,
+  rateZuordnung,
+  wandleZeilen,
+  type ImportFeld,
+  type Zuordnung,
+} from "@/lib/csv-import";
 import { importVotersAction, type ImportResult } from "./actions";
 
-const selectClass = "h-9 w-full rounded-sm border border-input bg-card px-3 text-sm";
-const leer: Zuordnung = { nachname: -1, vorname: -1, organisationseinheit: -1, funktion: -1, geburtsdatum: -1, inAusbildung: -1, ausbildungsende: -1, geschlecht: -1 };
+const selectClass =
+  "h-9 w-full rounded-sm border border-input bg-card px-3 text-sm";
+const leer: Zuordnung = {
+  nachname: -1,
+  vorname: -1,
+  organisationseinheit: -1,
+  funktion: -1,
+  geburtsdatum: -1,
+  inAusbildung: -1,
+  ausbildungsende: -1,
+  geschlecht: -1,
+};
 
-export function ImportWizard({ electionId }: { electionId: string }) {
+export function ImportWizard({ electionId }: Readonly<{ electionId: string }>) {
   const [dateiname, setDateiname] = useState<string | null>(null);
   const [buffer, setBuffer] = useState<ArrayBuffer | null>(null);
   const [encoding, setEncoding] = useState<"utf-8" | "windows-1252">("utf-8");
@@ -20,11 +37,22 @@ export function ImportWizard({ electionId }: { electionId: string }) {
   const [ergebnis, setErgebnis] = useState<ImportResult | null>(null);
   const [pending, startTransition] = useTransition();
 
-  const rows = useMemo(() => (buffer ? parseCsv(new TextDecoder(encoding).decode(buffer)) : []), [buffer, encoding]);
-  const spalten = rows[0]?.map((h, i) => (mitKopf ? h || `Spalte ${i + 1}` : `Spalte ${i + 1} (z. B. „${h}“)`)) ?? [];
-  const pflichtFehlt = IMPORT_FELDER.filter((f) => f.pflicht && zuordnung[f.key] < 0);
+  const rows = useMemo(
+    () => (buffer ? parseCsv(new TextDecoder(encoding).decode(buffer)) : []),
+    [buffer, encoding],
+  );
+  const spalten =
+    rows[0]?.map((h, i) =>
+      mitKopf ? h || `Spalte ${i + 1}` : `Spalte ${i + 1} (z. B. „${h}“)`,
+    ) ?? [];
+  const pflichtFehlt = IMPORT_FELDER.filter(
+    (f) => f.pflicht && zuordnung[f.key] < 0,
+  );
   const { zeilen, fehler } = useMemo(
-    () => (rows.length && pflichtFehlt.length === 0 ? wandleZeilen(rows, zuordnung, mitKopf) : { zeilen: [], fehler: [] }),
+    () =>
+      rows.length && pflichtFehlt.length === 0
+        ? wandleZeilen(rows, zuordnung, mitKopf)
+        : { zeilen: [], fehler: [] },
     [rows, zuordnung, mitKopf, pflichtFehlt.length],
   );
 
@@ -61,8 +89,10 @@ export function ImportWizard({ electionId }: { electionId: string }) {
       <section className="grid gap-3">
         <h2 className="font-semibold">1. Datei auswählen</h2>
         <p className="text-sm text-muted-foreground">
-          CSV-Datei (in Excel: „Speichern unter“ → „CSV (Trennzeichen-getrennt)“). Die Datei wird nur in diesem Browser gelesen
-          und nicht hochgeladen; übertragen werden ausschließlich die geprüften Zeilen.
+          CSV-Datei (in Excel: „Speichern unter“ → „CSV
+          (Trennzeichen-getrennt)“). Die Datei wird nur in diesem Browser
+          gelesen und nicht hochgeladen; übertragen werden ausschließlich die
+          geprüften Zeilen.
         </p>
         <input
           type="file"
@@ -77,14 +107,22 @@ export function ImportWizard({ electionId }: { electionId: string }) {
               {dateiname} · {rows.length} Zeilen
             </span>
             <label className="flex items-center gap-2">
-              Zeichensatz
-              <select value={encoding} onChange={(e) => setEncoding(e.target.value as typeof encoding)} className="h-8 rounded-sm border border-input bg-card px-2">
+              Zeichensatz{" "}
+              <select
+                value={encoding}
+                onChange={(e) => setEncoding(e.target.value as typeof encoding)}
+                className="h-8 rounded-sm border border-input bg-card px-2"
+              >
                 <option value="utf-8">UTF-8</option>
                 <option value="windows-1252">Windows (Excel)</option>
               </select>
             </label>
             <label className="flex items-center gap-2">
-              <input type="checkbox" checked={mitKopf} onChange={(e) => setMitKopf(e.target.checked)} />
+              <input
+                type="checkbox"
+                checked={mitKopf}
+                onChange={(e) => setMitKopf(e.target.checked)}
+              />{" "}
               Erste Zeile enthält Spaltennamen
             </label>
           </div>
@@ -105,7 +143,12 @@ export function ImportWizard({ electionId }: { electionId: string }) {
                   id={`map-${f.key}`}
                   className={selectClass}
                   value={zuordnung[f.key]}
-                  onChange={(e) => setZuordnung({ ...zuordnung, [f.key as ImportFeld]: Number(e.target.value) })}
+                  onChange={(e) =>
+                    setZuordnung({
+                      ...zuordnung,
+                      [f.key as ImportFeld]: Number(e.target.value),
+                    })
+                  }
                 >
                   <option value={-1}>– nicht vorhanden –</option>
                   {spalten.map((s, i) => (
@@ -117,7 +160,11 @@ export function ImportWizard({ electionId }: { electionId: string }) {
               </div>
             ))}
           </div>
-          {pflichtFehlt.length > 0 && <p className="text-sm text-destructive">Bitte zuordnen: {pflichtFehlt.map((f) => f.label).join(", ")}.</p>}
+          {pflichtFehlt.length > 0 && (
+            <p className="text-sm text-destructive">
+              Bitte zuordnen: {pflichtFehlt.map((f) => f.label).join(", ")}.
+            </p>
+          )}
         </section>
       )}
 
@@ -127,14 +174,19 @@ export function ImportWizard({ electionId }: { electionId: string }) {
           <div className="flex flex-wrap gap-2 text-sm">
             <Badge variant="secondary">{zeilen.length} Zeilen bereit</Badge>
             {fehler.length > 0 && (
-              <Badge variant="outline" className="border-destructive text-destructive">
+              <Badge
+                variant="outline"
+                className="border-destructive text-destructive"
+              >
                 {fehler.length} Zeilen mit Fehlern
               </Badge>
             )}
           </div>
           {fehler.length > 0 && (
             <details className="text-sm" open={fehler.length <= 10}>
-              <summary className="cursor-pointer">Fehlerhafte Zeilen (werden nicht importiert)</summary>
+              <summary className="cursor-pointer">
+                Fehlerhafte Zeilen (werden nicht importiert)
+              </summary>
               <ul className="mt-2 grid gap-1">
                 {fehler.slice(0, 200).map((f) => (
                   <li key={f.zeile}>
@@ -162,24 +214,42 @@ export function ImportWizard({ electionId }: { electionId: string }) {
                     <td className="py-1 pr-3">
                       {z.nachname}, {z.vorname}
                     </td>
-                    <td className="py-1 pr-3 tabular-nums">{z.geburtsdatum.split("-").reverse().join(".")}</td>
-                    <td className="py-1 pr-3">{z.inAusbildung ? `ja${z.ausbildungsende ? ` bis ${z.ausbildungsende.split("-").reverse().join(".")}` : ""}` : "nein"}</td>
+                    <td className="py-1 pr-3 tabular-nums">
+                      {z.geburtsdatum.split("-").reverse().join(".")}
+                    </td>
+                    <td className="py-1 pr-3">
+                      {z.inAusbildung
+                        ? `ja${z.ausbildungsende ? ` bis ${z.ausbildungsende.split("-").reverse().join(".")}` : ""}`
+                        : "nein"}
+                    </td>
                     <td className="py-1 pr-3">{z.funktion ?? "–"}</td>
-                    <td className="py-1 pr-3">{z.organisationseinheit ?? "–"}</td>
+                    <td className="py-1 pr-3">
+                      {z.organisationseinheit ?? "–"}
+                    </td>
                     <td className="py-1">{z.geschlecht ?? "–"}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
-            {zeilen.length > 10 && <p className="mt-1 text-xs text-muted-foreground">… und {zeilen.length - 10} weitere</p>}
+            {zeilen.length > 10 && (
+              <p className="mt-1 text-xs text-muted-foreground">
+                … und {zeilen.length - 10} weitere
+              </p>
+            )}
           </div>
           <p className="text-sm text-muted-foreground">
-            Wahlberechtigung und Wählbarkeit werden beim Import zum Wahltag berechnet. Personen mit gleichem Namen und
-            Geburtsdatum werden nicht doppelt angelegt.
+            Wahlberechtigung und Wählbarkeit werden beim Import zum Wahltag
+            berechnet. Personen mit gleichem Namen und Geburtsdatum werden nicht
+            doppelt angelegt.
           </p>
           <div>
-            <Button onClick={importieren} disabled={pending || zeilen.length === 0}>
-              {pending ? "Importiere …" : `${zeilen.length} Personen importieren`}
+            <Button
+              onClick={importieren}
+              disabled={pending || zeilen.length === 0}
+            >
+              {pending
+                ? "Importiere …"
+                : `${zeilen.length} Personen importieren`}
             </Button>
           </div>
         </section>
@@ -194,11 +264,16 @@ export function ImportWizard({ electionId }: { electionId: string }) {
         <div role="status" className="grid gap-2 rounded-md border p-4 text-sm">
           <p>
             <strong>{ergebnis.importiert}</strong> Personen importiert
-            {ergebnis.dubletten ? `, ${ergebnis.dubletten} Dubletten übersprungen` : ""}.
+            {ergebnis.dubletten
+              ? `, ${ergebnis.dubletten} Dubletten übersprungen`
+              : ""}
+            .
           </p>
           <div>
             <Button asChild size="sm">
-              <Link href={`/wahl/${electionId}/waehler?ansicht=alle`}>Zum Wählerverzeichnis</Link>
+              <Link href={`/wahl/${electionId}/waehler?ansicht=alle`}>
+                Zum Wählerverzeichnis
+              </Link>
             </Button>
           </div>
         </div>

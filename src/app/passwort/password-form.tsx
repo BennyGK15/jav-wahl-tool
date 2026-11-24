@@ -3,16 +3,26 @@
 import { useRouter } from "next/navigation";
 import { useActionState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { changePasswordAction, type ChangePasswordState } from "./actions";
 
 const initial: ChangePasswordState = { ok: false };
 
-export function PasswordForm({ forced }: { forced: boolean }) {
+export function PasswordForm({ forced }: Readonly<{ forced: boolean }>) {
   const router = useRouter();
-  const [state, formAction, pending] = useActionState(changePasswordAction, initial);
+  const [state, formAction, pending] = useActionState(
+    changePasswordAction,
+    initial,
+  );
 
   useEffect(() => {
     if (state.ok) {
@@ -35,15 +45,35 @@ export function PasswordForm({ forced }: { forced: boolean }) {
         <CardContent className="grid gap-4">
           <div className="grid gap-2">
             <Label htmlFor="currentPassword">Aktuelles Passwort</Label>
-            <Input id="currentPassword" name="currentPassword" type="password" autoComplete="current-password" required />
+            <Input
+              id="currentPassword"
+              name="currentPassword"
+              type="password"
+              autoComplete="current-password"
+              required
+            />
           </div>
           <div className="grid gap-2">
             <Label htmlFor="newPassword">Neues Passwort</Label>
-            <Input id="newPassword" name="newPassword" type="password" autoComplete="new-password" minLength={12} required />
+            <Input
+              id="newPassword"
+              name="newPassword"
+              type="password"
+              autoComplete="new-password"
+              minLength={12}
+              required
+            />
           </div>
           <div className="grid gap-2">
             <Label htmlFor="confirmPassword">Neues Passwort wiederholen</Label>
-            <Input id="confirmPassword" name="confirmPassword" type="password" autoComplete="new-password" minLength={12} required />
+            <Input
+              id="confirmPassword"
+              name="confirmPassword"
+              type="password"
+              autoComplete="new-password"
+              minLength={12}
+              required
+            />
           </div>
           {state.message && !state.ok && (
             <p role="alert" className="text-sm text-destructive">
