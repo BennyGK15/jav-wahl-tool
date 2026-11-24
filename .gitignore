@@ -1,0 +1,12 @@
+node_modules/
+.next/
+out/
+coverage/
+.env
+.env.*
+!.env.example
+*.tsbuildinfo
+next-env.d.ts
+auth-schema.generated.ts
+.DS_Store
+src/generated/

@@ -1,0 +1,59 @@
+{
+  "name": "jav-wahl-tool",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Plantool für den Wahlvorstand einer JAV-Wahl im öffentlichen Dienst Baden-Württemberg",
+  "engines": {
+    "node": ">=20.9"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "postinstall": "prisma generate",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma generate && prisma migrate dev",
+    "db:deploy": "prisma migrate deploy",
+    "db:studio": "prisma studio",
+    "auth:schema-check": "pnpm dlx @better-auth/cli@latest generate --output ./auth-schema.generated.ts",
+    "user:create": "tsx scripts/create-user.ts",
+    "seed:dummy": "tsx scripts/seed-dummy.ts",
+    "dev:reset": "tsx scripts/dev-reset.ts"
+  },
+  "dependencies": {
+    "@better-auth/prisma-adapter": "^1.7.0",
+    "@prisma/adapter-mariadb": "^7.0.0",
+    "@prisma/client": "^7.0.0",
+    "@radix-ui/react-label": "^2.1.0",
+    "@radix-ui/react-slot": "^1.1.0",
+    "better-auth": "^1.7.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "latest",
+    "next": "^16.4.6",
+    "qrcode": "^1.5.4",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "server-only": "^0.0.1",
+    "tailwind-merge": "^3.0.0",
+    "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.0",
+    "@types/node": "^22.0.0",
+    "@types/qrcode": "^1.5.5",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "eslint": "^9.0.0",
+    "eslint-config-next": "^16.4.6",
+    "prisma": "^7.0.0",
+    "tailwindcss": "^4.1.0",
+    "tsx": "latest",
+    "tw-animate-css": "latest",
+    "typescript": "^5.6.0",
+    "vitest": "latest"
+  }
+}

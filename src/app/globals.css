@@ -1,0 +1,310 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Farbwelt angelehnt an baden-wuerttemberg.de:
+ * Landesgelb als Akzent, warmes Anthrazit für Text und Aktionen, warme Grautöne für Flächen.
+ */
+:root {
+  --radius: 0.1875rem; /* 3 px – nahezu eckig */
+
+  --brand-yellow: #fffc00;
+  --brand-ink: #2a2623;
+
+  --background: #f4f3f3;
+  --foreground: #2a2623;
+  --card: #ffffff;
+  --card-foreground: #2a2623;
+  --primary: #2a2623;
+  --primary-foreground: #ffffff;
+  --secondary: #ebe8e8;
+  --secondary-foreground: #2a2623;
+  --muted: #ebe8e8;
+  --muted-foreground: #5d5754;
+  --accent: #fffc00;
+  --accent-foreground: #2a2623;
+  --highlight: #fffeb3; /* zartes Gelb für Hervorhebungen */
+  --destructive: #b3261e;
+  --success: #1e6b3a;
+  --border: #e4e0e0;
+  --input: #cfc9c9;
+  --ring: #2a2623;
+}
+
+.dark {
+  --background: #1d1a18;
+  --foreground: #f4f3f3;
+  --card: #2a2623;
+  --card-foreground: #f4f3f3;
+  --primary: #fffc00;
+  --primary-foreground: #2a2623;
+  --secondary: #3a3532;
+  --secondary-foreground: #f4f3f3;
+  --muted: #3a3532;
+  --muted-foreground: #c4bebb;
+  --accent: #fffc00;
+  --accent-foreground: #2a2623;
+  --highlight: #4a4520;
+  --destructive: #ff8a80;
+  --success: #7dd3a0;
+  --border: #45403c;
+  --input: #5d5754;
+  --ring: #fffc00;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-highlight: var(--highlight);
+  --color-destructive: var(--destructive);
+  --color-success: var(--success);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-brand-yellow: var(--brand-yellow);
+  --color-brand-ink: var(--brand-ink);
+  --radius-sm: var(--radius);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) * 2);
+  --radius-xl: calc(var(--radius) * 2);
+  --font-sans: var(--font-source-sans), ui-sans-serif, system-ui, "Segoe UI", Arial, sans-serif;
+  --font-serif: var(--font-source-serif), Georgia, "Times New Roman", serif;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-size: 1rem;
+    line-height: 1.6;
+  }
+  /* Große Überschriften in der Serifenschrift, wie im Landesportal */
+  h1 {
+    @apply font-serif tracking-tight;
+    font-weight: 700;
+  }
+  h2,
+  h3 {
+    font-weight: 700;
+  }
+  a {
+    text-underline-offset: 3px;
+  }
+  :focus-visible {
+    outline: 3px solid var(--ring);
+    outline-offset: 2px;
+  }
+  /* Sprungziele (z. B. aus „fehlende Angaben“): Abstand zur Kopfzeile und kurze Hervorhebung */
+  [id] {
+    scroll-margin-top: 6rem;
+  }
+  :target,
+  .sprung-ziel {
+    animation: sprung-hervorheben 2s ease-out;
+  }
+  ::selection {
+    background: var(--brand-yellow);
+    color: var(--brand-ink);
+  }
+}
+
+@page {
+  size: A4;
+  margin: 16mm 16mm 18mm 18mm;
+}
+
+@media print {
+  body {
+    background: #fff;
+    color: #000;
+    font-size: 11pt;
+  }
+}
+
+/*
+ * Dokumente (Druck/PDF): sachlich-amtliche Typografie.
+ * Im Browser als Blatt dargestellt, im Druck randlos auf A4.
+ */
+@layer components {
+  .dok {
+    background: #fff;
+    color: #1f1b18;
+    border: 1px solid var(--border);
+    padding: 2.75rem 3rem 3rem;
+    font-feature-settings: "kern", "liga";
+    hyphens: auto;
+  }
+  .dok p,
+  .dok li {
+    text-wrap: pretty;
+  }
+  /* Titelblock: Serifenschrift, darunter ein kurzer Strich mit gelbem Akzent */
+  :is(.dok, .dok article) > header {
+    margin-bottom: 0.5rem;
+  }
+  :is(.dok, .dok article) > header h1 {
+    font-size: 1.6rem;
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+  }
+  :is(.dok, .dok article) > header > p:first-of-type {
+    margin-top: 0.25rem;
+  }
+  :is(.dok, .dok article) > header::after {
+    content: "";
+    display: block;
+    width: 4.5rem;
+    height: 3px;
+    margin: 0.9rem auto 0;
+    background: linear-gradient(90deg, var(--brand-ink) 0 66%, var(--brand-yellow) 66% 100%);
+  }
+  :is(.dok, .dok article) > header:not(.text-center)::after {
+    margin-left: 0;
+  }
+  /* Abschnittsüberschriften: serifenlos, fett, mit feiner Linie */
+  .dok h2:not(header h2) {
+    font-family: var(--font-sans);
+    font-size: 0.95em;
+    letter-spacing: 0.01em;
+    padding-bottom: 0.2rem;
+    margin-bottom: 0.35rem;
+    border-bottom: 1px solid #d6d0cf;
+  }
+  /* Tabellen: Kopfzeile grau hinterlegt, Kapitälchen-Anmutung, feine Linien, Ziffern in gleicher Breite */
+  .dok table {
+    font-variant-numeric: tabular-nums;
+    border-collapse: collapse;
+  }
+  .dok thead th {
+    background: #f1efee;
+    color: #3a3532;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    vertical-align: bottom;
+  }
+  .dok th,
+  .dok td {
+    padding: 0.35rem 0.55rem;
+  }
+  .dok tbody tr {
+    border-color: #d6d0cf;
+  }
+  .dok tbody tr:last-child {
+    border-bottom: 1.5px solid #2a2623;
+  }
+  .dok strong {
+    font-weight: 650;
+  }
+  @media print {
+    .dok {
+      border: 0;
+      padding: 0;
+      color: #000;
+    }
+    .dok,
+    .dok * {
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    /* ---- Seitenumbrüche ---- */
+
+    /* Einspaltige Grids im Druck als normaler Textfluss: Chrome verteilt sonst beim Umbruch
+       die Grid-Abstände über die Seite und zieht Absätze auseinander. Abstand bleibt als Rand erhalten. */
+    .dok .grid:not([class*="grid-cols"]),
+    .dok.grid:not([class*="grid-cols"]) {
+      display: block !important; /* schlägt die Tailwind-Utility .grid (spätere Ebene) */
+    }
+    .dok .grid:not([class*="grid-cols"]) > * + *,
+    .dok.grid:not([class*="grid-cols"]) > * + * {
+      margin-top: 0.8em;
+    }
+
+    /* Keine einzelnen Zeilen am Seitenanfang oder -ende (Hurenkinder/Schusterjungen) */
+    .dok p,
+    .dok li,
+    .dok td {
+      orphans: 3;
+      widows: 3;
+    }
+
+    /* Kurze Einheiten nie trennen: Absätze, Listenpunkte, Tabellenzeilen, Kästen, Unterschriftszeilen, Briefkopf */
+    .dok p,
+    .dok li,
+    .dok tr,
+    .dok dl,
+    .dok .dok-kopf,
+    .dok [class*="grid-cols"],
+    .dok [class*="border-2"],
+    .dok [class*="border-dashed"] {
+      break-inside: avoid;
+    }
+
+    /* Textabschnitte ohne Tabelle oder Liste zusammenhalten; lange Abschnitte dürfen weiterhin umbrechen */
+    .dok section:not(:has(table, ol, ul)) {
+      break-inside: avoid;
+    }
+
+    /* Überschriften nie allein am Seitenende: mit dem folgenden Inhalt zusammenhalten.
+       Der unsichtbare Platzhalter reserviert Raum für die ersten Zeilen danach. */
+    .dok h1,
+    .dok h2,
+    .dok h3,
+    :is(.dok, .dok article) > header {
+      break-after: avoid;
+      break-inside: avoid;
+    }
+    .dok h2::after,
+    .dok h3::after {
+      content: "";
+      display: block;
+      height: 3.5em;
+      margin-bottom: -3.5em;
+    }
+
+    /* Tabellen: Kopfzeile auf jeder Seite wiederholen, Fußzeile ebenso */
+    .dok thead {
+      display: table-header-group;
+    }
+    .dok tfoot {
+      display: table-footer-group;
+    }
+
+    /* Bewusste Seitenwechsel (Anlagen, Serienbriefe) beginnen ohne Leerraum oben */
+    .dok .break-before-page,
+    .dok .break-after-page + * {
+      margin-top: 0 !important;
+    }
+  }
+}
+
+@keyframes sprung-hervorheben {
+  0%,
+  40% {
+    background-color: var(--brand-yellow);
+    box-shadow: 0 0 0 4px var(--brand-yellow);
+  }
+  100% {
+    background-color: transparent;
+    box-shadow: 0 0 0 4px transparent;
+  }
+}

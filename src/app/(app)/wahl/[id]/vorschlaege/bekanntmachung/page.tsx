@@ -1,0 +1,146 @@
+import Link from "next/link";
+import { Briefkopf, DokFuss } from "@/components/dokument";
+import { notFound } from "next/navigation";
+import { PrintButton } from "@/components/print-button";
+import { writeAudit } from "@/lib/audit";
+import { fromDbDate, todayBerlin } from "@/lib/dates";
+import { hasPermission } from "@/lib/rbac";
+import { requireSession } from "@/lib/session";
+import { formatIsoDate } from "@/lib/utils";
+import { bestimmeWahlverfahren } from "@/lib/ergebnis";
+import { verfahrensauskunft } from "@/lib/jav";
+import { loadNominations } from "@/server/nominations";
+import { voterCounts } from "@/server/voters";
+
+export const metadata = { title: "Bekanntmachung der Wahlvorschläge" };
+
+/** Bekanntmachung der gültigen Wahlvorschläge – ohne Unterzeichner (§ 18 Abs. 1 Satz 6 LPVGWO). */
+export default async function BekanntmachungPage({ params }: { params: Promise<{ id: string }> }) {
+  const session = await requireSession();
+  if (!hasPermission(session.user.role, "nominations.edit")) notFound();
+
+  const { id } = await params;
+  const data = await loadNominations(id).catch(() => null);
+  if (!data) notFound();
+  const { election, nominations } = data;
+
+  const gueltig = nominations
+    .filter((n) => n.status === "gueltig")
+    .sort((a, b) => (a.ordnungsnummer ?? 999) - (b.ordnungsnummer ?? 999) || a.eingangAm.getTime() - b.eingangAm.getTime());
+  const ohneNummer = gueltig.filter((n) => n.ordnungsnummer == null).length;
+  const { wahlberechtigt } = await voterCounts(id);
+  const sitze = verfahrensauskunft(wahlberechtigt > 0 ? wahlberechtigt : election.wahlberechtigteSchaetzung).mitglieder;
+  const wahlverfahren = bestimmeWahlverfahren(election.verfahren, gueltig.length, sitze);
+
+  await writeAudit({ userId: session.user.id, action: "nominations.notice.generated", objectType: "election", objectId: id });
+
+  return (
+    <div className="grid gap-6">
+      <div className="flex flex-wrap items-center justify-between gap-4 print:hidden">
+        <p className="text-sm text-muted-foreground">
+          <Link href={`/wahl/${id}/vorschlaege`} className="hover:underline">
+            Wahlvorschläge
+          </Link>{" "}
+          / Bekanntmachung
+        </p>
+        <PrintButton />
+      </div>
+      {ohneNummer > 0 && (
+        <p role="note" className="rounded-md border border-l-4 border-l-foreground border-y-0 border-r-0 bg-highlight p-3 text-sm text-foreground print:hidden">
+          {ohneNummer} gültige Vorschläge haben noch keine Ordnungsnummer und sind nach Eingang sortiert.
+        </p>
+      )}
+
+      <DokFuss text={`JAV-Wahl ${election.dienststelle} · Bekanntmachung der Wahlvorschläge`} />
+      <article className="dok mx-auto w-full max-w-3xl print:max-w-none">
+        <Briefkopf dienststelle={election.dienststelle} art="Bekanntmachung" datum={`Stand: ${formatIsoDate(todayBerlin())}`} />
+        <header className="mb-6">
+          <h1 className="text-xl font-semibold">Bekanntmachung der Wahlvorschläge</h1>
+          <p>zur Wahl der Jugend- und Auszubildendenvertretung</p>
+          <p className="mt-2 text-sm">
+            Dienststelle: {election.dienststelle}
+            <br />
+            Wahltag: {formatIsoDate(fromDbDate(election.wahltag))}
+          </p>
+        </header>
+
+        {gueltig.length === 0 ? (
+          <p className="text-sm">Es liegen keine gültigen Wahlvorschläge vor.</p>
+        ) : (
+          <div className="grid gap-6">
+            <p className="text-sm">Der Wahlvorstand hat folgende Wahlvorschläge als gültig zugelassen:</p>
+            {gueltig.map((n, i) => (
+              <section key={n.id} className="break-inside-avoid">
+                <h2 className="font-semibold">
+                  Wahlvorschlag Nr. {n.ordnungsnummer ?? i + 1}
+                  {n.kennwort ? ` – Kennwort „${n.kennwort}“` : ""}
+                </h2>
+                <table className="mt-2 w-full border-collapse text-sm">
+                  <thead>
+                    <tr className="border-b-2 border-foreground text-left">
+                      <th className="w-16 py-1 pr-4">Platz</th>
+                      <th className="py-1 pr-4">Familienname</th>
+                      <th className="py-1 pr-4">Vorname</th>
+                      <th className="py-1">Amts- oder Funktionsbezeichnung</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {n.candidates.map((c) => (
+                      <tr key={c.id} className="border-b">
+                        <td className="py-1 pr-4 tabular-nums">{c.listenplatz}</td>
+                        <td className="py-1 pr-4">{c.voter.nachname}</td>
+                        <td className="py-1 pr-4">{c.voter.vorname}</td>
+                        <td className="py-1">{c.voter.funktion ?? ""}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                {n.geschlechterBegruendung && (
+                  <p className="mt-2 text-sm">
+                    <span className="font-semibold">Begründung zur Verteilung von Frauen und Männern (§ 12 Abs. 2 LPVGWO):</span>{" "}
+                    {n.geschlechterBegruendung}
+                  </p>
+                )}
+              </section>
+            ))}
+          </div>
+        )}
+
+        {gueltig.length > 0 && wahlverfahren && (
+          <section className="mt-8 text-sm">
+            <h2 className="font-semibold">Hinweise zur Stimmabgabe</h2>
+            <ul className="mt-2 list-disc space-y-1 pl-5">
+              <li>Gewählt wird nur mit amtlichen Stimmzetteln und amtlichen Stimmzettelumschlägen (§ 18 Abs. 2 Nr. 1 LPVGWO).</li>
+              <li>Gewählt werden können nur Personen, die in einem der bekanntgemachten Wahlvorschläge stehen (§ 18 Abs. 2 Nr. 2 LPVGWO).</li>
+              {wahlverfahren === "verhaeltnis" ? (
+                <>
+                  <li>
+                    Jede wählende Person hat <strong>{sitze} Stimmen</strong> (§ 20 Abs. 4 LPVGWO). Sie gibt nur einen Stimmzettel ab
+                    und kennzeichnet die gewählten Personen durch Ankreuzen oder Beifügen einer Zahl.
+                  </li>
+                  <li>
+                    Bewerberinnen und Bewerber aus anderen Wahlvorschlägen können auf den Stimmzettel übernommen werden
+                    (panaschieren), und einer Person können bis zu drei Stimmen gegeben werden (kumulieren) – insgesamt höchstens{" "}
+                    {sitze} Stimmen (§ 33 LPVGWO).
+                  </li>
+                </>
+              ) : (
+                <li>
+                  Jede wählende Person hat <strong>{sitze === 1 ? "eine Stimme" : `bis zu ${sitze} Stimmen`}</strong>; jeder Person kann
+                  nur eine Stimme gegeben werden (§§ 20 Abs. 4, 40 LPVGWO). Die gewählten Personen werden angekreuzt.
+                </li>
+              )}
+              <li>Man ist nicht verpflichtet, eine bestimmte Zahl von Stimmen an Frauen oder Männer zu vergeben (§ 20 Abs. 4 Satz 3 LPVGWO).</li>
+            </ul>
+          </section>
+        )}
+
+        <footer className="mt-8 text-sm">
+          <p>Die Stimmabgabe ist geheim. Die Namen der Unterzeichnerinnen und Unterzeichner werden nicht veröffentlicht.</p>
+          <p className="mt-2">Stand: {formatIsoDate(todayBerlin())}</p>
+          <p className="mt-10">Der Wahlvorstand</p>
+        </footer>
+      </article>
+    </div>
+  );
+}

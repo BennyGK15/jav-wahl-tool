@@ -1,0 +1,474 @@
+// Datenbankschema (Prisma 7, MySQL 8 / MariaDB 11).
+// Spalten mit Suffix `Enc` enthalten AES-256-GCM-Chiffrat (siehe src/lib/crypto.ts).
+// Alle Fachdaten hängen an `Election`; das Löschen einer Wahl entfernt per Kaskade
+// alle zugehörigen personenbezogenen Daten.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+// ---------------------------------------------------------------------------
+// better-auth (Kern + Plugins username, admin, Rate-Limit in der DB)
+// Abgleich mit der installierten better-auth-Version: `pnpm auth:schema-check`
+// ---------------------------------------------------------------------------
+
+model User {
+  id                 String    @id @db.VarChar(64)
+  name               String    @db.VarChar(255)
+  /// better-auth verlangt eine E-Mail. Wir vergeben Platzhalter <benutzername>@users.invalid.
+  email              String    @unique @db.VarChar(255)
+  emailVerified      Boolean   @default(false) @map("email_verified")
+  image              String?   @db.Text
+  createdAt          DateTime  @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt          DateTime  @updatedAt @map("updated_at") @db.DateTime(3)
+  // username-Plugin
+  username           String?   @unique @db.VarChar(64)
+  displayUsername    String?   @map("display_username") @db.VarChar(64)
+  // admin-Plugin
+  role               String?   @default("mitglied") @db.VarChar(32)
+  banned             Boolean?  @default(false)
+  banReason          String?   @map("ban_reason") @db.Text
+  banExpires         DateTime? @map("ban_expires") @db.DateTime(3)
+  // eigenes Feld: Passwortwechsel beim ersten Login erzwingen
+  mustChangePassword Boolean   @default(true) @map("must_change_password")
+  // twoFactor-Plugin
+  twoFactorEnabled   Boolean?  @default(false) @map("two_factor_enabled")
+  // Kontosperre nach Fehlversuchen (eigene Logik, src/lib/auth.ts)
+  failedLoginCount   Int       @default(0) @map("failed_login_count")
+  failedLoginAt      DateTime? @map("failed_login_at") @db.DateTime(3)
+
+  sessions   Session[]
+  accounts   Account[]
+  twoFactors TwoFactor[]
+
+  @@map("user")
+}
+
+model Session {
+  id             String   @id @db.VarChar(64)
+  expiresAt      DateTime @map("expires_at") @db.DateTime(3)
+  token          String   @unique @db.VarChar(255)
+  createdAt      DateTime @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.DateTime(3)
+  ipAddress      String?  @map("ip_address") @db.VarChar(64)
+  userAgent      String?  @map("user_agent") @db.Text
+  userId         String   @map("user_id") @db.VarChar(64)
+  impersonatedBy String?  @map("impersonated_by") @db.VarChar(64)
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id @db.VarChar(64)
+  accountId             String    @map("account_id") @db.VarChar(255)
+  providerId            String    @map("provider_id") @db.VarChar(64)
+  userId                String    @map("user_id") @db.VarChar(64)
+  accessToken           String?   @map("access_token") @db.Text
+  refreshToken          String?   @map("refresh_token") @db.Text
+  idToken               String?   @map("id_token") @db.Text
+  accessTokenExpiresAt  DateTime? @map("access_token_expires_at") @db.DateTime(3)
+  refreshTokenExpiresAt DateTime? @map("refresh_token_expires_at") @db.DateTime(3)
+  scope                 String?   @db.Text
+  password              String?   @db.Text
+  createdAt             DateTime  @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt             DateTime  @updatedAt @map("updated_at") @db.DateTime(3)
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("account")
+}
+
+model TwoFactor {
+  id                      String    @id @db.VarChar(64)
+  secret                  String    @db.Text
+  backupCodes             String    @map("backup_codes") @db.Text
+  userId                  String    @map("user_id") @db.VarChar(64)
+  verified                Boolean?  @default(true)
+  failedVerificationCount Int?      @default(0) @map("failed_verification_count")
+  lockedUntil             DateTime? @map("locked_until") @db.DateTime(3)
+  user                    User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("two_factor")
+}
+
+model Verification {
+  id         String   @id @db.VarChar(64)
+  identifier String   @db.VarChar(255)
+  value      String   @db.Text
+  expiresAt  DateTime @map("expires_at") @db.DateTime(3)
+  createdAt  DateTime @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt  DateTime @updatedAt @map("updated_at") @db.DateTime(3)
+
+  @@index([identifier])
+  @@map("verification")
+}
+
+model RateLimit {
+  id          String @id @db.VarChar(64)
+  key         String @unique @db.VarChar(255)
+  count       Int
+  lastRequest BigInt @map("last_request")
+
+  @@map("rate_limit")
+}
+
+// ---------------------------------------------------------------------------
+// Fachdaten
+// Verweise auf Benutzer (createdBy, erledigtVon …) sind bewusst einfache IDs ohne
+// Fremdschlüssel: Konten werden gesperrt, nicht gelöscht, und die Historie bleibt lesbar.
+// ---------------------------------------------------------------------------
+
+enum Verfahren {
+  regulaer
+  wahlversammlung
+}
+
+enum ElectionStatus {
+  vorbereitung
+  eingeleitet
+  wahl
+  abgeschlossen
+}
+
+model Election {
+  id                 String         @id @default(uuid()) @db.VarChar(36)
+  dienststelle       String         @db.VarChar(255)
+  verfahren          Verfahren      @default(regulaer)
+  wahltag            DateTime       @db.Date
+  wahlausschreibenAm DateTime?      @map("wahlausschreiben_am") @db.Date
+  /// Ende der Amtszeit der bisherigen JAV; fehlt bei der ersten Wahl.
+  amtszeitEnde       DateTime?      @map("amtszeit_ende") @db.Date
+  /// Voraussichtliche Zahl laut Personalstelle; wird durch das Wählerverzeichnis ersetzt.
+  wahlberechtigteSchaetzung Int     @default(0) @map("wahlberechtigte_schaetzung")
+  /// Mindestzahl der Stützunterschriften für Vorschläge der Beschäftigten – vom Wahlvorstand nach Gesetz festgelegt.
+  stuetzunterschriftenMin   Int?    @map("stuetzunterschriften_min")
+  /// Organisatorische Angaben für das Wahlausschreiben (Wahlraum, Zeiten, Orte) – siehe src/lib/wahlausschreiben.ts
+  wahlausschreibenAngaben   Json?   @map("wahlausschreiben_angaben")
+  /// Bekanntmachung der Nachfrist für Wahlvorschläge (§ 16 LPVGWO); Fristende = 6 Arbeitstage danach
+  nachfristBekanntgemachtAm DateTime? @map("nachfrist_bekanntgemacht_am") @db.Date
+  status             ElectionStatus @default(vorbereitung)
+  /// Zeitpunkt des Abschlusses der Wahl – Bezugspunkt für Fristen „30 Tage nach Abschluss“
+  abgeschlossenAm    DateTime?      @map("abgeschlossen_am") @db.DateTime(3)
+  /// Einrichtungsassistent noch nicht abgeschlossen (nur neu angelegte Wahlen; bestehende bleiben unberührt)
+  einrichtungOffen   Boolean        @default(false) @map("einrichtung_offen")
+  /// Danach werden alle personenbezogenen Daten dieser Wahl gelöscht (Frist mit DSB festlegen).
+  retentionUntil     DateTime?      @map("retention_until") @db.Date
+  /// Wahlanfechtung (§ 21 LPVG): Kenntnis des Wahlvorstands und rechtskräftiger Abschluss – sperrt die Löschung (§ 32 LPVGWO)
+  anfechtungAm         DateTime?    @map("anfechtung_am") @db.Date
+  anfechtungErledigtAm DateTime?    @map("anfechtung_erledigt_am") @db.Date
+  createdAt          DateTime       @default(now()) @map("created_at") @db.DateTime(3)
+  createdBy          String?        @map("created_by") @db.VarChar(64)
+
+  voters         Voter[]
+  objections     Objection[]
+  nominations    Nomination[]
+  deadlines      Deadline[]
+  checklistItems ChecklistItem[]
+  result         Result?
+  resultEntries  ResultEntry[]
+  documents      Document[]
+
+  @@map("election")
+}
+
+enum Geschlecht {
+  w
+  m
+  d
+}
+
+model Voter {
+  id                   String      @id @default(uuid()) @db.VarChar(36)
+  electionId           String      @map("election_id") @db.VarChar(36)
+  lfdNr                Int         @map("lfd_nr")
+  nachname             String      @db.VarChar(120)
+  vorname              String      @db.VarChar(120)
+  organisationseinheit String?     @db.VarChar(120)
+  /// Amts- oder Funktionsbezeichnung bzw. Ausbildungsberuf (§ 6 Abs. 3 Nr. 5, § 12 Abs. 3, § 34 Abs. 2 LPVGWO)
+  funktion             String?     @db.VarChar(120)
+  geburtsdatumEnc      String      @map("geburtsdatum_enc") @db.VarChar(255)
+  inAusbildung         Boolean     @default(false) @map("in_ausbildung")
+  ausbildungsendeEnc   String?     @map("ausbildungsende_enc") @db.VarChar(255)
+  /// Nur für die Geschlechteranteile der Wahlvorschläge.
+  geschlecht           Geschlecht?
+  wahlberechtigt       Boolean
+  waehlbar             Boolean
+  votedAt              DateTime?   @map("voted_at") @db.DateTime(3)
+  votedMarkedBy        String?     @map("voted_marked_by") @db.VarChar(64)
+  stimmabgabeArt       StimmabgabeArt? @map("stimmabgabe_art")
+  briefwahlBeantragtAm DateTime?   @map("briefwahl_beantragt_am") @db.DateTime(3)
+  briefwahlVersandtAm  DateTime?   @map("briefwahl_versandt_am") @db.DateTime(3)
+  briefwahlEingangAm   DateTime?   @map("briefwahl_eingang_am") @db.DateTime(3)
+  createdAt            DateTime    @default(now()) @map("created_at") @db.DateTime(3)
+
+  election    Election              @relation(fields: [electionId], references: [id], onDelete: Cascade)
+  objections  Objection[]
+  candidacies NominationCandidate[]
+  supports    NominationSupporter[]
+
+  @@unique([electionId, lfdNr])
+  @@index([electionId])
+  @@map("voter")
+}
+
+enum StimmabgabeArt {
+  urne
+  brief
+}
+
+enum Entscheidung {
+  offen
+  stattgegeben
+  zurueckgewiesen
+}
+
+model Objection {
+  id             String       @id @default(uuid()) @db.VarChar(36)
+  electionId     String       @map("election_id") @db.VarChar(36)
+  voterId        String?      @map("voter_id") @db.VarChar(36)
+  eingangAm      DateTime     @map("eingang_am") @db.DateTime(3)
+  /// Wer den Einspruch eingelegt hat und worum es geht – verschlüsselt.
+  begruendungEnc String?      @map("begruendung_enc") @db.Text
+  entscheidungsgrundEnc String? @map("entscheidungsgrund_enc") @db.Text
+  entscheidung   Entscheidung @default(offen)
+  entschiedenAm  DateTime?    @map("entschieden_am") @db.DateTime(3)
+  entschiedenVon String?      @map("entschieden_von") @db.VarChar(64)
+
+  election Election @relation(fields: [electionId], references: [id], onDelete: Cascade)
+  voter    Voter?   @relation(fields: [voterId], references: [id], onDelete: Cascade)
+
+  @@map("objection")
+}
+
+enum EinreicherArt {
+  beschaeftigte
+  gewerkschaft
+}
+
+enum NominationStatus {
+  eingegangen
+  gueltig
+  ungueltig
+  zurueckgegeben
+}
+
+model Nomination {
+  id             String           @id @default(uuid()) @db.VarChar(36)
+  electionId     String           @map("election_id") @db.VarChar(36)
+  kennwort       String?          @db.VarChar(120)
+  einreicherArt  EinreicherArt    @map("einreicher_art")
+  gewerkschaft   String?          @db.VarChar(120)
+  /// Eingang mit Datum und Uhrzeit – maßgeblich für die Fristwahrung.
+  eingangAm      DateTime         @map("eingang_am") @db.DateTime(3)
+  status         NominationStatus @default(eingegangen)
+  pruefnotiz     String?          @db.Text
+  /// Schriftliche Begründung, wenn der Vorschlag nicht genug Frauen bzw. Männer enthält (§ 12 Abs. 2 LPVGWO); wird mit bekanntgemacht
+  geschlechterBegruendung String? @map("geschlechter_begruendung") @db.Text
+  ordnungsnummer Int?
+  /// Veraltet: früher Listenstimmen. In BW werden Personen gewählt (§ 33 LPVGWO); die Gesamtstimmen
+  /// eines Vorschlags ergeben sich aus den Bewerberstimmen (ResultEntry.stimmen).
+  listenstimmen  Int?
+
+  election   Election              @relation(fields: [electionId], references: [id], onDelete: Cascade)
+  candidates NominationCandidate[]
+  supporters NominationSupporter[]
+
+  @@map("nomination")
+}
+
+model NominationCandidate {
+  id                 String  @id @default(uuid()) @db.VarChar(36)
+  nominationId       String  @map("nomination_id") @db.VarChar(36)
+  voterId            String  @map("voter_id") @db.VarChar(36)
+  listenplatz        Int
+  zustimmungLiegtVor Boolean @default(false) @map("zustimmung_liegt_vor")
+
+  nomination    Nomination    @relation(fields: [nominationId], references: [id], onDelete: Cascade)
+  voter         Voter         @relation(fields: [voterId], references: [id], onDelete: Cascade)
+  resultEntries ResultEntry[]
+
+  @@unique([nominationId, listenplatz])
+  @@map("nomination_candidate")
+}
+
+/// Unterstützer werden NIE veröffentlicht.
+model NominationSupporter {
+  id           String @id @default(uuid()) @db.VarChar(36)
+  nominationId String @map("nomination_id") @db.VarChar(36)
+  voterId      String @map("voter_id") @db.VarChar(36)
+
+  nomination Nomination @relation(fields: [nominationId], references: [id], onDelete: Cascade)
+  voter      Voter      @relation(fields: [voterId], references: [id], onDelete: Cascade)
+
+  @@unique([nominationId, voterId])
+  @@map("nomination_supporter")
+}
+
+enum RuleAnchor {
+  wahltag
+  wahlausschreiben
+  amtszeitende
+}
+
+enum RuleDirection {
+  vor
+  nach
+}
+
+enum RuleUnit {
+  arbeitstage
+  wochen
+  monate
+}
+
+model DeadlineRule {
+  key        String        @id @db.VarChar(64)
+  label      String        @db.VarChar(255)
+  verfahren  Verfahren     @default(regulaer)
+  anchor     RuleAnchor
+  direction  RuleDirection
+  unit       RuleUnit
+  amount     Int
+  legalBasis String        @map("legal_basis") @db.VarChar(120)
+  verified   Boolean       @default(false)
+  verifiedBy String?       @map("verified_by") @db.VarChar(64)
+  verifiedAt DateTime?     @map("verified_at") @db.DateTime(3)
+
+  @@map("deadline_rule")
+}
+
+model Deadline {
+  id                    String    @id @default(uuid()) @db.VarChar(36)
+  electionId            String    @map("election_id") @db.VarChar(36)
+  ruleKey               String    @map("rule_key") @db.VarChar(64)
+  datum                 DateTime  @db.Date
+  uhrzeit               String?   @db.VarChar(5)
+  manuellUeberschrieben Boolean   @default(false) @map("manuell_ueberschrieben")
+  erledigtAm            DateTime? @map("erledigt_am") @db.DateTime(3)
+  erledigtVon           String?   @map("erledigt_von") @db.VarChar(64)
+
+  election Election @relation(fields: [electionId], references: [id], onDelete: Cascade)
+
+  @@unique([electionId, ruleKey])
+  @@map("deadline")
+}
+
+enum ChecklistPhase {
+  vorbereitung
+  wahltag
+  abschluss
+}
+
+model ChecklistItem {
+  id          String         @id @default(uuid()) @db.VarChar(36)
+  electionId  String         @map("election_id") @db.VarChar(36)
+  phase       ChecklistPhase
+  sortierung  Int
+  text        String         @db.VarChar(500)
+  erledigtAm  DateTime?      @map("erledigt_am") @db.DateTime(3)
+  erledigtVon String?        @map("erledigt_von") @db.VarChar(64)
+
+  election Election @relation(fields: [electionId], references: [id], onDelete: Cascade)
+
+  @@map("checklist_item")
+}
+
+model Result {
+  electionId           String    @id @map("election_id") @db.VarChar(36)
+  stimmzettelGesamt    Int       @map("stimmzettel_gesamt")
+  stimmzettelGueltig   Int       @map("stimmzettel_gueltig")
+  stimmzettelUngueltig Int       @map("stimmzettel_ungueltig")
+  /// Ungültige Stimmen auf gültigen Stimmzetteln (§§ 26 Abs. 4, 28, 35 LPVGWO)
+  stimmenUngueltig     Int?      @map("stimmen_ungueltig")
+  festgestelltAm       DateTime? @map("festgestellt_am") @db.DateTime(3)
+  festgestelltVon      String?   @map("festgestellt_von") @db.VarChar(64)
+  /// Ergebnis von Losentscheiden: Ids in gezogener Reihenfolge (vorne = gewinnt)
+  losReihenfolge       Json?     @map("los_reihenfolge")
+  /// Besondere Vorkommnisse für die Wahlniederschrift
+  vorkommnisse         String?   @db.Text
+
+  election Election @relation(fields: [electionId], references: [id], onDelete: Cascade)
+
+  @@map("result")
+}
+
+enum Wahlergebnis {
+  gewaehlt
+  ersatz
+  nicht_gewaehlt
+}
+
+model ResultEntry {
+  id          String       @id @default(uuid()) @db.VarChar(36)
+  electionId  String       @map("election_id") @db.VarChar(36)
+  candidateId String       @map("candidate_id") @db.VarChar(36)
+  /// Gültige Stimmen der Person (Verhältnis- und Mehrheitswahl)
+  stimmen     Int?
+  ergebnis    Wahlergebnis
+  /// Reihenfolge innerhalb von „gewählt“ bzw. „Ersatz“
+  rang        Int?
+
+  election  Election            @relation(fields: [electionId], references: [id], onDelete: Cascade)
+  candidate NominationCandidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  @@unique([electionId, candidateId])
+  @@map("result_entry")
+}
+
+enum DocumentTyp {
+  wahlausschreiben
+  auslage_waehlerverzeichnis
+  wahlvorschlaege
+  nachfrist
+  wahlergebnis
+  niederschrift
+}
+
+model Document {
+  id             String      @id @default(uuid()) @db.VarChar(36)
+  electionId     String      @map("election_id") @db.VarChar(36)
+  typ            DocumentTyp
+  version        Int
+  sha256         String      @db.VarChar(64)
+  freigegebenAm  DateTime?   @map("freigegeben_am") @db.DateTime(3)
+  freigegebenVon String?     @map("freigegeben_von") @db.VarChar(64)
+  createdAt      DateTime    @default(now()) @map("created_at") @db.DateTime(3)
+
+  election Election @relation(fields: [electionId], references: [id], onDelete: Cascade)
+
+  @@map("document")
+}
+
+/// Anwendungsweite Einstellungen als JSON je Schlüssel (z. B. Angaben für die Datenschutz-Unterlagen).
+model Einstellung {
+  schluessel  String   @id @db.VarChar(64)
+  wert        Json
+  geaendertAm DateTime @updatedAt @map("geaendert_am") @db.DateTime(3)
+  geaendertVon String? @map("geaendert_von") @db.VarChar(64)
+
+  @@map("einstellung")
+}
+
+/// Bewusst ohne Feldinhalte: nur Feldnamen, damit das Log keine Kopie der Daten wird.
+model AuditLog {
+  id         String   @id @default(uuid()) @db.VarChar(36)
+  at         DateTime @default(now()) @db.DateTime(3)
+  userId     String?  @map("user_id") @db.VarChar(64)
+  action     String   @db.VarChar(64)
+  objectType String   @map("object_type") @db.VarChar(64)
+  objectId   String?  @map("object_id") @db.VarChar(64)
+  fields     Json?
+  ipHash     String?  @map("ip_hash") @db.VarChar(64)
+
+  @@index([at])
+  @@index([objectType, objectId])
+  @@map("audit_log")
+}
