@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { KalenderMonate } from "@/components/kalender-monate";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -176,6 +177,26 @@ export default async function WahlPage({ params }: { params: Promise<{ id: strin
         </CardContent>
       </Card>
 
+      <section aria-labelledby="kalender" className="grid gap-3">
+        <h2 id="kalender" className="text-xl font-bold">
+          Kalender
+        </h2>
+        <KalenderMonate
+          termine={rows.map((r) => ({
+            key: r.ruleKey,
+            iso: r.iso,
+            label: r.rule?.label ?? r.ruleKey,
+            uhrzeit: r.uhrzeit,
+            erledigt: Boolean(r.erledigtAm),
+            href: `#frist-${r.ruleKey}`,
+          }))}
+          wahltag={wahltag}
+          wahltagLabel={election.verfahren === "wahlversammlung" ? "Wahlversammlung" : "Erster Wahltag"}
+          heute={today}
+        />
+      </section>
+
+      <h2 className="text-xl font-bold">Alle Termine</h2>
       <Card>
         <CardContent className="overflow-x-auto pt-6">
           <table className="w-full text-sm">
