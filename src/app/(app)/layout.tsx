@@ -42,6 +42,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     : election
     ? [
         { href: base, label: "Wahlkalender", exact: true },
+        { href: `${base}/aushaenge`, label: "Aushänge" },
         { href: `${base}/checklisten`, label: "Checklisten" },
         ...(can("voters.edit") ? [{ href: `${base}/sitzung`, label: "Sitzungen" }] : []),
       ]
